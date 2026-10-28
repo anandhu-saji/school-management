@@ -1,7 +1,20 @@
-const dotenv=require("dotenv");
-dotenv.config()
-const app=require("./app");
+import "dotenv/config"; // Must be line 1: loads .env before any other modules import
 
-const PORT=process.env.PORT
+import app from "./app.js";
+import connectDB from "./config/db.js";
 
-app.listen(PORT,()=>console.log("Server Started"))
+const PORT = process.env.PORT || 5000;
+
+const startServer = async () => {
+  try {
+    await connectDB();
+    app.listen(PORT, () => {
+      console.log(`Server started on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error.message);
+    process.exit(1);
+  }
+};
+
+startServer();
