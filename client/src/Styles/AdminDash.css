@@ -1,0 +1,24 @@
+.admin-layout { display: flex; min-height: 100vh; background: #f5f7fb; font-family: Inter, sans-serif; }
+.admin-sidebar { width: 250px; background: #fff; border-right: 1px solid #e5eaf2; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
+.school-code-label { font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 10px; }
+.sampoorna-live-pill { background: #d1fae5; color: #065f46; font-size: 11px; font-weight: 800; padding: 8px 12px; border-radius: 6px; margin-bottom: 20px; display: flex; align-items: center; gap: 6px; }
+.dot { width: 7px; height: 7px; background: #10b981; border-radius: 50%; }
+.console-nav-list { display: flex; flex-direction: column; gap: 6px; }
+.console-nav-item { width: 100%; padding: 10px 14px; border: none; border-radius: 8px; background: transparent; color: #334155; font-size: 13px; font-weight: 600; text-align: left; cursor: pointer; }
+.console-nav-item:hover { background: #f1f5f9; }
+.console-nav-item.active { background: #135bec; color: #fff; }
+.admin-main-wrapper { flex: 1; display: flex; flex-direction: column; }
+.admin-top-header { height: 60px; background: #fff; border-bottom: 1px solid #e5eaf2; padding: 0 32px; display: flex; align-items: center; font-size: 12px; font-weight: 700; color: #334155; }
+.admin-content-area { padding: 24px 32px; flex: 1; }
+.headmaster-hero-card { background: #fff; border: 1px solid #e5eaf2; border-radius: 14px; padding: 24px; margin-bottom: 24px; }
+.badge-row { display: flex; gap: 10px; margin-bottom: 10px; }
+.badge-governance { background: #e0f2fe; color: #0369a1; font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 4px; }
+.badge-sync { background: #dcfce7; color: #15803d; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 99px; }
+.overview-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.overview-stat-card { background: #fff; border: 1px solid #e5eaf2; border-radius: 14px; padding: 20px; }
+.card-label { font-size: 10px; font-weight: 800; color: #64748b; letter-spacing: 0.5px; }
+.overview-number { font-size: 24px; font-weight: 800; color: #0f172a; margin: 10px 0 6px; }
+.sub-text { font-size: 11.5px; color: #64748b; }
+.text-green { color: #15803d; font-weight: 700; }
+.text-red { color: #dc2626; font-weight: 700; }
+.text-teal { color: #0d9488; }

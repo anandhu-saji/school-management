@@ -6,7 +6,11 @@ const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
+      trim: true,
+    },
+    // Missing Property: username (used by seeds and client views)
+    username: {
+      type: String,
       trim: true,
     },
     email: {
@@ -20,14 +24,25 @@ const userSchema = new mongoose.Schema(
       type: String,
       minlength: 6,
     },
+    // Accepts "student", "teacher", "admin", and legacy "user"
     role: {
       type: String,
-      enum: Object.values(UserRole),
+      enum: [...Object.values(UserRole), "user"],
       default: UserRole.STUDENT,
     },
     isGoogleAuth: {
       type: Boolean,
       default: false,
+    },
+    // Missing Property: avatarUrl (stores Google profile or S3 image)
+    avatarUrl: {
+      type: String,
+      default: null,
+    },
+    // Missing Property: isActive (used by seed files & account status)
+    isActive: {
+      type: Boolean,
+      default: true,
     },
     // Account Security & Lockout
     loginAttempts: {
@@ -53,6 +68,20 @@ const userSchema = new mongoose.Schema(
     collection: "users",
   }
 );
+
+// Synchronize name and username so neither is ever undefined
+userSchema.pre("validate", function (next) {
+  if (!this.name && this.username) {
+    this.name = this.username;
+  } else if (!this.username && this.name) {
+    this.username = this.name;
+  }
+  // Normalize legacy 'user' to 'student'
+  if (this.role === "user") {
+    this.role = UserRole.STUDENT;
+  }
+  next();
+});
 
 // Hash password before saving if modified
 userSchema.pre("save", async function (next) {
