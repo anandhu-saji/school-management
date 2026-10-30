@@ -1877,3 +1877,186 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   CLASS ATTENDANCE REGISTER MODAL STYLES (ADMIN CONSOLE)
+   ========================================================================== */
+
+.attendance-modal-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.attendance-date-picker-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  padding: 6px 14px;
+  border-radius: 8px;
+}
+
+.attendance-date-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.attendance-summary-pills-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.attendance-summary-mini-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.attendance-mini-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.attendance-mini-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.attendance-register-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.attendance-filter-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.att-tab-btn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.att-tab-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.att-tab-btn.active {
+  background: #1d4ed8;
+  color: #ffffff;
+  border-color: #1d4ed8;
+}
+
+.attendance-bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-bulk-present {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-bulk-present:hover {
+  background: #bbf7d0;
+}
+
+.btn-bulk-absent {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-bulk-absent:hover {
+  background: #fecaca;
+}
+
+/* Status Segmented Toggle */
+.reg-segmented-toggle {
+  display: inline-flex;
+  align-items: center;
+  background-color: #f1f5f9;
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.reg-segment-btn {
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.reg-segment-btn.active-present {
+  background-color: #059669;
+  color: #ffffff;
+}
+
+.reg-segment-btn.active-absent {
+  background-color: #dc2626;
+  color: #ffffff;
+}
+
+.reg-segment-btn.active-leave {
+  background-color: #d97706;
+  color: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .attendance-summary-pills-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

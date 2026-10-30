@@ -2,6 +2,8 @@ import { Router } from "express";
 import {
   getAdminOverviewStats,
   getDivisionMuster,
+  getDivisionAttendanceRegister,
+  saveDivisionAttendanceRegister,
   getTeachersRecords,
   createTeacher,
   updateTeacher,
@@ -27,6 +29,8 @@ router.use(authenticate, requireAdmin);
 
 router.get("/overview-stats", getAdminOverviewStats);
 router.get("/division-muster", getDivisionMuster);
+router.get("/attendance/register", getDivisionAttendanceRegister);
+router.post("/attendance/register", saveDivisionAttendanceRegister);
 
 // Teachers Endpoints
 router.get("/teachers", getTeachersRecords);

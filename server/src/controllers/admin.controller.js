@@ -41,11 +41,166 @@ export const getDivisionMuster = async (req, res) => {
       { id: "8-B", standardDivision: "Class 8–B", stream: "(General)", mentor: "Sri. Radhakrishnan N. (HST)", enrolled: 44, present: 42, absent: 2, turnoutRate: "95.5%", syncStatus: "Verified & Locked" },
       { id: "9-A", standardDivision: "Class 9–A", stream: "(General)", mentor: "Sri. George K. (HST)", enrolled: 46, present: 45, absent: 1, turnoutRate: "97.8%", syncStatus: "Verified & Locked" },
       { id: "9-B", standardDivision: "Class 9–B", stream: "(General)", mentor: "Smt. Sunitha R. (HST)", enrolled: 47, present: 45, absent: 2, turnoutRate: "95.7%", syncStatus: "Verified & Locked" },
-      { id: "10-A", standardDivision: "Class 10–A", stream: "(General)", mentor: "Mrs. Priya Nair (HSST)", enrolled: 48, present: 47, absent: 1, turnoutRate: "97.9%", syncStatus: "Verified & Locked" },
-      { id: "10-B", standardDivision: "Class 10–B", stream: "(General)", mentor: "Sri. K. Manoj (HST)", enrolled: 46, present: 44, absent: 2, turnoutRate: "95.6%", syncStatus: "Verified & Locked" },
+      { id: "10-A", standardDivision: "Class 10–A", stream: "(General)", mentor: "Mrs. Indu B Nair (HST)", enrolled: 48, present: 47, absent: 1, turnoutRate: "97.9%", syncStatus: "Verified & Locked" },
+      { id: "10-B", standardDivision: "Class 10–B", stream: "(General)", mentor: "Sri. George K. (HST)", enrolled: 46, present: 44, absent: 2, turnoutRate: "95.6%", syncStatus: "Verified & Locked" },
     ];
     return res.status(200).json({ success: true, divisions });
   } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 2b. Get Detailed Class Attendance Register for a Division
+export const getDivisionAttendanceRegister = async (req, res) => {
+  try {
+    const { division, date } = req.query;
+    const targetDate = date || new Date().toISOString().split("T")[0];
+    const rawDivision = division || "Class 10-A";
+    const cleanDiv = rawDivision.replace(/–/g, "-").trim();
+
+    let normalizedDivision = cleanDiv;
+    if (!normalizedDivision.startsWith("Class")) {
+      normalizedDivision = `Class ${normalizedDivision}`;
+    }
+
+    // 1. Fetch Students in this division
+    const divRegex = new RegExp(cleanDiv.replace(/^Classs*/i, ""), "i");
+    let students = await Student.find({
+      $or: [
+        { classDivision: { $regex: divRegex } },
+        { className: { $regex: divRegex } },
+      ],
+    })
+      .sort({ rollNumber: 1 })
+      .lean();
+
+    // If no students in DB for this class division, generate realistic class roll
+    if (!students || students.length === 0) {
+      const sampleNames = [
+        "Aaditya S. Kumar", "Ananya Manoj", "Devanand P. B.", "Fathima Nizar", "Gopika Krishna",
+        "Harikrishnan M.", "Irfan Habeeb", "Kavya Rajesh", "Muhammed Bilal", "Nandana Suresh",
+        "Pranav P.", "Rithika Nair", "Rohit R. Chandran", "Sneha Santhosh", "Vaishnav V.",
+        "Abhimanyu S.", "Aparna Vinod", "Christo George", "Diya Mariam", "Gautham Krishna"
+      ];
+      students = sampleNames.map((name, i) => ({
+        _id: `temp_${cleanDiv.replace(/\s+/g, "_")}_${i + 1}`,
+        rollNumber: i + 1,
+        admissionNumber: `ADM-${cleanDiv.replace(/[^0-9]/g, "")}0${10 + i}`,
+        name,
+        gender: i % 2 === 0 ? "Male" : "Female",
+        monthlyLeavesTaken: i % 5 === 0 ? 1 : 0,
+        overallAttendance: (95 + ((i * 3) % 5)).toFixed(1) + "%",
+      }));
+    }
+
+    // 2. Fetch Attendance register sheet from MongoDB for this date & division
+    const attendanceDoc = await Attendance.findOne({
+      date: targetDate,
+      classDivision: { $regex: divRegex },
+    }).lean();
+
+    const recordStatusMap = {};
+    if (attendanceDoc && attendanceDoc.records) {
+      attendanceDoc.records.forEach((r) => {
+        if (r.studentId) recordStatusMap[String(r.studentId)] = r.status;
+        if (r.rollNumber) recordStatusMap[`roll_${r.rollNumber}`] = r.status;
+      });
+    }
+
+    const studentRoster = students.map((s) => {
+      const recordedStatus =
+        recordStatusMap[String(s._id)] ||
+        recordStatusMap[`roll_${s.rollNumber}`] ||
+        (s.monthlyLeavesTaken > 0 && s.rollNumber === 4 ? "Absent" : "Present");
+
+      return {
+        _id: s._id,
+        rollNumber: s.rollNumber,
+        admissionNumber: s.admissionNumber || s.studentId || `ADM-149${20 + s.rollNumber}`,
+        name: s.name,
+        gender: s.gender || "Male",
+        status: recordedStatus,
+        monthlyLeavesTaken: s.monthlyLeavesTaken || 0,
+        overallAttendance: s.overallAttendance || "97.5%",
+      };
+    });
+
+    const presentCount = studentRoster.filter((r) => r.status === "Present").length;
+    const absentCount = studentRoster.filter((r) => r.status === "Absent").length;
+    const leaveCount = studentRoster.filter((r) => r.status === "On Leave" || r.status === "Leave" || r.status === "Half Day").length;
+    const turnoutRate =
+      studentRoster.length > 0
+        ? ((presentCount / studentRoster.length) * 100).toFixed(1) + "%"
+        : "100.0%";
+
+    // Resolve Mentor
+    let mentorName = "Faculty Mentor";
+    const teacher = await Teacher.findOne({
+      $or: [
+        { assignedClass: { $regex: divRegex } },
+        { mentorClass: { $regex: divRegex } },
+      ],
+    }).lean();
+    if (teacher) {
+      mentorName = `${teacher.name} (${teacher.department || "HST"})`;
+    }
+
+    return res.status(200).json({
+      success: true,
+      division: normalizedDivision,
+      date: targetDate,
+      mentor: mentorName,
+      stats: {
+        totalEnrolled: studentRoster.length,
+        presentCount,
+        absentCount,
+        leaveCount,
+        turnoutRate,
+      },
+      students: studentRoster,
+    });
+  } catch (error) {
+    console.error("Error fetching division attendance register:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 2c. Save / Sync Division Attendance Register from Admin Console
+export const saveDivisionAttendanceRegister = async (req, res) => {
+  try {
+    const { date, classDivision, records } = req.body;
+    if (!date || !classDivision || !records || !Array.isArray(records)) {
+      return res.status(400).json({
+        success: false,
+        message: "Date, classDivision, and records array are required.",
+      });
+    }
+
+    const presentCount = records.filter((r) => r.status === "Present").length;
+    const absentCount = records.filter((r) => r.status === "Absent").length;
+
+    const updated = await Attendance.findOneAndUpdate(
+      { date, classDivision },
+      {
+        $set: {
+          date,
+          classDivision,
+          records,
+          totalPresent: presentCount,
+          totalAbsent: absentCount,
+          markedBy: "admin@ghss.edu (Headmaster Sign-off)",
+        },
+      },
+      { upsert: true, returnDocument: "after" }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: `Attendance for ${classDivision} on ${date} saved and locked successfully.`,
+      attendance: updated,
+    });
+  } catch (error) {
+    console.error("Error saving division attendance register:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
