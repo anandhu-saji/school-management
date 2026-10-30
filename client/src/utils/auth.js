@@ -1,4 +1,4 @@
-// Stores session info with an explicit 1-hour expiration timestamp
+// Stores session info with expiration timestamp
 export function saveAuthSession(token, user, expiresInMs = 60 * 60 * 1000) {
   const expiresAt = Date.now() + expiresInMs;
   localStorage.setItem("token", token);
@@ -13,7 +13,7 @@ export function clearAuthSession() {
   localStorage.removeItem("session_expires_at");
 }
 
-// Returns true if session exists and has NOT passed 1 hour
+// Returns true if session exists and has NOT passed expiration
 export function isSessionValid() {
   const token = localStorage.getItem("token");
   const expiresAt = Number(localStorage.getItem("session_expires_at"));
@@ -23,7 +23,6 @@ export function isSessionValid() {
     return false;
   }
 
-  // If more than 1 hour has elapsed since login
   if (Date.now() > expiresAt) {
     clearAuthSession();
     return false;
@@ -34,11 +33,13 @@ export function isSessionValid() {
 
 // Determines the correct dashboard route based on user role
 export function getRoleDashboardPath(role) {
-  switch (role) {
+  const cleanRole = (role || "").toLowerCase();
+  switch (cleanRole) {
     case "admin":
       return "/admin/dashboard";
     case "teacher":
       return "/teacher/dashboard";
+    case "student": // <-- MISSING: Explicit student route resolution
     case "user":
     default:
       return "/dashboard";

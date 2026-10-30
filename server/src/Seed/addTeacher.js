@@ -1,17 +1,15 @@
-const path = require("path");
-const dotenv = require("dotenv");
-
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
-
-const connectDB = require("../config/db");
-const User = require("../models/user");
-const Teacher = require("../models/Teacher");
+import "dotenv/config";
+import mongoose from "mongoose";
+import connectDB from "../config/db.js";
+import User from "../models/user.js";
+import Teacher from "../models/Teacher.js";
 
 const addTeacherRecord = async () => {
   try {
     await connectDB();
 
     const teacherAccount = {
+      name: "Mrs. Priya Nair",
       username: "Mrs. Priya Nair",
       email: "priyanair@ghss.edu",
       password: "Teacher@12345",
@@ -22,18 +20,19 @@ const addTeacherRecord = async () => {
     let user = await User.findOne({ email: teacherAccount.email });
     if (!user) {
       user = await User.create({
+        name: teacherAccount.name,
         username: teacherAccount.username,
         email: teacherAccount.email,
         password: teacherAccount.password,
-        role: teacherAccount.role,
+        role: "teacher",
         isActive: true,
       });
-      console.log(`Created user account for ${user.email}`);
+      console.log(`✅ Created User login account for ${user.email}`);
     } else {
       user.role = "teacher";
       user.password = teacherAccount.password;
       await user.save();
-      console.log(`Updated user account role to teacher for ${user.email}`);
+      console.log(`✅ Updated User login account for ${user.email}`);
     }
 
     // 2. Create or update Teacher profile document
@@ -41,38 +40,35 @@ const addTeacherRecord = async () => {
     if (!profile) {
       profile = await Teacher.create({
         userId: user._id,
-        teacherId: "GHSS-RJK-0428",
-        penNumber: "PEN-984210",
-        fullName: "Mrs. Priya Nair",
-        designation: "HSST Malayalam",
+        name: teacherAccount.name,
+        email: teacherAccount.email,
         department: "Languages",
         mentorClass: "Class 10-A",
-        phone: "+91 94470 00000",
-        assignedSubjects: [
-          { subjectName: "Malayalam Paper I", className: "Class 10-A" },
-          { subjectName: "Malayalam Paper I", className: "Class 10-B" },
-          { subjectName: "Malayalam Literature", className: "Class 9-A" },
-        ],
+        assignedClass: "Class 10-A",
+        subject: "Malayalam",
+        phone: "+91 94470 12345",
+        isActive: true,
       });
-      console.log("Teacher profile data saved successfully!");
+      console.log("✅ Teacher profile document created!");
     } else {
-      profile.fullName = teacherAccount.username;
+      profile.name = teacherAccount.name;
       profile.mentorClass = "Class 10-A";
+      profile.assignedClass = "Class 10-A";
       await profile.save();
-      console.log("Teacher profile updated.");
+      console.log("✅ Teacher profile document updated.");
     }
 
-    console.log("-----------------------------------------");
-    console.log(`Email    : ${user.email}`);
-    console.log(`Password : Teacher@12345`);
-    console.log(`Role     : teacher`);
-    console.log(`TeacherID: ${profile.teacherId}`);
-    console.log(`Mentor of: ${profile.mentorClass}`);
-    console.log("-----------------------------------------");
+    console.log("=========================================");
+    console.log(" TEACHER LOGIN CREDENTIALS:");
+    console.log(` Email    : ${user.email}`);
+    console.log(` Password : ${teacherAccount.password}`);
+    console.log(` Role     : teacher`);
+    console.log(` Mentor of: Class 10-A`);
+    console.log("=========================================");
 
     process.exit(0);
   } catch (error) {
-    console.error("Error creating teacher:", error.message);
+    console.error("❌ Error seeding teacher:", error.message);
     process.exit(1);
   }
 };

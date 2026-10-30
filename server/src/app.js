@@ -8,6 +8,9 @@ import teacherRoutes from "./routes/teacher.routes.js";
 import studentRoutes from "./routes/student.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
 
+import adminRoutes from "./routes/admin.routes.js";
+
+
 // Error Middleware
 import { errorHandler } from "./middleware/error.middleware.js";
 
@@ -22,6 +25,7 @@ app.use(
 );
 app.use(cookieParser());
 app.use(express.json());
+app.use("/api/admin", adminRoutes);
 
 // API Routes
 app.use("/api/auth", authRoutes);

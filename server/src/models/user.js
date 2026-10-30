@@ -6,7 +6,10 @@ const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
+      trim: true,
+    },
+    username: {
+      type: String,
       trim: true,
     },
     email: {
@@ -22,12 +25,20 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: Object.values(UserRole),
+      enum: [...Object.values(UserRole), "user"],
       default: UserRole.STUDENT,
     },
     isGoogleAuth: {
       type: Boolean,
       default: false,
+    },
+    avatarUrl: {
+      type: String,
+      default: null,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     },
     // Account Security & Lockout
     loginAttempts: {
@@ -54,16 +65,23 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Hash password before saving if modified
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password") || !this.password) return next();
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (err) {
-    next(err);
+// Synchronize name and username so neither is ever undefined
+userSchema.pre("validate", function () {
+  if (!this.name && this.username) {
+    this.name = this.username;
+  } else if (!this.username && this.name) {
+    this.username = this.name;
   }
+  // Normalize legacy 'user' to 'student'
+  if (this.role === "user") {
+    this.role = UserRole.STUDENT;
+  }
+});
+// Hash password before saving if modified (async, no next)
+userSchema.pre("save", async function () {
+  if (!this.isModified("password") || !this.password) return;
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
 // Compare password helper method
