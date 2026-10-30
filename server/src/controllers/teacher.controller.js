@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 import Student from "../models/Student.js";
+import Teacher from "../models/Teacher.js";
 import Attendance from "../models/Attendance.js";
 
 /**
- * 1. Fetch Students & Register for selected Date & Division
+ * 1. Fetch Teacher Profile, Students & Register for selected Date & Division
  * GET /api/teacher/students?division=Class 10-A&date=YYYY-MM-DD
  */
 export const getStudentsByDivision = async (req, res) => {
@@ -15,6 +16,14 @@ export const getStudentsByDivision = async (req, res) => {
     const cleanDivision = rawDivision.replace(/[\s-]/g, "");
     const pattern = cleanDivision.split("").join("[\\s-]*");
     const divisionRegex = new RegExp(`^${pattern}$|${pattern}`, "i");
+
+    // Fetch assigned class teacher from MongoDB (Indu B Nair)
+    const classTeacher = await Teacher.findOne({
+      $or: [
+        { assignedClass: { $regex: divisionRegex } },
+        { email: "kathalanx@gmail.com" },
+      ],
+    }).lean();
 
     // Fetch all students in division
     const students = await Student.find({
@@ -29,6 +38,12 @@ export const getStudentsByDivision = async (req, res) => {
       return res.status(200).json({
         success: true,
         count: 0,
+        teacher: classTeacher || {
+          name: "Indu B Nair",
+          email: "kathalanx@gmail.com",
+          assignedClass: "Class 10-A",
+          department: "Mathematics",
+        },
         students: [],
         message: "No students found for this division.",
       });
@@ -43,7 +58,6 @@ export const getStudentsByDivision = async (req, res) => {
       ],
     });
 
-    // Map each student to their recorded or default status
     const roster = students.map((std) => {
       let status = "Present";
       if (existingAttendance && existingAttendance.records) {
@@ -75,6 +89,12 @@ export const getStudentsByDivision = async (req, res) => {
       presentCount,
       absentCount,
       registerStatus: existingAttendance ? "Submitted" : "Draft",
+      teacher: classTeacher || {
+        name: "Indu B Nair",
+        email: "kathalanx@gmail.com",
+        assignedClass: "Class 10-A",
+        department: "Mathematics",
+      },
       students: roster,
     });
   } catch (error) {
@@ -108,7 +128,9 @@ export const saveAttendance = async (req, res) => {
 
     // Weekly Holiday rule: block saving on Sundays
     const [yearStr, monthStr, dayStr] = date.split("-");
-    const parsedDate = new Date(Date.UTC(Number(yearStr), Number(monthStr) - 1, Number(dayStr)));
+    const parsedDate = new Date(
+      Date.UTC(Number(yearStr), Number(monthStr) - 1, Number(dayStr))
+    );
 
     if (parsedDate.getUTCDay() === 0) {
       await session.abortTransaction();
@@ -123,7 +145,6 @@ export const saveAttendance = async (req, res) => {
     const totalPresent = records.filter((r) => r.status === "Present").length;
     const totalAbsent = records.filter((r) => r.status === "Absent").length;
 
-    // Upsert attendance document inside transaction
     await Attendance.findOneAndUpdate(
       { date, classDivision: division },
       {
@@ -139,7 +160,7 @@ export const saveAttendance = async (req, res) => {
       { upsert: true, new: true, session }
     );
 
-    // Dynamic 3-day quota: tally monthly absent count per student for this month
+    // Dynamic 3-day quota calculation for current month
     const currentMonthPrefix = `${yearStr}-${monthStr}`;
     const monthlyAttendanceLogs = await Attendance.find({
       date: { $regex: new RegExp(`^${currentMonthPrefix}`) },
@@ -156,7 +177,6 @@ export const saveAttendance = async (req, res) => {
       }
     }
 
-    // Update each student's monthlyLeavesTaken in DB inside transaction
     const studentUpdatePromises = records.map((rec) => {
       const sId = String(rec.studentId);
       const absentDays = monthlyAbsentCounts[sId] || 0;
