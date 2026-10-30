@@ -5,9 +5,12 @@
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "seed": "node src/Seed/seedData.js",
+    "seed:admin": "node src/Seed/seedAdmin.js",
+    "seed:teacher": "node src/Seed/addTeacher.js"
   },
-  "keywords": [],
+    "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",

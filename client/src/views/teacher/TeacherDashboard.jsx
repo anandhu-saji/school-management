@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../api/axiosclient";
+import { clearAuthSession } from "../../utils/auth";
 import "../../Styles/TeacherDash.css";
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
 
-  const [selectedDate, setSelectedDate] = useState("2026-10-26");
+  const todayStr = new Date().toISOString().split("T")[0];
+  const [selectedDate, setSelectedDate] = useState(todayStr);
   const [teacherProfile, setTeacherProfile] = useState({
     name: "Indu B Nair",
     email: "kathalanx@gmail.com",
@@ -23,8 +25,8 @@ export default function TeacherDashboard() {
 
   const fetchRoster = async () => {
     try {
-      const res = await axios.get(
-        `http://localhost:5000/api/teacher/students?division=Class 10-A&date=${selectedDate}`
+      const res = await api.get(
+        `/teacher/students?division=Class 10-A&date=${selectedDate}`
       );
 
       if (res.data.success) {
@@ -49,7 +51,7 @@ export default function TeacherDashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.clear();
+    clearAuthSession();
     navigate("/login");
   };
 
@@ -80,10 +82,7 @@ export default function TeacherDashboard() {
         })),
       };
 
-      const res = await axios.post(
-        "http://localhost:5000/api/teacher/attendance",
-        payload
-      );
+      const res = await api.post("/teacher/attendance", payload);
 
       if (res.data.success) {
         setFeedback({
@@ -103,261 +102,275 @@ export default function TeacherDashboard() {
     }
   };
 
-  const totalEnrolled = students.length;
-  const presentCount = students.filter((s) => s.status === "Present").length;
-  const absentCount = students.filter((s) => s.status === "Absent").length;
-  const attendanceRate =
-    totalEnrolled > 0 ? ((presentCount / totalEnrolled) * 100).toFixed(1) : "0.0";
+  const markAll = (status) => {
+    setStudents((prev) => prev.map((s) => ({ ...s, status })));
+  };
 
   const filteredStudents = students.filter((s) => {
-    if (filter === "Present") return s.status === "Present";
-    if (filter === "Absent") return s.status === "Absent";
-    return true;
+    if (filter === "All") return true;
+    return s.status === filter;
   });
 
   const totalPages = Math.ceil(filteredStudents.length / pageSize) || 1;
-  const startIndex = (currentPage - 1) * pageSize;
   const paginatedStudents = filteredStudents.slice(
-    startIndex,
-    startIndex + pageSize
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
   );
 
-  const getInitials = (name) => {
-    const parts = name.trim().split(" ");
-    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    return parts[0].slice(0, 2).toUpperCase();
-  };
+  const presentCount = students.filter((s) => s.status === "Present").length;
+  const absentCount = students.filter((s) => s.status === "Absent").length;
+  const totalCount = students.length;
+  const attendanceRate = totalCount
+    ? Math.round((presentCount / totalCount) * 100)
+    : 0;
 
   return (
     <div className="teacher-layout">
-      <div className="mobile-topbar">
-        <button
-          className="hamburger-btn"
-          onClick={() => setSidebarOpen(true)}
-        >
-          ☰
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`teacher-sidebar ${sidebarOpen ? "open" : ""}`}>
+        <div className="sidebar-brand">
+          <div className="brand-badge">GHSS RAJAKKAD</div>
+          <h2>Sampoorna 2.0</h2>
+          <span className="portal-sub">Teacher Console</span>
+        </div>
+
+        <nav className="teacher-nav">
+          <button className="nav-btn active">
+            <span>📅</span> Mark Daily Attendance
+          </button>
+          <button className="nav-btn" onClick={() => navigate("/dashboard")}>
+            <span>📊</span> Academic Records
+          </button>
+          <button className="nav-btn" onClick={() => navigate("/dashboard")}>
+            <span>📝</span> Internal Marks
+          </button>
+          <button className="nav-btn" onClick={() => navigate("/dashboard")}>
+            <span>🗓️</span> Timetable
+          </button>
+        </nav>
+
+        <div className="sidebar-teacher-card">
+          <div className="teacher-avatar">
+            {teacherProfile.name ? teacherProfile.name.charAt(0) : "T"}
+          </div>
+          <div className="teacher-info">
+            <strong>{teacherProfile.name}</strong>
+            <span>{teacherProfile.department}</span>
+            <span className="mentor-pill">{teacherProfile.assignedClass}</span>
+          </div>
+        </div>
+
+        <button className="sidebar-logout" onClick={handleLogout}>
+          Sign Out
         </button>
-        <span className="mobile-brand-title">G.H.S.S Rajakkad</span>
-        <span className="live-dot"></span>
-      </div>
-
-      <div
-        className={`sidebar-backdrop ${sidebarOpen ? "drawer-open" : ""}`}
-        onClick={() => setSidebarOpen(false)}
-      ></div>
-
-      <aside className={`teacher-sidebar ${sidebarOpen ? "drawer-open" : ""}`}>
-        <div>
-          <div className="school-header">
-            <h2>G.H.S.S Rajakkad</h2>
-            <p className="school-code">SCHOOL CODE: 06042</p>
-            <div className="live-badge">
-              <span className="live-dot"></span> Sampoorna 2.0 Live
-            </div>
-          </div>
-          <nav className="nav-links">
-            <button className="nav-item active">📑 Daily Attendance</button>
-          </nav>
-        </div>
-
-        <div className="teacher-profile-widget">
-          <div className="profile-card">
-            <div className="profile-avatar">👤</div>
-            <div className="profile-info">
-              <p className="profile-name">{teacherProfile.name}</p>
-              <p className="profile-role">
-                {teacherProfile.department || "Mathematics"} • Class 10-A Mentor
-              </p>
-            </div>
-            <button
-              type="button"
-              className="btn-profile-logout"
-              onClick={handleLogout}
-              title="Sign Out"
-            >
-              🚪
-            </button>
-          </div>
-        </div>
       </aside>
 
-      <main className="teacher-main">
-        <div className="dashboard-header-card">
-          <div>
-            <h1 className="greeting-text">Good morning, {teacherProfile.name}</h1>
-            <p className="greeting-sub">Class 10-A Mentor • Daily Muster &amp; Biometric Attendance Portal</p>
-          </div>
-          <div className="header-action-buttons">
-            <button className="btn-action-print" onClick={() => window.print()}>
-              🖨️ Print
-            </button>
-            <button
-              className="btn-action-save"
-              onClick={handleSaveAttendance}
-              disabled={saving || totalEnrolled === 0}
-            >
-              💾 {saving ? "Saving..." : "Save"}
-            </button>
-          </div>
-        </div>
-
-        {feedback.message && (
-          <div
-            style={{
-              padding: "10px 16px",
-              borderRadius: "8px",
-              marginBottom: "16px",
-              fontSize: "13px",
-              fontWeight: 700,
-              backgroundColor: feedback.type === "success" ? "#ecfdf5" : "#fef2f2",
-              color: feedback.type === "success" ? "#065f46" : "#b91c1c",
-            }}
+      {/* Main Content Area */}
+      <div className="teacher-main-wrapper">
+        <header className="teacher-header">
+          <button
+            className="hamburger-btn"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
           >
-            {feedback.message}
+            ☰
+          </button>
+          <div className="header-breadcrumbs">
+            <span>Academics</span> / <span>Attendance Register</span> /{" "}
+            <strong>{teacherProfile.assignedClass}</strong>
           </div>
-        )}
+          <div className="header-controls">
+            <input
+              type="date"
+              className="date-input"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+            />
+          </div>
+        </header>
 
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-label">CLASS 10-A STRENGTH</div>
-            <div className="stat-value-group">
-              <span className="stat-number">{totalEnrolled}</span>
-              <span className="stat-unit">Enrolled</span>
+        <main className="teacher-content">
+          {/* Quick Metrics Bar */}
+          <div className="stats-row">
+            <div className="stat-pill">
+              <span className="stat-label">Enrolled:</span>
+              <strong>{totalCount}</strong>
             </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">TODAY'S ATTENDANCE</div>
-            <div className="stat-value-group">
-              <span className="stat-number">{attendanceRate}%</span>
+            <div className="stat-pill green">
+              <span className="stat-label">Present:</span>
+              <strong>{presentCount}</strong>
             </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">ABSENT TODAY</div>
-            <div className="stat-value-group">
-              <span className="stat-number" style={{ color: "#c5221f" }}>
-                {absentCount}
-              </span>
-              <span className="stat-unit" style={{ color: "#c5221f" }}>
-                Students
-              </span>
+            <div className="stat-pill red">
+              <span className="stat-label">Absent:</span>
+              <strong>{absentCount}</strong>
             </div>
-          </div>
-        </div>
-
-        <div className="register-container">
-          <div className="register-header">
-            <h2 className="register-title">Daily Attendance Register &amp; History</h2>
-            <p className="register-subtitle">Kerala State Education Sampoorna Portal Live Sync</p>
+            <div className="stat-pill blue">
+              <span className="stat-label">Turnout:</span>
+              <strong>{attendanceRate}%</strong>
+            </div>
           </div>
 
-          <div className="filter-bar">
-            <div className="date-picker-box">
-              <span className="date-label">Date:</span>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="date-native-input"
-              />
+          {/* Feedback Alert */}
+          {feedback.message && (
+            <div className={`feedback-alert ${feedback.type}`}>
+              {feedback.message}
             </div>
-            <div className="filter-pills-group">
+          )}
+
+          {/* Actions & Filters */}
+          <div className="table-controls-card">
+            <div className="filter-group">
               <button
-                className={`filter-pill ${filter === "All" ? "active-all" : ""}`}
-                onClick={() => setFilter("All")}
+                className={`filter-btn ${filter === "All" ? "active" : ""}`}
+                onClick={() => {
+                  setFilter("All");
+                  setCurrentPage(1);
+                }}
               >
-                All ({totalEnrolled})
+                All ({totalCount})
               </button>
               <button
-                className={`filter-pill ${filter === "Present" ? "active-present" : ""}`}
-                onClick={() => setFilter("Present")}
+                className={`filter-btn green ${filter === "Present" ? "active" : ""}`}
+                onClick={() => {
+                  setFilter("Present");
+                  setCurrentPage(1);
+                }}
               >
                 Present ({presentCount})
               </button>
               <button
-                className={`filter-pill ${filter === "Absent" ? "active-absent" : ""}`}
-                onClick={() => setFilter("Absent")}
+                className={`filter-btn red ${filter === "Absent" ? "active" : ""}`}
+                onClick={() => {
+                  setFilter("Absent");
+                  setCurrentPage(1);
+                }}
               >
                 Absent ({absentCount})
               </button>
             </div>
+
+            <div className="bulk-actions">
+              <button
+                className="btn-mark-all present"
+                onClick={() => markAll("Present")}
+              >
+                Mark All Present
+              </button>
+              <button
+                className="btn-mark-all absent"
+                onClick={() => markAll("Absent")}
+              >
+                Mark All Absent
+              </button>
+              <button
+                className="btn-save-attendance"
+                disabled={saving}
+                onClick={handleSaveAttendance}
+              >
+                {saving ? "Saving..." : "💾 Save Register"}
+              </button>
+            </div>
           </div>
 
-          <div className="table-responsive-wrapper">
+          {/* Student Roster Table */}
+          <div className="roster-card">
             <table className="roster-table">
               <thead>
-                <tr className="table-head">
-                  <th>ROLL</th>
-                  <th>STUDENT NAME</th>
-                  <th>STUDENT ID</th>
-                  <th style={{ textAlign: "center" }}>ATTENDANCE STATUS TOGGLE</th>
-                  <th style={{ textAlign: "center" }}>REMAINING LEAVE</th>
+                <tr>
+                  <th>Roll #</th>
+                  <th>Student Name</th>
+                  <th>Adm. Number</th>
+                  <th>Gender</th>
+                  <th>Monthly Leaves</th>
+                  <th style={{ textAlign: "center" }}>Status</th>
                 </tr>
               </thead>
               <tbody>
-                {paginatedStudents.map((std) => {
-                  const isAbsent = std.status === "Absent";
-                  const initials = getInitials(std.name);
-                  const leavesUsed = std.monthlyLeavesTaken || 0;
-                  const leavesRemaining = Math.max(0, 3 - leavesUsed);
-
-                  let pillClass = "leave-green";
-                  if (leavesRemaining <= 1) pillClass = "leave-amber";
-                  if (leavesRemaining === 0) pillClass = "leave-red";
-
-                  return (
+                {paginatedStudents.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" style={{ textAlign: "center", padding: "24px" }}>
+                      No student records found.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedStudents.map((std) => (
                     <tr
                       key={std._id}
-                      className={`student-row ${isAbsent ? "is-absent" : ""}`}
+                      className={std.status === "Absent" ? "row-absent" : ""}
                     >
+                      <td>{std.rollNumber}</td>
                       <td>
-                        <span className="roll-text">
-                          {String(std.rollNumber).padStart(2, "0")}
-                        </span>
+                        <strong>{std.name}</strong>
                       </td>
+                      <td>{std.admissionNumber}</td>
+                      <td>{std.gender}</td>
                       <td>
-                        <div className="student-identity-cell">
-                          <div className={`avatar-circle ${isAbsent ? "avatar-absent" : ""}`}>
-                            {initials}
-                          </div>
-                          <span className="student-full-name">{std.name}</span>
-                        </div>
-                      </td>
-                      <td>
-                        <span className="student-id-text">
-                          {std.admissionNumber || `KL-2022-${1080 + std.rollNumber}`}
+                        <span
+                          className={`leave-badge ${
+                            std.monthlyLeavesTaken >= 3 ? "warning" : ""
+                          }`}
+                        >
+                          {std.monthlyLeavesTaken} / 3 Days
                         </span>
                       </td>
                       <td style={{ textAlign: "center" }}>
-                        <div className="segmented-toggle">
+                        <div className="status-toggle-group">
                           <button
                             type="button"
-                            className={`segment-btn ${!isAbsent ? "active-green" : ""}`}
+                            className={`toggle-btn present ${
+                              std.status === "Present" ? "active" : ""
+                            }`}
                             onClick={() => setStatus(std._id, "Present")}
                           >
-                            Present
+                            P
                           </button>
                           <button
                             type="button"
-                            className={`segment-btn ${isAbsent ? "active-red" : ""}`}
+                            className={`toggle-btn absent ${
+                              std.status === "Absent" ? "active" : ""
+                            }`}
                             onClick={() => setStatus(std._id, "Absent")}
                           >
-                            Absent
+                            A
                           </button>
                         </div>
                       </td>
-                      <td style={{ textAlign: "center" }}>
-                        <span className={`remaining-leave-pill ${pillClass}`}>
-                          {leavesRemaining === 1 ? "1 Day Left" : `${leavesRemaining} Days Left`}
-                        </span>
-                      </td>
                     </tr>
-                  );
-                })}
+                  ))
+                )}
               </tbody>
             </table>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="pagination-bar">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => p - 1)}
+                >
+                  ← Prev
+                </button>
+                <span>
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((p) => p + 1)}
+                >
+                  Next →
+                </button>
+              </div>
+            )}
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

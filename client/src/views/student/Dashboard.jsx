@@ -1,37 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../../api/axiosclient";
 import { isSessionValid, clearAuthSession } from "../../utils/auth";
 import "./../../Styles/StudentDash.css";
-
-const metrics = [
-  {
-    title: "ATTENDANCE RATE",
-    value: "96.2%",
-    extra: "+1.4%",
-    description: "21 Present out of 22 Working Days",
-    type: "attendance",
-  },
-  {
-    title: "UPCOMING EXAM",
-    value: "Second Terminal",
-    description: "Malayalam Paper I • 09:30 AM",
-    type: "exam",
-  },
-  {
-    title: "FIRST TERM SCORE",
-    value: "88.5%",
-    extra: "Grade A+",
-    description: "Total 531 / 600 • Distinction",
-    type: "score",
-  },
-  {
-    title: "REMAINING DAYS",
-    value: "14 Days",
-    extra: "Term II",
-    description: "Christmas Vacation: 24 Dec",
-    type: "days",
-  },
-];
 
 const lessons = [
   {
@@ -79,16 +50,18 @@ const notices = [
 function StudentDashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. Verify 1-hour session validity on mount
+    // 1. Verify session validity
     if (!isSessionValid()) {
       clearAuthSession();
       navigate("/login?session=expired", { replace: true });
       return;
     }
 
-    // 2. Read stored user profile
+    // 2. Read stored user profile from localStorage
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
@@ -98,20 +71,37 @@ function StudentDashboard() {
       }
     }
 
-    // 3. Block browser back button from returning to login
+    // 3. Block browser back button from navigating back to login
     window.history.pushState(null, "", window.location.href);
     const handlePopState = () => {
       window.history.pushState(null, "", window.location.href);
     };
     window.addEventListener("popstate", handlePopState);
 
-    // 4. Auto-logout timer if 1 hour passes while tab remains open
+    // 4. Auto-logout timer if session expires while tab is open
     const interval = setInterval(() => {
       if (!isSessionValid()) {
         clearAuthSession();
         navigate("/login?session=expired", { replace: true });
       }
     }, 10000);
+
+    // 5. Fetch live student profile and attendance metrics from backend
+    async function fetchDashboardMetrics() {
+      try {
+        setLoading(true);
+        const res = await api.get("/student/dashboard-data");
+        if (res.data.success) {
+          setDashboardData(res.data.data);
+        }
+      } catch (err) {
+        console.error("Failed to load student dashboard data:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchDashboardMetrics();
 
     return () => {
       window.removeEventListener("popstate", handlePopState);
@@ -124,9 +114,9 @@ function StudentDashboard() {
     navigate("/login", { replace: true });
   };
 
-  const getDisplayName = (username) => {
-    if (!username) return "Student";
-    return username
+  const getDisplayName = (name) => {
+    if (!name) return "Student";
+    return name
       .replace(/[._-]+/g, " ")
       .split(" ")
       .filter(Boolean)
@@ -144,11 +134,54 @@ function StudentDashboard() {
       .slice(0, 2);
   };
 
-  const displayName = getDisplayName(user?.username);
+  const studentProfile = dashboardData?.student;
+  const attendanceStats = dashboardData?.attendance;
+
+  const displayName = getDisplayName(
+    studentProfile?.name || user?.name || user?.username || user?.email
+  );
+
+  const displayClass =
+    studentProfile?.className || "Class 10-A";
+
+  const metrics = [
+    {
+      title: "ATTENDANCE RATE",
+      value: attendanceStats?.rate || "100%",
+      extra:
+        attendanceStats && attendanceStats.totalWorkingDays > 0
+          ? `${attendanceStats.presentDays} Present / ${attendanceStats.absentDays} Absent`
+          : "Verified Muster",
+      description: attendanceStats && attendanceStats.totalWorkingDays > 0
+        ? `${attendanceStats.presentDays} Present out of ${attendanceStats.totalWorkingDays} Working Days`
+        : "Complete Academic Attendance Record",
+      type: "attendance",
+    },
+    {
+      title: "UPCOMING EXAM",
+      value: "Second Terminal",
+      description: "Malayalam Paper I • 09:30 AM",
+      type: "exam",
+    },
+    {
+      title: "FIRST TERM SCORE",
+      value: "88.5%",
+      extra: "Grade A+",
+      description: "Total 531 / 600 • Distinction",
+      type: "score",
+    },
+    {
+      title: "REMAINING DAYS",
+      value: "14 Days",
+      extra: "Term II",
+      description: "Christmas Vacation: 24 Dec",
+      type: "days",
+    },
+  ];
 
   return (
     <div className="portal">
-      {/* Sidebar */}
+      {/* Sidebar Navigation */}
       <aside className="sidebar">
         <div className="school-brand">
           <h2>G.H.S.S Rajakkad</h2>
@@ -178,12 +211,12 @@ function StudentDashboard() {
         </nav>
 
         <div className="sidebar-profile">
-          <div className="avatar small-avatar">{getInitials(user?.username)}</div>
+          <div className="avatar small-avatar">{getInitials(displayName)}</div>
           <div className="profile-info">
             <strong>{displayName}</strong>
-            <span>{user?.email || "student@school.edu"}</span>
+            <span>{user?.email || studentProfile?.email || "student@school.edu"}</span>
             <span className="profile-role">
-              {user?.role ? user.role.toUpperCase() : "STUDENT"} · Class 10-A
+              {user?.role ? user.role.toUpperCase() : "STUDENT"} · {displayClass}
             </span>
           </div>
           <button
@@ -202,7 +235,7 @@ function StudentDashboard() {
       <div className="portal-main">
         <header className="topbar">
           <div className="topbar-class">
-            <strong>Class 10-A</strong>
+            <strong>{displayClass}</strong>
             <span>•</span>
             <span>SSLC Board Batch 2025-26</span>
             <span className="topbar-divider">|</span>
@@ -221,20 +254,30 @@ function StudentDashboard() {
         <main className="dashboard-content" id="overview">
           {/* Welcome Card */}
           <section className="welcome-card">
-            <div className="avatar main-avatar">{getInitials(user?.username)}</div>
+            <div className="avatar main-avatar">{getInitials(displayName)}</div>
 
             <div className="welcome-info">
               <h1>Welcome back, {displayName}!</h1>
               <span className="active-badge">Active Scholar</span>
 
               <p>
-                Class 10-A (Malayalam Medium)
-                <span>•</span>
-                Class Mentor: Mrs. Priya Nair
+                {displayClass} (Malayalam Medium)
+                {studentProfile?.rollNumber && (
+                  <>
+                    <span>•</span>
+                    Roll No: {studentProfile.rollNumber}
+                  </>
+                )}
+                {studentProfile?.studentId && (
+                  <>
+                    <span>•</span>
+                    Adm: {studentProfile.studentId}
+                  </>
+                )}
               </p>
 
               <p>
-                Email: <strong>{user?.email || "student@school.edu"}</strong>
+                Email: <strong>{user?.email || studentProfile?.email || "student@school.edu"}</strong>
               </p>
             </div>
 
