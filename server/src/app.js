@@ -1,15 +1,14 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import path from "path";
 
 // Route imports
 import authRoutes from "./routes/auth.routes.js";
 import teacherRoutes from "./routes/teacher.routes.js";
 import studentRoutes from "./routes/student.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
-
 import adminRoutes from "./routes/admin.routes.js";
-
 
 // Error Middleware
 import { errorHandler } from "./middleware/error.middleware.js";
@@ -25,6 +24,11 @@ app.use(
 );
 app.use(cookieParser());
 app.use(express.json());
+
+// Serve static uploaded documents and assets
+app.use("/uploads", express.static(path.resolve("uploads")));
+
+// Admin Routes
 app.use("/api/admin", adminRoutes);
 
 // API Routes

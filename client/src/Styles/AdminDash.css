@@ -1163,3 +1163,188 @@ body {
 .btn-modal-delete:hover {
   background: #fecaca;
 }
+
+/* ---------------- ID PROOF DOCUMENT UPLOADS ---------------- */
+.upload-dropzone {
+  border: 2px dashed #cbd5e1;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 16px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.upload-dropzone:hover {
+  border-color: #135bec;
+  background: #eff6ff;
+}
+
+.upload-dropzone.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.upload-icon-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: #135bec;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.upload-prompt-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.upload-sub-text {
+  font-size: 11.5px;
+  color: #64748b;
+  margin: 0;
+}
+
+.uploaded-file-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  margin-top: 8px;
+}
+
+.uploaded-file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.uploaded-file-thumbnail {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid #cbd5e1;
+}
+
+.uploaded-pdf-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  background: #fee2e2;
+  color: #dc2626;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1px solid #fecaca;
+  flex-shrink: 0;
+}
+
+.uploaded-file-names {
+  min-width: 0;
+}
+
+.uploaded-file-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+  display: block;
+}
+
+.uploaded-file-status {
+  font-size: 11px;
+  color: #047857;
+  font-weight: 600;
+}
+
+.uploaded-file-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-file-preview {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #135bec;
+  background: #ffffff;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-file-preview:hover {
+  background: #eff6ff;
+}
+
+.btn-file-remove {
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #dc2626;
+  background: #ffffff;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-file-remove:hover {
+  background: #fee2e2;
+}
+
+.id-proof-doc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 3px;
+  border: 1px solid #bfdbfe;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.id-proof-doc-link:hover {
+  background: #dbeafe;
+}
+
+.dossier-doc-preview-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-top: 8px;
+}

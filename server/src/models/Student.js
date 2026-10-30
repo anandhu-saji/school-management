@@ -80,6 +80,32 @@ const studentSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    // Uploaded ID Proof Files (PDF or Images)
+    idProofUrl: {
+      type: String,
+      trim: true,
+    },
+    idProofType: {
+      type: String,
+      trim: true,
+      default: "Aadhaar Card",
+    },
+    idProofFileName: {
+      type: String,
+      trim: true,
+    },
+    idProofFileType: {
+      type: String,
+      trim: true,
+    },
+    birthCertificateUrl: {
+      type: String,
+      trim: true,
+    },
+    birthCertificateFileName: {
+      type: String,
+      trim: true,
+    },
     bloodGroup: {
       type: String,
       enum: ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-", "Unknown"],

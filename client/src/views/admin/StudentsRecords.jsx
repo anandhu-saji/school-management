@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosclient";
 import { clearAuthSession } from "../../utils/auth";
@@ -6,6 +6,8 @@ import "../../Styles/AdminDash.css";
 
 export default function StudentsRecords() {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+  const bcFileInputRef = useRef(null);
 
   // State
   const [students, setStudents] = useState([]);
@@ -28,6 +30,8 @@ export default function StudentsRecords() {
   const [editingStudent, setEditingStudent] = useState(null);
   const [activeModalTab, setActiveModalTab] = useState("personal");
   const [formSubmitting, setFormSubmitting] = useState(false);
+  const [uploadingIdProof, setUploadingIdProof] = useState(false);
+  const [uploadingBcProof, setUploadingBcProof] = useState(false);
   const [feedback, setFeedback] = useState({ type: "", message: "" });
 
   // Dossier View Modal State
@@ -45,9 +49,15 @@ export default function StudentsRecords() {
     bloodGroup: "O+",
     religion: "Hindu",
     caste: "",
-    // Essential Statutory ID Proofs
+    // Essential Statutory ID Proofs & Uploaded Files
     aadhaarNumber: "",
     birthCertificateNumber: "",
+    idProofUrl: "",
+    idProofType: "Aadhaar Card",
+    idProofFileName: "",
+    idProofFileType: "",
+    birthCertificateUrl: "",
+    birthCertificateFileName: "",
     identificationMarks: "",
     // Parent & Guardian Details
     fatherName: "",
@@ -69,6 +79,16 @@ export default function StudentsRecords() {
     tcNumber: "",
   };
   const [formData, setFormData] = useState(initialForm);
+
+  // Helper to resolve full URL for uploaded files
+  const getDocumentUrl = (url) => {
+    if (!url) return "";
+    if (url.startsWith("http://") || url.startsWith("https://")) return url;
+    const backendBase = import.meta.env.VITE_API_URL
+      ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, "")
+      : "http://localhost:5000";
+    return `${backendBase}${url.startsWith("/") ? "" : "/"}${url}`;
+  };
 
   // Fetch Students & Stats
   const fetchStudents = async () => {
@@ -159,6 +179,12 @@ export default function StudentsRecords() {
       caste: student.caste || "",
       aadhaarNumber: student.aadhaarNumber || "",
       birthCertificateNumber: student.birthCertificateNumber || "",
+      idProofUrl: student.idProofUrl || "",
+      idProofType: student.idProofType || "Aadhaar Card",
+      idProofFileName: student.idProofFileName || "",
+      idProofFileType: student.idProofFileType || "",
+      birthCertificateUrl: student.birthCertificateUrl || "",
+      birthCertificateFileName: student.birthCertificateFileName || "",
       identificationMarks: student.identificationMarks || "",
       fatherName: student.fatherName || "",
       motherName: student.motherName || "",
@@ -188,6 +214,83 @@ export default function StudentsRecords() {
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Upload handler for ID Proof Document (Image or PDF)
+  const handleFileUpload = async (e, fieldType = "idProof") => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      setFeedback({
+        type: "error",
+        message: "File exceeds 10MB limit. Please upload a smaller document.",
+      });
+      return;
+    }
+
+    const uploadFormData = new FormData();
+    uploadFormData.append("document", file);
+
+    try {
+      if (fieldType === "idProof") setUploadingIdProof(true);
+      else setUploadingBcProof(true);
+
+      const res = await api.post("/upload/document", uploadFormData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      if (res.data.success) {
+        if (fieldType === "idProof") {
+          setFormData((prev) => ({
+            ...prev,
+            idProofUrl: res.data.fileUrl,
+            idProofFileName: res.data.fileName,
+            idProofFileType: res.data.fileType,
+          }));
+        } else {
+          setFormData((prev) => ({
+            ...prev,
+            birthCertificateUrl: res.data.fileUrl,
+            birthCertificateFileName: res.data.fileName,
+          }));
+        }
+        setFeedback({
+          type: "success",
+          message: `${file.name} uploaded successfully!`,
+        });
+      }
+    } catch (err) {
+      setFeedback({
+        type: "error",
+        message: err.response?.data?.message || "File upload failed.",
+      });
+    } finally {
+      if (fieldType === "idProof") {
+        setUploadingIdProof(false);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      } else {
+        setUploadingBcProof(false);
+        if (bcFileInputRef.current) bcFileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleRemoveUploadedFile = (fieldType = "idProof") => {
+    if (fieldType === "idProof") {
+      setFormData((prev) => ({
+        ...prev,
+        idProofUrl: "",
+        idProofFileName: "",
+        idProofFileType: "",
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        birthCertificateUrl: "",
+        birthCertificateFileName: "",
+      }));
+    }
   };
 
   const handleFormSubmit = async (e) => {
@@ -279,6 +382,7 @@ export default function StudentsRecords() {
       "Blood Group",
       "Aadhaar Number",
       "Birth Certificate No",
+      "ID Proof Uploaded",
       "Division",
       "Father Name",
       "Mother Name",
@@ -300,6 +404,7 @@ export default function StudentsRecords() {
       s.bloodGroup || "O+",
       `"${s.aadhaarNumber || "Pending"}"`,
       `"${s.birthCertificateNumber || "N/A"}"`,
+      s.idProofUrl ? `"Yes (${s.idProofFileName || "Document"})"` : '"No"',
       s.division,
       `"${s.fatherName || ""}"`,
       `"${s.motherName || ""}"`,
@@ -487,8 +592,8 @@ export default function StudentsRecords() {
               <div className="registry-title-text">
                 <h1>Student Admission &amp; Academic Registry</h1>
                 <p>
-                  Official Kerala Sampoorna student database with UID/Aadhaar
-                  verification and ID proofs.
+                  Official Kerala Sampoorna student database with digital ID proof
+                  verification (Images &amp; PDFs).
                 </p>
               </div>
             </div>
@@ -596,21 +701,45 @@ export default function StudentsRecords() {
                             {std.admissionNumber}
                           </span>
                           <span className="subtext-dim">{std.sampoornaId}</span>
-                          {std.aadhaarNumber ? (
-                            <span
-                              className="aadhaar-verified-pill"
-                              title={`Aadhaar: ${std.aadhaarNumber}`}
-                            >
-                              ✓ UID Linked
-                            </span>
-                          ) : (
-                            <span
-                              className="aadhaar-pending-pill"
-                              title="Aadhaar UID not linked yet"
-                            >
-                              ⚠ UID Pending
-                            </span>
-                          )}
+
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            {std.aadhaarNumber ? (
+                              <span
+                                className="aadhaar-verified-pill"
+                                title={`Aadhaar: ${std.aadhaarNumber}`}
+                              >
+                                ✓ UID Linked
+                              </span>
+                            ) : (
+                              <span
+                                className="aadhaar-pending-pill"
+                                title="Aadhaar UID not linked yet"
+                              >
+                                ⚠ UID Pending
+                              </span>
+                            )}
+
+                            {/* Clickable ID Proof File indicator if uploaded */}
+                            {std.idProofUrl && (
+                              <a
+                                href={getDocumentUrl(std.idProofUrl)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="id-proof-doc-link"
+                                title={`View Uploaded ${std.idProofType || "ID Proof"} (${std.idProofFileName || "Document"})`}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                📎 {std.idProofFileType === "pdf" ? "PDF" : "Doc"}
+                              </a>
+                            )}
+                          </div>
                         </td>
                         <td className="student-name-cell">
                           <strong
@@ -720,7 +849,7 @@ export default function StudentsRecords() {
                 <button
                   className="page-btn"
                   disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((p) => p - 1)}
+                  onClick={() => setCurrentPage((p) => p + 1)}
                 >
                   &gt;
                 </button>
@@ -989,13 +1118,14 @@ export default function StudentsRecords() {
                   </div>
                 )}
 
-                {/* TAB 2: STATUTORY ID PROOFS & KYC */}
+                {/* TAB 2: STATUTORY ID PROOFS & KYC (WITH FILE UPLOAD) */}
                 {activeModalTab === "idproofs" && (
                   <div>
                     <div className="form-section-header">
-                      <span>🛡️</span> Government Identity Documents
+                      <span>🛡️</span> Government Identity Documents &amp; Upload
                     </div>
 
+                    {/* Aadhaar Number Field */}
                     <div className="form-field-group">
                       <label>Aadhaar Card Number (12-Digit UID)</label>
                       <input
@@ -1012,6 +1142,83 @@ export default function StudentsRecords() {
                       </span>
                     </div>
 
+                    {/* 1. Upload Aadhaar / Primary ID Proof File */}
+                    <div className="form-field-group" style={{ marginBottom: "20px" }}>
+                      <label>Upload Aadhaar / ID Proof Document (Image or PDF)</label>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept="image/jpeg,image/png,image/webp,image/jpg,application/pdf"
+                        style={{ display: "none" }}
+                        onChange={(e) => handleFileUpload(e, "idProof")}
+                      />
+
+                      {formData.idProofUrl ? (
+                        <div className="uploaded-file-card">
+                          <div className="uploaded-file-info">
+                            {formData.idProofFileType === "pdf" ? (
+                              <div className="uploaded-pdf-badge">
+                                <span>PDF</span>
+                              </div>
+                            ) : (
+                              <img
+                                src={getDocumentUrl(formData.idProofUrl)}
+                                alt="ID Proof Preview"
+                                className="uploaded-file-thumbnail"
+                              />
+                            )}
+                            <div className="uploaded-file-names">
+                              <span className="uploaded-file-name">
+                                {formData.idProofFileName || "Aadhaar_Proof_Document"}
+                              </span>
+                              <span className="uploaded-file-status">
+                                ✓ Uploaded &amp; Attached
+                              </span>
+                            </div>
+                          </div>
+                          <div className="uploaded-file-actions">
+                            <a
+                              href={getDocumentUrl(formData.idProofUrl)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="btn-file-preview"
+                            >
+                              View / Open ↗
+                            </a>
+                            <button
+                              type="button"
+                              className="btn-file-remove"
+                              onClick={() => handleRemoveUploadedFile("idProof")}
+                              title="Remove file"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          className={`upload-dropzone ${
+                            uploadingIdProof ? "disabled" : ""
+                          }`}
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <div className="upload-icon-circle">
+                            {uploadingIdProof ? "⏳" : "📤"}
+                          </div>
+                          <p className="upload-prompt-text">
+                            {uploadingIdProof
+                              ? "Uploading document to secure storage..."
+                              : "Click to upload Aadhaar / ID Proof file"}
+                          </p>
+                          <p className="upload-sub-text">
+                            Supports PDF documents or Image files (JPG, PNG, WEBP)
+                            up to 10MB
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Birth Certificate Number Field */}
                     <div className="form-field-group">
                       <label>Birth Certificate Registration Number</label>
                       <input
@@ -1021,10 +1228,73 @@ export default function StudentsRecords() {
                         value={formData.birthCertificateNumber}
                         onChange={handleFormChange}
                       />
-                      <span className="helper-text">
-                        Issued by the Registrar of Births and Deaths / Local Body
-                        Authority.
-                      </span>
+                    </div>
+
+                    {/* 2. Upload Birth Certificate File (Optional) */}
+                    <div className="form-field-group" style={{ marginBottom: "20px" }}>
+                      <label>Upload Birth Certificate Copy (Optional - Image or PDF)</label>
+                      <input
+                        type="file"
+                        ref={bcFileInputRef}
+                        accept="image/jpeg,image/png,image/webp,image/jpg,application/pdf"
+                        style={{ display: "none" }}
+                        onChange={(e) => handleFileUpload(e, "birthCertificate")}
+                      />
+
+                      {formData.birthCertificateUrl ? (
+                        <div className="uploaded-file-card">
+                          <div className="uploaded-file-info">
+                            <div className="uploaded-pdf-badge" style={{ background: "#e0f2fe", color: "#0369a1", borderColor: "#bae6fd" }}>
+                              <span>DOC</span>
+                            </div>
+                            <div className="uploaded-file-names">
+                              <span className="uploaded-file-name">
+                                {formData.birthCertificateFileName || "Birth_Certificate"}
+                              </span>
+                              <span className="uploaded-file-status">
+                                ✓ Uploaded &amp; Attached
+                              </span>
+                            </div>
+                          </div>
+                          <div className="uploaded-file-actions">
+                            <a
+                              href={getDocumentUrl(formData.birthCertificateUrl)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="btn-file-preview"
+                            >
+                              View / Open ↗
+                            </a>
+                            <button
+                              type="button"
+                              className="btn-file-remove"
+                              onClick={() => handleRemoveUploadedFile("birthCertificate")}
+                              title="Remove file"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          className={`upload-dropzone ${
+                            uploadingBcProof ? "disabled" : ""
+                          }`}
+                          onClick={() => bcFileInputRef.current?.click()}
+                        >
+                          <div className="upload-icon-circle" style={{ background: "#f0fdf4", color: "#16a34a" }}>
+                            {uploadingBcProof ? "⏳" : "📋"}
+                          </div>
+                          <p className="upload-prompt-text">
+                            {uploadingBcProof
+                              ? "Uploading certificate..."
+                              : "Click to upload Birth Certificate file (Image or PDF)"}
+                          </p>
+                          <p className="upload-sub-text">
+                            Local Self Government / Corporation registration certificate
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     <div className="form-field-group">
@@ -1279,7 +1549,7 @@ export default function StudentsRecords() {
                 <button
                   type="submit"
                   className="btn-modal-save"
-                  disabled={formSubmitting}
+                  disabled={formSubmitting || uploadingIdProof || uploadingBcProof}
                 >
                   {formSubmitting
                     ? "Saving..."
@@ -1400,7 +1670,7 @@ export default function StudentsRecords() {
                 {/* Statutory ID Proofs */}
                 <div className="dossier-card">
                   <h4>
-                    <span>🛡️</span> Statutory ID Proofs
+                    <span>🛡️</span> Statutory ID Proofs &amp; Files
                   </h4>
                   <div className="dossier-field-row">
                     <span className="label">Aadhaar (UID):</span>
@@ -1414,12 +1684,66 @@ export default function StudentsRecords() {
                       )}
                     </span>
                   </div>
-                  <div className="dossier-field-row">
+
+                  {/* Uploaded Primary ID Proof Document */}
+                  {dossierStudent.idProofUrl ? (
+                    <div className="dossier-doc-preview-box">
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontSize: "16px" }}>
+                          {dossierStudent.idProofFileType === "pdf" ? "📕" : "🖼️"}
+                        </span>
+                        <div>
+                          <strong style={{ fontSize: "12px", display: "block", color: "#0f172a" }}>
+                            {dossierStudent.idProofFileName || "Aadhaar Card Proof"}
+                          </strong>
+                          <span style={{ fontSize: "10.5px", color: "#047857" }}>
+                            Uploaded Document
+                          </span>
+                        </div>
+                      </div>
+                      <a
+                        href={getDocumentUrl(dossierStudent.idProofUrl)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-file-preview"
+                      >
+                        View Proof ↗
+                      </a>
+                    </div>
+                  ) : null}
+
+                  <div className="dossier-field-row" style={{ marginTop: "8px" }}>
                     <span className="label">Birth Certificate:</span>
                     <span className="value">
                       {dossierStudent.birthCertificateNumber || "Registered on File"}
                     </span>
                   </div>
+
+                  {/* Uploaded Birth Certificate Document */}
+                  {dossierStudent.birthCertificateUrl ? (
+                    <div className="dossier-doc-preview-box">
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontSize: "16px" }}>📋</span>
+                        <div>
+                          <strong style={{ fontSize: "12px", display: "block", color: "#0f172a" }}>
+                            {dossierStudent.birthCertificateFileName || "Birth_Certificate.pdf"}
+                          </strong>
+                          <span style={{ fontSize: "10.5px", color: "#047857" }}>
+                            Birth Proof File
+                          </span>
+                        </div>
+                      </div>
+                      <a
+                        href={getDocumentUrl(dossierStudent.birthCertificateUrl)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-file-preview"
+                      >
+                        View Copy ↗
+                      </a>
+                    </div>
+                  ) : null}
+
                   <div className="dossier-field-row">
                     <span className="label">Date of Birth:</span>
                     <span className="value">{dossierStudent.dob}</span>
