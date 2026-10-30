@@ -4,6 +4,7 @@ import ForgotPassword from "./views/auth/ForgotPassword.jsx";
 import ResetPassword from "./views/auth/ResetPassword.jsx";
 import AdminDashboard from "./views/admin/AdminDashboard.jsx";
 import DivisionAttendance from "./views/admin/DivisionAttendance.jsx";
+import TeachersRecords from "./views/admin/TeachersRecords.jsx";
 import StudentsRecords from "./views/admin/StudentsRecords.jsx";
 import TeacherDashboard from "./views/teacher/TeacherDashboard.jsx";
 import Dashboard from "./views/student/Dashboard.jsx";
@@ -117,6 +118,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <DivisionAttendance />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/teachers"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <TeachersRecords />
             </ProtectedRoute>
           }
         />

@@ -5,21 +5,42 @@ const teacherSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      sparse: true,
     },
     name: {
       type: String,
       required: true,
-      trim: true, // e.g. "Indu B Nair"
+      trim: true, // e.g. "Mrs. Priya Nair"
+    },
+    pen: {
+      type: String,
+      trim: true,
+      sparse: true, // Permanent Employee Number, e.g. "849201"
     },
     email: {
       type: String,
       lowercase: true,
       trim: true,
     },
+    phone: {
+      type: String,
+      trim: true,
+      default: "+91 94471 00000",
+    },
     department: {
       type: String,
-      default: "High School",
+      default: "HSST Malayalam",
+      trim: true,
+    },
+    designation: {
+      type: String,
+      default: "HSST",
+      trim: true,
+    },
+    assignedClass: {
+      type: String,
+      default: "Class 10-A Mentor",
+      trim: true,
     },
     mentorClass: {
       type: String,
@@ -28,15 +49,35 @@ const teacherSchema = new mongoose.Schema(
     },
     subject: {
       type: String,
-      default: "Class Teacher",
+      default: "Malayalam",
+      trim: true,
     },
-    phone: {
+    periods: {
       type: String,
-      default: "",
+      default: "24 hrs / Week",
+      trim: true,
+    },
+    status: {
+      type: String,
+      enum: ["Active", "In Class", "On Duty", "On Leave"],
+      default: "Active",
+    },
+    qualification: {
+      type: String,
+      default: "M.A, B.Ed, SET",
+      trim: true,
+    },
+    appointmentDate: {
+      type: String,
+      default: "01/06/2016",
     },
     avatarUrl: {
       type: String,
-      default: null, // AWS S3 bucket public URL
+      default: null,
+    },
+    penAllotmentDocUrl: {
+      type: String,
+      default: null,
     },
     isActive: {
       type: Boolean,
@@ -49,5 +90,6 @@ const teacherSchema = new mongoose.Schema(
   }
 );
 
-const Teacher = mongoose.model("Teacher", teacherSchema);
+const Teacher =
+  mongoose.models.Teacher || mongoose.model("Teacher", teacherSchema);
 export default Teacher;
