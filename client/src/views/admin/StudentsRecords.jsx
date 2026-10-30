@@ -26,8 +26,12 @@ export default function StudentsRecords() {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
+  const [activeModalTab, setActiveModalTab] = useState("personal");
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [feedback, setFeedback] = useState({ type: "", message: "" });
+
+  // Dossier View Modal State
+  const [dossierStudent, setDossierStudent] = useState(null);
 
   const initialForm = {
     name: "",
@@ -37,10 +41,32 @@ export default function StudentsRecords() {
     division: "10-A",
     gender: "Male",
     category: "General",
-    dob: "14/05/2010",
+    dob: "2010-05-14",
+    bloodGroup: "O+",
+    religion: "Hindu",
+    caste: "",
+    // Essential Statutory ID Proofs
+    aadhaarNumber: "",
+    birthCertificateNumber: "",
+    identificationMarks: "",
+    // Parent & Guardian Details
+    fatherName: "",
+    motherName: "",
     guardian: "",
+    guardianRelation: "Father",
     parentContact: "",
-    overallAttendance: "98.4",
+    altContact: "",
+    // Residential Address
+    houseName: "",
+    street: "",
+    postOffice: "",
+    city: "",
+    district: "Idukki",
+    state: "Kerala",
+    pincode: "",
+    // Academic History
+    previousSchool: "",
+    tcNumber: "",
   };
   const [formData, setFormData] = useState(initialForm);
 
@@ -74,13 +100,14 @@ export default function StudentsRecords() {
   // Filter & Search Logic
   const filteredStudents = useMemo(() => {
     return students.filter((s) => {
+      const q = searchQuery.toLowerCase();
       const matchSearch =
-        s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        String(s.rollNumber).includes(searchQuery) ||
-        (s.admissionNumber &&
-          s.admissionNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (s.sampoornaId &&
-          s.sampoornaId.toLowerCase().includes(searchQuery.toLowerCase()));
+        s.name.toLowerCase().includes(q) ||
+        String(s.rollNumber).includes(q) ||
+        (s.admissionNumber && s.admissionNumber.toLowerCase().includes(q)) ||
+        (s.sampoornaId && s.sampoornaId.toLowerCase().includes(q)) ||
+        (s.aadhaarNumber && s.aadhaarNumber.includes(q)) ||
+        (s.guardian && s.guardian.toLowerCase().includes(q));
 
       const matchDivision =
         selectedDivision === "All" ||
@@ -102,11 +129,14 @@ export default function StudentsRecords() {
   // Modal Handlers
   const openNewAdmissionModal = () => {
     setEditingStudent(null);
+    setActiveModalTab("personal");
+    const nextRoll = students.length + 1;
     setFormData({
       ...initialForm,
-      rollNumber: students.length + 1,
-      admissionNumber: `ADM-${14920 + students.length + 1}`,
-      sampoornaId: `SMP-06042-${880 + students.length + 1}`,
+      rollNumber: nextRoll,
+      admissionNumber: `ADM-${14920 + nextRoll}`,
+      sampoornaId: `SMP-06042-${880 + nextRoll}`,
+      dob: "2010-05-14",
     });
     setFeedback({ type: "", message: "" });
     setIsModalOpen(true);
@@ -114,6 +144,7 @@ export default function StudentsRecords() {
 
   const openEditModal = (student) => {
     setEditingStudent(student);
+    setActiveModalTab("personal");
     setFormData({
       name: student.name || "",
       rollNumber: student.rollNumber || "",
@@ -122,10 +153,28 @@ export default function StudentsRecords() {
       division: student.division || "10-A",
       gender: student.gender || "Male",
       category: student.category ? student.category.split(" / ")[0] : "General",
-      dob: student.dob || "14/05/2010",
+      dob: student.dob || "2010-05-14",
+      bloodGroup: student.bloodGroup || "O+",
+      religion: student.religion || "Hindu",
+      caste: student.caste || "",
+      aadhaarNumber: student.aadhaarNumber || "",
+      birthCertificateNumber: student.birthCertificateNumber || "",
+      identificationMarks: student.identificationMarks || "",
+      fatherName: student.fatherName || "",
+      motherName: student.motherName || "",
       guardian: student.guardian || "",
+      guardianRelation: student.guardianRelation || "Father",
       parentContact: student.parentContact || "",
-      overallAttendance: (student.attendance || "98.4%").replace("%", ""),
+      altContact: student.altContact || "",
+      houseName: student.address?.houseName || "",
+      street: student.address?.street || "",
+      postOffice: student.address?.postOffice || "",
+      city: student.address?.city || "",
+      district: student.address?.district || "Idukki",
+      state: student.address?.state || "Kerala",
+      pincode: student.address?.pincode || "",
+      previousSchool: student.previousSchool || "",
+      tcNumber: student.tcNumber || "",
     });
     setFeedback({ type: "", message: "" });
     setIsModalOpen(true);
@@ -144,6 +193,7 @@ export default function StudentsRecords() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name.trim()) {
+      setActiveModalTab("personal");
       setFeedback({ type: "error", message: "Student Name is required." });
       return;
     }
@@ -172,7 +222,7 @@ export default function StudentsRecords() {
         if (res.data.success) {
           setFeedback({
             type: "success",
-            message: `Student ${formData.name} admitted successfully!`,
+            message: `Student ${formData.name} admitted successfully with Sampoorna ID ${res.data.student?.sampoornaId}!`,
           });
           setTimeout(() => {
             closeModal();
@@ -216,7 +266,7 @@ export default function StudentsRecords() {
     }
   };
 
-  // CSV Export
+  // CSV Export (Full Government SSLC Nominal Roll)
   const handleExportCSV = () => {
     if (!students.length) return;
     const headers = [
@@ -225,9 +275,18 @@ export default function StudentsRecords() {
       "Sampoorna ID",
       "Student Name",
       "DOB",
+      "Gender",
+      "Blood Group",
+      "Aadhaar Number",
+      "Birth Certificate No",
       "Division",
+      "Father Name",
+      "Mother Name",
       "Guardian Name",
       "Parent Contact",
+      "Residential Address",
+      "District",
+      "PIN Code",
       "Category",
       "Attendance %",
     ];
@@ -237,9 +296,18 @@ export default function StudentsRecords() {
       s.sampoornaId,
       `"${s.name}"`,
       s.dob,
+      s.gender,
+      s.bloodGroup || "O+",
+      `"${s.aadhaarNumber || "Pending"}"`,
+      `"${s.birthCertificateNumber || "N/A"}"`,
       s.division,
-      `"${s.guardian}"`,
+      `"${s.fatherName || ""}"`,
+      `"${s.motherName || ""}"`,
+      `"${s.guardian || ""}"`,
       s.parentContact,
+      `"${s.fullAddress || ""}"`,
+      `"${s.address?.district || "Idukki"}"`,
+      `"${s.address?.pincode || ""}"`,
       `"${s.category}"`,
       s.attendance,
     ]);
@@ -251,7 +319,10 @@ export default function StudentsRecords() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Sampoorna_Nominal_Roll_${Date.now()}.csv`);
+    link.setAttribute(
+      "download",
+      `Sampoorna_Nominal_Roll_Full_${Date.now()}.csv`
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -416,8 +487,8 @@ export default function StudentsRecords() {
               <div className="registry-title-text">
                 <h1>Student Admission &amp; Academic Registry</h1>
                 <p>
-                  Official Kerala Sampoorna student database with UDISE+ and
-                  attendance tracking.
+                  Official Kerala Sampoorna student database with UID/Aadhaar
+                  verification and ID proofs.
                 </p>
               </div>
             </div>
@@ -428,7 +499,7 @@ export default function StudentsRecords() {
                 <span className="search-input-icon">🔍</span>
                 <input
                   type="text"
-                  placeholder="Name, Roll No, Adm No, Sampoorna ID..."
+                  placeholder="Name, Roll No, Adm No, Aadhaar, Sampoorna ID..."
                   className="registry-search-input"
                   value={searchQuery}
                   onChange={(e) => {
@@ -520,13 +591,35 @@ export default function StudentsRecords() {
                           <span
                             className="adm-no-link"
                             onClick={() => openEditModal(std)}
+                            title="Click to Edit Student"
                           >
                             {std.admissionNumber}
                           </span>
                           <span className="subtext-dim">{std.sampoornaId}</span>
+                          {std.aadhaarNumber ? (
+                            <span
+                              className="aadhaar-verified-pill"
+                              title={`Aadhaar: ${std.aadhaarNumber}`}
+                            >
+                              ✓ UID Linked
+                            </span>
+                          ) : (
+                            <span
+                              className="aadhaar-pending-pill"
+                              title="Aadhaar UID not linked yet"
+                            >
+                              ⚠ UID Pending
+                            </span>
+                          )}
                         </td>
                         <td className="student-name-cell">
-                          <strong>{std.name}</strong>
+                          <strong
+                            style={{ cursor: "pointer", color: "#135bec" }}
+                            onClick={() => setDossierStudent(std)}
+                            title="Click to view full student dossier"
+                          >
+                            {std.name}
+                          </strong>
                           <span className="subtext-dim">DOB: {std.dob}</span>
                         </td>
                         <td>
@@ -549,12 +642,29 @@ export default function StudentsRecords() {
                           </span>
                         </td>
                         <td style={{ textAlign: "right" }}>
-                          <button
-                            className="btn-edit-link"
-                            onClick={() => openEditModal(std)}
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "flex-end",
+                              gap: "8px",
+                            }}
                           >
-                            Edit
-                          </button>
+                            <button
+                              className="btn-dossier-link"
+                              onClick={() => setDossierStudent(std)}
+                              title="View Student Dossier &amp; ID Proofs"
+                            >
+                              Dossier
+                            </button>
+                            <button
+                              className="btn-edit-link"
+                              onClick={() => openEditModal(std)}
+                              title="Edit Record"
+                            >
+                              Edit
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -610,7 +720,7 @@ export default function StudentsRecords() {
                 <button
                   className="page-btn"
                   disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((p) => p + 1)}
+                  onClick={() => setCurrentPage((p) => p - 1)}
                 >
                   &gt;
                 </button>
@@ -640,21 +750,72 @@ export default function StudentsRecords() {
         </main>
       </div>
 
-      {/* ---------------- NEW / EDIT STUDENT MODAL ---------------- */}
+      {/* ---------------- NEW / EDIT STUDENT MODAL (MULTI-TAB) ---------------- */}
       {isModalOpen && (
         <div className="modal-overlay" onClick={closeModal}>
           <div
-            className="modal-content-card"
+            className="modal-content-card modal-lg"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal-header-row">
-              <h3>
-                {editingStudent
-                  ? `Edit Student: ${editingStudent.name}`
-                  : "New Student Admission"}
-              </h3>
+              <div>
+                <h3>
+                  {editingStudent
+                    ? `Edit Student: ${editingStudent.name}`
+                    : "New Student Admission"}
+                </h3>
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "#64748b",
+                    margin: "2px 0 0 0",
+                  }}
+                >
+                  Kerala Sampoorna Student Identity &amp; Statutory KYC Registry
+                </p>
+              </div>
               <button className="modal-close-btn" onClick={closeModal}>
                 ✕
+              </button>
+            </div>
+
+            {/* Modal Tab Strip */}
+            <div className="modal-tab-nav">
+              <button
+                type="button"
+                className={`modal-tab-btn ${
+                  activeModalTab === "personal" ? "active" : ""
+                }`}
+                onClick={() => setActiveModalTab("personal")}
+              >
+                <span>👤</span> Academic &amp; Personal
+              </button>
+              <button
+                type="button"
+                className={`modal-tab-btn ${
+                  activeModalTab === "idproofs" ? "active" : ""
+                }`}
+                onClick={() => setActiveModalTab("idproofs")}
+              >
+                <span>🛡️</span> ID Proofs &amp; KYC
+              </button>
+              <button
+                type="button"
+                className={`modal-tab-btn ${
+                  activeModalTab === "family" ? "active" : ""
+                }`}
+                onClick={() => setActiveModalTab("family")}
+              >
+                <span>👨‍👩‍👧</span> Parents &amp; Contacts
+              </button>
+              <button
+                type="button"
+                className={`modal-tab-btn ${
+                  activeModalTab === "address" ? "active" : ""
+                }`}
+                onClick={() => setActiveModalTab("address")}
+              >
+                <span>📍</span> Residence &amp; TC
               </button>
             </div>
 
@@ -677,145 +838,405 @@ export default function StudentsRecords() {
                   </div>
                 )}
 
-                <div className="form-field-group">
-                  <label>Student Full Name *</label>
-                  <input
-                    type="text"
-                    name="name"
-                    required
-                    placeholder="e.g. Aaditya S. Kumar"
-                    value={formData.name}
-                    onChange={handleFormChange}
-                  />
-                </div>
+                {/* TAB 1: ACADEMIC & PERSONAL */}
+                {activeModalTab === "personal" && (
+                  <div>
+                    <div className="form-field-group">
+                      <label>Student Full Name *</label>
+                      <input
+                        type="text"
+                        name="name"
+                        required
+                        placeholder="e.g. Aaditya S. Kumar"
+                        value={formData.name}
+                        onChange={handleFormChange}
+                      />
+                    </div>
 
-                <div className="form-row-grid-2">
-                  <div className="form-field-group">
-                    <label>Roll Number</label>
-                    <input
-                      type="number"
-                      name="rollNumber"
-                      placeholder="e.g. 1"
-                      value={formData.rollNumber}
-                      onChange={handleFormChange}
-                    />
-                  </div>
-                  <div className="form-field-group">
-                    <label>Division</label>
-                    <select
-                      name="division"
-                      value={formData.division}
-                      onChange={handleFormChange}
-                    >
-                      <option value="10-A">10-A</option>
-                      <option value="10-B">10-B</option>
-                      <option value="9-A">9-A</option>
-                      <option value="9-B">9-B</option>
-                      <option value="8-A">8-A</option>
-                      <option value="8-B">8-B</option>
-                    </select>
-                  </div>
-                </div>
+                    <div className="form-row-grid-2">
+                      <div className="form-field-group">
+                        <label>Roll Number</label>
+                        <input
+                          type="number"
+                          name="rollNumber"
+                          placeholder="e.g. 1"
+                          value={formData.rollNumber}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                      <div className="form-field-group">
+                        <label>Class &amp; Division</label>
+                        <select
+                          name="division"
+                          value={formData.division}
+                          onChange={handleFormChange}
+                        >
+                          <option value="10-A">Class 10-A</option>
+                          <option value="10-B">Class 10-B</option>
+                          <option value="9-A">Class 9-A</option>
+                          <option value="9-B">Class 9-B</option>
+                          <option value="8-A">Class 8-A</option>
+                          <option value="8-B">Class 8-B</option>
+                        </select>
+                      </div>
+                    </div>
 
-                <div className="form-row-grid-2">
-                  <div className="form-field-group">
-                    <label>Admission No</label>
-                    <input
-                      type="text"
-                      name="admissionNumber"
-                      placeholder="ADM-14920"
-                      value={formData.admissionNumber}
-                      onChange={handleFormChange}
-                    />
-                  </div>
-                  <div className="form-field-group">
-                    <label>Sampoorna ID</label>
-                    <input
-                      type="text"
-                      name="sampoornaId"
-                      placeholder="SMP-06042-881"
-                      value={formData.sampoornaId}
-                      onChange={handleFormChange}
-                    />
-                  </div>
-                </div>
+                    <div className="form-row-grid-2">
+                      <div className="form-field-group">
+                        <label>Admission Number</label>
+                        <input
+                          type="text"
+                          name="admissionNumber"
+                          placeholder="ADM-14920"
+                          value={formData.admissionNumber}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                      <div className="form-field-group">
+                        <label>Sampoorna ID</label>
+                        <input
+                          type="text"
+                          name="sampoornaId"
+                          placeholder="SMP-06042-881"
+                          value={formData.sampoornaId}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                    </div>
 
-                <div className="form-row-grid-2">
-                  <div className="form-field-group">
-                    <label>Gender</label>
-                    <select
-                      name="gender"
-                      value={formData.gender}
-                      onChange={handleFormChange}
-                    >
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                  <div className="form-field-group">
-                    <label>Category</label>
-                    <select
-                      name="category"
-                      value={formData.category}
-                      onChange={handleFormChange}
-                    >
-                      <option value="General">General</option>
-                      <option value="OBC">OBC</option>
-                      <option value="SC">SC</option>
-                      <option value="ST">ST</option>
-                      <option value="OEC">OEC</option>
-                    </select>
-                  </div>
-                </div>
+                    <div className="form-row-grid-3">
+                      <div className="form-field-group">
+                        <label>Date of Birth</label>
+                        <input
+                          type="text"
+                          name="dob"
+                          placeholder="DD/MM/YYYY"
+                          value={formData.dob}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                      <div className="form-field-group">
+                        <label>Gender</label>
+                        <select
+                          name="gender"
+                          value={formData.gender}
+                          onChange={handleFormChange}
+                        >
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                      <div className="form-field-group">
+                        <label>Blood Group</label>
+                        <select
+                          name="bloodGroup"
+                          value={formData.bloodGroup}
+                          onChange={handleFormChange}
+                        >
+                          <option value="A+">A+</option>
+                          <option value="A-">A-</option>
+                          <option value="B+">B+</option>
+                          <option value="B-">B-</option>
+                          <option value="O+">O+</option>
+                          <option value="O-">O-</option>
+                          <option value="AB+">AB+</option>
+                          <option value="AB-">AB-</option>
+                          <option value="Unknown">Unknown</option>
+                        </select>
+                      </div>
+                    </div>
 
-                <div className="form-row-grid-2">
-                  <div className="form-field-group">
-                    <label>Date of Birth</label>
-                    <input
-                      type="text"
-                      name="dob"
-                      placeholder="DD/MM/YYYY"
-                      value={formData.dob}
-                      onChange={handleFormChange}
-                    />
+                    <div className="form-row-grid-3">
+                      <div className="form-field-group">
+                        <label>Social Category</label>
+                        <select
+                          name="category"
+                          value={formData.category}
+                          onChange={handleFormChange}
+                        >
+                          <option value="General">General</option>
+                          <option value="OBC">OBC</option>
+                          <option value="SC">SC</option>
+                          <option value="ST">ST</option>
+                          <option value="OEC">OEC</option>
+                        </select>
+                      </div>
+                      <div className="form-field-group">
+                        <label>Religion</label>
+                        <select
+                          name="religion"
+                          value={formData.religion}
+                          onChange={handleFormChange}
+                        >
+                          <option value="Hindu">Hindu</option>
+                          <option value="Christian">Christian</option>
+                          <option value="Muslim">Muslim</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                      <div className="form-field-group">
+                        <label>Caste / Community</label>
+                        <input
+                          type="text"
+                          name="caste"
+                          placeholder="e.g. Nair, Ezhava, etc."
+                          value={formData.caste}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="form-field-group">
-                    <label>Attendance Rate %</label>
-                    <input
-                      type="text"
-                      name="overallAttendance"
-                      placeholder="98.4"
-                      value={formData.overallAttendance}
-                      onChange={handleFormChange}
-                    />
-                  </div>
-                </div>
+                )}
 
-                <div className="form-row-grid-2">
-                  <div className="form-field-group">
-                    <label>Guardian Name</label>
-                    <input
-                      type="text"
-                      name="guardian"
-                      placeholder="e.g. Santhosh Kumar K."
-                      value={formData.guardian}
-                      onChange={handleFormChange}
-                    />
+                {/* TAB 2: STATUTORY ID PROOFS & KYC */}
+                {activeModalTab === "idproofs" && (
+                  <div>
+                    <div className="form-section-header">
+                      <span>🛡️</span> Government Identity Documents
+                    </div>
+
+                    <div className="form-field-group">
+                      <label>Aadhaar Card Number (12-Digit UID)</label>
+                      <input
+                        type="text"
+                        name="aadhaarNumber"
+                        maxLength="14"
+                        placeholder="XXXX XXXX XXXX (e.g. 5482 9102 3841)"
+                        value={formData.aadhaarNumber}
+                        onChange={handleFormChange}
+                      />
+                      <span className="helper-text">
+                        Mandatory for UDISE+ and Kerala Sampoorna direct scholarship
+                        seeding.
+                      </span>
+                    </div>
+
+                    <div className="form-field-group">
+                      <label>Birth Certificate Registration Number</label>
+                      <input
+                        type="text"
+                        name="birthCertificateNumber"
+                        placeholder="e.g. KL-2010-060421-BC"
+                        value={formData.birthCertificateNumber}
+                        onChange={handleFormChange}
+                      />
+                      <span className="helper-text">
+                        Issued by the Registrar of Births and Deaths / Local Body
+                        Authority.
+                      </span>
+                    </div>
+
+                    <div className="form-field-group">
+                      <label>Visible Identification Marks (Govt. SSLC)</label>
+                      <input
+                        type="text"
+                        name="identificationMarks"
+                        placeholder="e.g. A mole on the right cheek / A small scar on the left forehead"
+                        value={formData.identificationMarks}
+                        onChange={handleFormChange}
+                      />
+                      <span className="helper-text">
+                        Recorded on the SSLC Book &amp; Hall Ticket for identification.
+                      </span>
+                    </div>
                   </div>
-                  <div className="form-field-group">
-                    <label>Guardian Contact</label>
-                    <input
-                      type="text"
-                      name="parentContact"
-                      placeholder="+91 94473 11820"
-                      value={formData.parentContact}
-                      onChange={handleFormChange}
-                    />
+                )}
+
+                {/* TAB 3: PARENTS & GUARDIANS */}
+                {activeModalTab === "family" && (
+                  <div>
+                    <div className="form-section-header">
+                      <span>👨‍👩‍👧</span> Parent &amp; Guardian Information
+                    </div>
+
+                    <div className="form-row-grid-2">
+                      <div className="form-field-group">
+                        <label>Father's Full Name</label>
+                        <input
+                          type="text"
+                          name="fatherName"
+                          placeholder="e.g. Santhosh Kumar K."
+                          value={formData.fatherName}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                      <div className="form-field-group">
+                        <label>Mother's Full Name</label>
+                        <input
+                          type="text"
+                          name="motherName"
+                          placeholder="e.g. Rekha Santhosh"
+                          value={formData.motherName}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-row-grid-2">
+                      <div className="form-field-group">
+                        <label>Primary Guardian Name *</label>
+                        <input
+                          type="text"
+                          name="guardian"
+                          placeholder="e.g. Santhosh Kumar K."
+                          value={formData.guardian}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                      <div className="form-field-group">
+                        <label>Relationship with Student</label>
+                        <select
+                          name="guardianRelation"
+                          value={formData.guardianRelation}
+                          onChange={handleFormChange}
+                        >
+                          <option value="Father">Father</option>
+                          <option value="Mother">Mother</option>
+                          <option value="Grandfather">Grandfather</option>
+                          <option value="Grandmother">Grandmother</option>
+                          <option value="Uncle">Uncle</option>
+                          <option value="Legal Guardian">Legal Guardian</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="form-row-grid-2">
+                      <div className="form-field-group">
+                        <label>Primary Mobile (SMS / WhatsApp) *</label>
+                        <input
+                          type="text"
+                          name="parentContact"
+                          placeholder="+91 94473 11820"
+                          value={formData.parentContact}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                      <div className="form-field-group">
+                        <label>Emergency / Alternate Contact</label>
+                        <input
+                          type="text"
+                          name="altContact"
+                          placeholder="+91 98460 00000"
+                          value={formData.altContact}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {/* TAB 4: RESIDENTIAL ADDRESS & PREVIOUS SCHOOL */}
+                {activeModalTab === "address" && (
+                  <div>
+                    <div className="form-section-header">
+                      <span>📍</span> Permanent Residential Address
+                    </div>
+
+                    <div className="form-row-grid-2">
+                      <div className="form-field-group">
+                        <label>House Name / Flat No</label>
+                        <input
+                          type="text"
+                          name="houseName"
+                          placeholder="e.g. Parambil House"
+                          value={formData.houseName}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                      <div className="form-field-group">
+                        <label>Street / Locality</label>
+                        <input
+                          type="text"
+                          name="street"
+                          placeholder="e.g. Near GHSS Junction"
+                          value={formData.street}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-row-grid-3">
+                      <div className="form-field-group">
+                        <label>Post Office</label>
+                        <input
+                          type="text"
+                          name="postOffice"
+                          placeholder="e.g. Rajakkad P.O"
+                          value={formData.postOffice}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                      <div className="form-field-group">
+                        <label>District</label>
+                        <select
+                          name="district"
+                          value={formData.district}
+                          onChange={handleFormChange}
+                        >
+                          <option value="Idukki">Idukki</option>
+                          <option value="Ernakulam">Ernakulam</option>
+                          <option value="Kottayam">Kottayam</option>
+                          <option value="Thrissur">Thrissur</option>
+                          <option value="Palakkad">Palakkad</option>
+                          <option value="Thiruvananthapuram">
+                            Thiruvananthapuram
+                          </option>
+                          <option value="Kozhikode">Kozhikode</option>
+                          <option value="Malappuram">Malappuram</option>
+                          <option value="Kannur">Kannur</option>
+                          <option value="Kollam">Kollam</option>
+                          <option value="Alappuzha">Alappuzha</option>
+                          <option value="Pathanamthitta">Pathanamthitta</option>
+                          <option value="Wayanad">Wayanad</option>
+                          <option value="Kasaragod">Kasaragod</option>
+                        </select>
+                      </div>
+                      <div className="form-field-group">
+                        <label>PIN Code</label>
+                        <input
+                          type="text"
+                          name="pincode"
+                          placeholder="685566"
+                          maxLength="6"
+                          value={formData.pincode}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-section-header">
+                      <span>🏫</span> Previous Education &amp; Transfer
+                      Certificate
+                    </div>
+
+                    <div className="form-row-grid-2">
+                      <div className="form-field-group">
+                        <label>Previous Institution Attended</label>
+                        <input
+                          type="text"
+                          name="previousSchool"
+                          placeholder="e.g. St. Mary's High School"
+                          value={formData.previousSchool}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                      <div className="form-field-group">
+                        <label>Transfer Certificate (TC) Number</label>
+                        <input
+                          type="text"
+                          name="tcNumber"
+                          placeholder="e.g. TC/2025/482"
+                          value={formData.tcNumber}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
+              {/* Modal Footer Controls */}
               <div className="modal-footer-row">
                 {editingStudent && (
                   <button
@@ -827,6 +1248,25 @@ export default function StudentsRecords() {
                     Delete Record
                   </button>
                 )}
+
+                {/* Quick Next Tab navigation helper */}
+                {activeModalTab !== "address" ? (
+                  <button
+                    type="button"
+                    className="btn-modal-cancel"
+                    onClick={() => {
+                      if (activeModalTab === "personal")
+                        setActiveModalTab("idproofs");
+                      else if (activeModalTab === "idproofs")
+                        setActiveModalTab("family");
+                      else if (activeModalTab === "family")
+                        setActiveModalTab("address");
+                    }}
+                  >
+                    Next Tab →
+                  </button>
+                ) : null}
+
                 <button
                   type="button"
                   className="btn-modal-cancel"
@@ -835,6 +1275,7 @@ export default function StudentsRecords() {
                 >
                   Cancel
                 </button>
+
                 <button
                   type="submit"
                   className="btn-modal-save"
@@ -843,11 +1284,292 @@ export default function StudentsRecords() {
                   {formSubmitting
                     ? "Saving..."
                     : editingStudent
-                    ? "Update Student"
-                    : "Admit Student"}
+                    ? "Update Student Record"
+                    : "Complete Admission"}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ---------------- STUDENT KYC DOSSIER POPUP ---------------- */}
+      {dossierStudent && (
+        <div className="modal-overlay" onClick={() => setDossierStudent(null)}>
+          <div
+            className="modal-content-card modal-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header-row">
+              <div>
+                <h3>Student Identity &amp; Statutory KYC Dossier</h3>
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "#64748b",
+                    margin: "2px 0 0 0",
+                  }}
+                >
+                  Kerala Sampoorna Official Student Record • School Code: 06042
+                </p>
+              </div>
+              <button
+                className="modal-close-btn"
+                onClick={() => setDossierStudent(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="modal-form-body">
+              {/* Header profile brief */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "16px",
+                  background: "#eff6ff",
+                  borderRadius: "12px",
+                  marginBottom: "20px",
+                  border: "1px solid #bfdbfe",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                  <div
+                    style={{
+                      width: "52px",
+                      height: "52px",
+                      borderRadius: "50%",
+                      background: "#135bec",
+                      color: "#ffffff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "24px",
+                      fontWeight: "700",
+                    }}
+                  >
+                    {dossierStudent.name.charAt(0)}
+                  </div>
+                  <div>
+                    <h2
+                      style={{
+                        margin: 0,
+                        fontSize: "18px",
+                        fontWeight: "800",
+                        color: "#0f172a",
+                      }}
+                    >
+                      {dossierStudent.name}
+                    </h2>
+                    <p
+                      style={{
+                        margin: "4px 0 0 0",
+                        fontSize: "13px",
+                        color: "#475569",
+                      }}
+                    >
+                      Roll No:{" "}
+                      <strong>{dossierStudent.rollNoFormatted}</strong> •{" "}
+                      {dossierStudent.division} • Adm No:{" "}
+                      <strong>{dossierStudent.admissionNumber}</strong>
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ textAlign: "right" }}>
+                  <span className="dossier-blood-pill">
+                    Blood Group: {dossierStudent.bloodGroup || "O+"}
+                  </span>
+                  <div
+                    style={{
+                      marginTop: "6px",
+                      fontSize: "12px",
+                      color: "#047857",
+                      fontWeight: "700",
+                    }}
+                  >
+                    Sampoorna: {dossierStudent.sampoornaId}
+                  </div>
+                </div>
+              </div>
+
+              {/* Dossier Grid */}
+              <div className="dossier-preview-grid">
+                {/* Statutory ID Proofs */}
+                <div className="dossier-card">
+                  <h4>
+                    <span>🛡️</span> Statutory ID Proofs
+                  </h4>
+                  <div className="dossier-field-row">
+                    <span className="label">Aadhaar (UID):</span>
+                    <span className="value">
+                      {dossierStudent.aadhaarNumber ? (
+                        <span style={{ color: "#047857" }}>
+                          ✓ {dossierStudent.aadhaarNumber}
+                        </span>
+                      ) : (
+                        <span style={{ color: "#b45309" }}>⚠ Not Linked</span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="dossier-field-row">
+                    <span className="label">Birth Certificate:</span>
+                    <span className="value">
+                      {dossierStudent.birthCertificateNumber || "Registered on File"}
+                    </span>
+                  </div>
+                  <div className="dossier-field-row">
+                    <span className="label">Date of Birth:</span>
+                    <span className="value">{dossierStudent.dob}</span>
+                  </div>
+                  <div className="dossier-field-row">
+                    <span className="label">Gender:</span>
+                    <span className="value">{dossierStudent.gender}</span>
+                  </div>
+                  <div className="dossier-field-row">
+                    <span className="label">Identification Mark:</span>
+                    <span className="value" style={{ fontSize: "11.5px" }}>
+                      {dossierStudent.identificationMarks ||
+                        "Recorded in SSLC register"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Family & Guardians */}
+                <div className="dossier-card">
+                  <h4>
+                    <span>👨‍👩‍👧</span> Family &amp; Guardians
+                  </h4>
+                  <div className="dossier-field-row">
+                    <span className="label">Father's Name:</span>
+                    <span className="value">
+                      {dossierStudent.fatherName || dossierStudent.guardian}
+                    </span>
+                  </div>
+                  <div className="dossier-field-row">
+                    <span className="label">Mother's Name:</span>
+                    <span className="value">
+                      {dossierStudent.motherName || "Not Recorded"}
+                    </span>
+                  </div>
+                  <div className="dossier-field-row">
+                    <span className="label">Primary Guardian:</span>
+                    <span className="value">
+                      {dossierStudent.guardian} (
+                      {dossierStudent.guardianRelation || "Father"})
+                    </span>
+                  </div>
+                  <div className="dossier-field-row">
+                    <span className="label">Contact Mobile:</span>
+                    <span className="value">
+                      {dossierStudent.parentContact}
+                    </span>
+                  </div>
+                  <div className="dossier-field-row">
+                    <span className="label">Alt / Emergency:</span>
+                    <span className="value">
+                      {dossierStudent.altContact || "N/A"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Residential Address */}
+                <div className="dossier-card">
+                  <h4>
+                    <span>📍</span> Residential Address
+                  </h4>
+                  <div className="dossier-field-row">
+                    <span className="label">Full Address:</span>
+                    <span
+                      className="value"
+                      style={{
+                        maxWidth: "60%",
+                        wordBreak: "break-word",
+                        fontSize: "12px",
+                      }}
+                    >
+                      {dossierStudent.fullAddress ||
+                        "Rajakkad P.O, Idukki District, Kerala"}
+                    </span>
+                  </div>
+                  <div className="dossier-field-row">
+                    <span className="label">District:</span>
+                    <span className="value">
+                      {dossierStudent.address?.district || "Idukki"}
+                    </span>
+                  </div>
+                  <div className="dossier-field-row">
+                    <span className="label">PIN Code:</span>
+                    <span className="value">
+                      {dossierStudent.address?.pincode || "685566"}
+                    </span>
+                  </div>
+                  <div className="dossier-field-row">
+                    <span className="label">State:</span>
+                    <span className="value">Kerala</span>
+                  </div>
+                </div>
+
+                {/* Academic & Categorization */}
+                <div className="dossier-card">
+                  <h4>
+                    <span>🎓</span> Academic &amp; Social Profile
+                  </h4>
+                  <div className="dossier-field-row">
+                    <span className="label">Social Category:</span>
+                    <span className="value">{dossierStudent.category}</span>
+                  </div>
+                  <div className="dossier-field-row">
+                    <span className="label">Religion &amp; Caste:</span>
+                    <span className="value">
+                      {dossierStudent.religion || "Hindu"}{" "}
+                      {dossierStudent.caste ? `(${dossierStudent.caste})` : ""}
+                    </span>
+                  </div>
+                  <div className="dossier-field-row">
+                    <span className="label">Previous School:</span>
+                    <span className="value">
+                      {dossierStudent.previousSchool || "Direct Admission"}
+                    </span>
+                  </div>
+                  <div className="dossier-field-row">
+                    <span className="label">TC Number:</span>
+                    <span className="value">
+                      {dossierStudent.tcNumber || "N/A"}
+                    </span>
+                  </div>
+                  <div className="dossier-field-row">
+                    <span className="label">Cumulative Attendance:</span>
+                    <span className="value" style={{ color: "#047857" }}>
+                      {dossierStudent.attendance}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer-row">
+              <button
+                type="button"
+                className="btn-modal-cancel"
+                onClick={() => setDossierStudent(null)}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                className="btn-modal-save"
+                onClick={() => {
+                  const target = dossierStudent;
+                  setDossierStudent(null);
+                  openEditModal(target);
+                }}
+              >
+                ✏️ Edit Records
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -70,6 +70,75 @@ const studentSchema = new mongoose.Schema(
       trim: true,
       default: "General",
     },
+    // Essential Identity Proofs & Legal Records
+    aadhaarNumber: {
+      type: String,
+      trim: true,
+      sparse: true,
+    },
+    birthCertificateNumber: {
+      type: String,
+      trim: true,
+    },
+    bloodGroup: {
+      type: String,
+      enum: ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-", "Unknown"],
+      default: "Unknown",
+    },
+    religion: {
+      type: String,
+      trim: true,
+      default: "Hindu",
+    },
+    caste: {
+      type: String,
+      trim: true,
+    },
+    // Family & Guardian Details
+    fatherName: {
+      type: String,
+      trim: true,
+    },
+    motherName: {
+      type: String,
+      trim: true,
+    },
+    guardianRelation: {
+      type: String,
+      trim: true,
+      default: "Father",
+    },
+    altContact: {
+      type: String,
+      trim: true,
+    },
+    // Residential Address
+    address: {
+      houseName: { type: String, trim: true },
+      street: { type: String, trim: true },
+      postOffice: { type: String, trim: true },
+      city: { type: String, trim: true },
+      district: { type: String, trim: true, default: "Idukki" },
+      state: { type: String, trim: true, default: "Kerala" },
+      pincode: { type: String, trim: true },
+    },
+    fullAddress: {
+      type: String,
+      trim: true,
+    },
+    // Academic History / Transfer Certificate
+    previousSchool: {
+      type: String,
+      trim: true,
+    },
+    tcNumber: {
+      type: String,
+      trim: true,
+    },
+    identificationMarks: {
+      type: String,
+      trim: true,
+    },
     monthlyLeavesTaken: {
       type: Number,
       default: 0,
@@ -114,6 +183,19 @@ studentSchema.pre("validate", function () {
 
   if (!this.sampoornaId && this.rollNumber) {
     this.sampoornaId = `SMP-06042-${880 + Number(this.rollNumber)}`;
+  }
+
+  if (!this.fullAddress && this.address) {
+    const parts = [
+      this.address.houseName,
+      this.address.street,
+      this.address.postOffice,
+      this.address.district,
+      this.address.pincode ? `PIN: ${this.address.pincode}` : "",
+    ].filter(Boolean);
+    if (parts.length > 0) {
+      this.fullAddress = parts.join(", ");
+    }
   }
 });
 
