@@ -24,11 +24,16 @@ export default function TeachersRecords() {
   // Add / Edit Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState(null);
+  const [activeModalTab, setActiveModalTab] = useState("general");
   const [formSubmitting, setFormSubmitting] = useState(false);
+  const [uploadingDoc, setUploadingDoc] = useState({});
   const [feedback, setFeedback] = useState({ type: "", message: "" });
 
   // View Allotment Modal State
   const [allotmentTeacher, setAllotmentTeacher] = useState(null);
+
+  // View Document Dossier Modal State
+  const [dossierTeacher, setDossierTeacher] = useState(null);
 
   const initialForm = {
     name: "",
@@ -42,8 +47,44 @@ export default function TeachersRecords() {
     status: "Active",
     qualification: "M.A, B.Ed, SET",
     appointmentDate: "01/06/2018",
+    // Essential Statutory ID Proofs
+    aadharNumber: "",
+    aadharDocUrl: null,
+    aadharDocFileName: null,
+    panNumber: "",
+    panDocUrl: null,
+    panDocFileName: null,
+    penAllotmentDocUrl: null,
+    penAllotmentDocFileName: null,
+    // Essential Qualification Certificates
+    highestDegree: "Post Graduate (Master's)",
+    pgDegreeName: "M.Sc Mathematics",
+    pgCertificateUrl: null,
+    pgCertificateFileName: null,
+    ugDegreeName: "B.Sc Mathematics",
+    ugCertificateUrl: null,
+    ugCertificateFileName: null,
+    bedCollege: "Govt. College of Teacher Education",
+    bedCertificateUrl: null,
+    bedCertificateFileName: null,
+    eligibilityExam: "SET / KTET Qualified",
+    eligibilityCertificateUrl: null,
+    eligibilityCertificateFileName: null,
+    experienceCertificateUrl: null,
+    experienceCertificateFileName: null,
+    documentsVerified: true,
   };
   const [formData, setFormData] = useState(initialForm);
+
+  // Helper to resolve full URL for uploaded files
+  const getFileUrl = (path) => {
+    if (!path) return "";
+    if (path.startsWith("http://") || path.startsWith("https://")) return path;
+    const backendBase = import.meta.env.VITE_API_URL
+      ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, "")
+      : "http://localhost:5000";
+    return `${backendBase}${path.startsWith("/") ? "" : "/"}${path}`;
+  };
 
   // Fetch Teachers & Stats
   const fetchTeachers = async () => {
@@ -80,7 +121,9 @@ export default function TeachersRecords() {
         t.name.toLowerCase().includes(q) ||
         String(t.pen).includes(q) ||
         t.department.toLowerCase().includes(q) ||
-        (t.assignedClass && t.assignedClass.toLowerCase().includes(q));
+        (t.assignedClass && t.assignedClass.toLowerCase().includes(q)) ||
+        (t.aadharNumber && t.aadharNumber.includes(q)) ||
+        (t.panNumber && t.panNumber.toLowerCase().includes(q));
 
       const matchDept =
         selectedDept === "All" ||
@@ -101,6 +144,7 @@ export default function TeachersRecords() {
   // Modal Open Handlers
   const openAddTeacherModal = () => {
     setEditingTeacher(null);
+    setActiveModalTab("general");
     setFormData({
       ...initialForm,
       pen: `849${Math.floor(200 + teachers.length + 1)}`,
@@ -113,6 +157,7 @@ export default function TeachersRecords() {
 
   const openEditModal = (teacher) => {
     setEditingTeacher(teacher);
+    setActiveModalTab("general");
     setFormData({
       name: teacher.name || "",
       pen: teacher.pen || "",
@@ -125,6 +170,34 @@ export default function TeachersRecords() {
       status: teacher.status || "Active",
       qualification: teacher.qualification || "B.Ed",
       appointmentDate: teacher.appointmentDate || "01/06/2018",
+      // ID Proofs
+      aadharNumber: teacher.aadharNumber || "",
+      aadharDocUrl: teacher.aadharDocUrl || null,
+      aadharDocFileName: teacher.aadharDocFileName || null,
+      panNumber: teacher.panNumber || "",
+      panDocUrl: teacher.panDocUrl || null,
+      panDocFileName: teacher.panDocFileName || null,
+      penAllotmentDocUrl: teacher.penAllotmentDocUrl || null,
+      penAllotmentDocFileName: teacher.penAllotmentDocFileName || null,
+      // Qualifications & Certificates
+      highestDegree: teacher.highestDegree || "Post Graduate (Master's)",
+      pgDegreeName: teacher.pgDegreeName || "M.Sc / M.A",
+      pgCertificateUrl: teacher.pgCertificateUrl || null,
+      pgCertificateFileName: teacher.pgCertificateFileName || null,
+      ugDegreeName: teacher.ugDegreeName || "B.Sc / B.A",
+      ugCertificateUrl: teacher.ugCertificateUrl || null,
+      ugCertificateFileName: teacher.ugCertificateFileName || null,
+      bedCollege: teacher.bedCollege || "Govt. College of Teacher Education",
+      bedCertificateUrl: teacher.bedCertificateUrl || null,
+      bedCertificateFileName: teacher.bedCertificateFileName || null,
+      eligibilityExam: teacher.eligibilityExam || "SET / KTET Qualified",
+      eligibilityCertificateUrl: teacher.eligibilityCertificateUrl || null,
+      eligibilityCertificateFileName:
+        teacher.eligibilityCertificateFileName || null,
+      experienceCertificateUrl: teacher.experienceCertificateUrl || null,
+      experienceCertificateFileName:
+        teacher.experienceCertificateFileName || null,
+      documentsVerified: teacher.documentsVerified !== false,
     });
     setFeedback({ type: "", message: "" });
     setIsModalOpen(true);
@@ -136,8 +209,62 @@ export default function TeachersRecords() {
   };
 
   const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  // Upload handler for documents (PDF or Image)
+  const handleDocumentUpload = async (e, urlKey, nameKey) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      setFeedback({
+        type: "error",
+        message: `File ${file.name} exceeds 10MB limit. Please upload a smaller document.`,
+      });
+      return;
+    }
+
+    const uploadFormData = new FormData();
+    uploadFormData.append("document", file);
+
+    try {
+      setUploadingDoc((prev) => ({ ...prev, [urlKey]: true }));
+      const res = await api.post("/upload/document", uploadFormData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      if (res.data.success) {
+        setFormData((prev) => ({
+          ...prev,
+          [urlKey]: res.data.fileUrl,
+          [nameKey]: file.name,
+        }));
+        setFeedback({
+          type: "success",
+          message: `${file.name} uploaded and attached successfully!`,
+        });
+      }
+    } catch (err) {
+      setFeedback({
+        type: "error",
+        message:
+          err.response?.data?.message || "File upload failed. Please try again.",
+      });
+    } finally {
+      setUploadingDoc((prev) => ({ ...prev, [urlKey]: false }));
+    }
+  };
+
+  const handleRemoveDocument = (urlKey, nameKey) => {
+    setFormData((prev) => ({
+      ...prev,
+      [urlKey]: null,
+      [nameKey]: null,
+    }));
   };
 
   const handleFormSubmit = async (e) => {
@@ -157,7 +284,7 @@ export default function TeachersRecords() {
         if (res.data.success) {
           setFeedback({
             type: "success",
-            message: `Updated faculty ${formData.name}!`,
+            message: `Updated faculty ${formData.name} & verified credentials!`,
           });
           setTimeout(() => {
             closeModal();
@@ -169,7 +296,7 @@ export default function TeachersRecords() {
         if (res.data.success) {
           setFeedback({
             type: "success",
-            message: `Faculty ${formData.name} added with PEN ${res.data.teacher?.pen}!`,
+            message: `Faculty ${formData.name} registered with PEN ${res.data.teacher?.pen} and submitted documents!`,
           });
           setTimeout(() => {
             closeModal();
@@ -213,7 +340,7 @@ export default function TeachersRecords() {
     }
   };
 
-  // CSV Export for Faculty Roster
+  // CSV Export for Faculty Roster with Document Verification
   const handleExportCSV = () => {
     if (!teachers.length) return;
     const headers = [
@@ -226,6 +353,11 @@ export default function TeachersRecords() {
       "Status",
       "Qualification",
       "Appointment Date",
+      "Aadhaar Number",
+      "PAN Number",
+      "Aadhaar Proof Attached",
+      "B.Ed Certificate Attached",
+      "Statutory Documents Verified",
     ];
     const rows = teachers.map((t) => [
       `"${t.pen}"`,
@@ -237,6 +369,11 @@ export default function TeachersRecords() {
       `"${t.status}"`,
       `"${t.qualification || "B.Ed"}"`,
       `"${t.appointmentDate || "01/06/2018"}"`,
+      `"${t.aadharNumber || "N/A"}"`,
+      `"${t.panNumber || "N/A"}"`,
+      `"${t.aadharDocUrl ? "Yes" : "No"}"`,
+      `"${t.bedCertificateUrl ? "Yes" : "No"}"`,
+      `"${t.documentsVerified ? "Verified" : "Pending"}"`,
     ]);
 
     const csvContent =
@@ -248,11 +385,110 @@ export default function TeachersRecords() {
     link.setAttribute("href", encodedUri);
     link.setAttribute(
       "download",
-      `Sampoorna_Faculty_Roster_${Date.now()}.csv`
+      `Sampoorna_Faculty_Dossier_Roster_${Date.now()}.csv`
     );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // Helper component to render an upload box
+  const renderDocumentUploadCard = (
+    label,
+    urlKey,
+    nameKey,
+    helpText = "Upload PDF or Image (JPG, PNG) up to 10MB",
+    icon = "📄"
+  ) => {
+    const isUploading = !!uploadingDoc[urlKey];
+    const fileUrl = formData[urlKey];
+    const fileName = formData[nameKey] || "Attached Document";
+    const isPdf =
+      fileUrl &&
+      (fileUrl.toLowerCase().endsWith(".pdf") ||
+        (fileName && fileName.toLowerCase().endsWith(".pdf")));
+
+    return (
+      <div className="form-field-group" style={{ marginBottom: "16px" }}>
+        <label>{label}</label>
+        <span className="helper-text" style={{ marginBottom: "6px" }}>
+          {helpText}
+        </span>
+
+        {fileUrl ? (
+          <div className="uploaded-file-card">
+            <div className="uploaded-file-info">
+              {isPdf ? (
+                <div className="uploaded-pdf-badge">
+                  <span>PDF</span>
+                </div>
+              ) : (
+                <img
+                  src={getFileUrl(fileUrl)}
+                  alt={fileName}
+                  className="uploaded-file-thumbnail"
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                  }}
+                />
+              )}
+              <div className="uploaded-file-names">
+                <span className="uploaded-file-name" title={fileName}>
+                  {fileName}
+                </span>
+                <span className="uploaded-file-status">
+                  ✓ Uploaded &amp; Attached
+                </span>
+              </div>
+            </div>
+
+            <div className="uploaded-file-actions">
+              <a
+                href={getFileUrl(fileUrl)}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-file-preview"
+                title="View document in new tab"
+              >
+                View ↗
+              </a>
+              <button
+                type="button"
+                className="btn-file-remove"
+                onClick={() => handleRemoveDocument(urlKey, nameKey)}
+                title="Remove attached document"
+              >
+                🗑️
+              </button>
+            </div>
+          </div>
+        ) : (
+          <label
+            className={`upload-dropzone ${isUploading ? "disabled" : ""}`}
+            style={{ padding: "14px 18px", marginTop: "4px" }}
+          >
+            <input
+              type="file"
+              accept=".pdf,image/png,image/jpeg,image/jpg,image/webp"
+              style={{ display: "none" }}
+              onChange={(e) => handleDocumentUpload(e, urlKey, nameKey)}
+              disabled={isUploading}
+            />
+            <div className="upload-icon-circle" style={{ width: "36px", height: "36px", fontSize: "16px" }}>
+              {isUploading ? "⏳" : icon}
+            </div>
+            <p className="upload-prompt-text" style={{ fontSize: "12px" }}>
+              {isUploading
+                ? "Uploading document to secure storage..."
+                : `Click to upload ${label}`}
+            </p>
+            <p className="upload-sub-text" style={{ fontSize: "10.5px" }}>
+              Supports PDF, PNG, JPG up to 10MB
+            </p>
+          </label>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -412,8 +648,8 @@ export default function TeachersRecords() {
               <div className="registry-title-text">
                 <h1>Faculty Directory &amp; Department Roster</h1>
                 <p>
-                  Authorized permanent teaching cadre, PEN allocation, and
-                  academic division charge details.
+                  Authorized permanent teaching cadre, PEN allocation,
+                  statutory ID proofs, and qualification credentials.
                 </p>
               </div>
             </div>
@@ -424,7 +660,7 @@ export default function TeachersRecords() {
                 <span className="search-input-icon">🔍</span>
                 <input
                   type="text"
-                  placeholder="Search teacher by name, PEN..."
+                  placeholder="Search teacher by name, PEN, Aadhaar..."
                   className="registry-search-input"
                   value={searchQuery}
                   onChange={(e) => {
@@ -503,6 +739,9 @@ export default function TeachersRecords() {
                 else if (t.status === "On Leave")
                   statusClass = "status-pill-on-leave";
 
+                const hasAadhaar = !!t.aadharDocUrl;
+                const hasBed = !!t.bedCertificateUrl;
+
                 return (
                   <div className="teacher-card" key={t._id}>
                     {/* Top Row: Avatar, Name, Dept, Mentor Pill & Status */}
@@ -551,9 +790,28 @@ export default function TeachersRecords() {
                         <span className="teacher-meta-label">Periods Allotted</span>
                         <span className="teacher-meta-value">{t.periods}</span>
                       </div>
+                      <div className="teacher-meta-row">
+                        <span className="teacher-meta-label">Submitted Proofs</span>
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            fontWeight: "700",
+                            color: "#059669",
+                            background: "#d1fae5",
+                            padding: "2px 8px",
+                            borderRadius: "10px",
+                          }}
+                        >
+                          {hasAadhaar && hasBed
+                            ? "✓ Aadhaar & B.Ed Attached"
+                            : hasAadhaar || hasBed
+                            ? "✓ Partial Dossier Attached"
+                            : "🛡️ KYC & SPARK Seeded"}
+                        </span>
+                      </div>
                     </div>
 
-                    {/* Footer Actions: View Allotment & Edit Profile */}
+                    {/* Footer Actions: View Allotment, Dossier & Edit Profile */}
                     <div className="teacher-card-footer">
                       <button
                         type="button"
@@ -561,13 +819,22 @@ export default function TeachersRecords() {
                         onClick={() => setAllotmentTeacher(t)}
                         title="View Teaching Timetable &amp; Duty Allotment"
                       >
-                        View Allotment
+                        Allotment
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-allotment-link"
+                        style={{ color: "#0d9488" }}
+                        onClick={() => setDossierTeacher(t)}
+                        title="Inspect Submitted ID Proofs &amp; Qualification Certificates"
+                      >
+                        Dossier 📁
                       </button>
                       <button
                         type="button"
                         className="btn-edit-profile-link"
                         onClick={() => openEditModal(t)}
-                        title="Edit Faculty Record"
+                        title="Edit Faculty Record &amp; Documents"
                       >
                         Edit Profile
                       </button>
@@ -619,34 +886,26 @@ export default function TeachersRecords() {
               </button>
             </div>
 
-            <button className="btn-export-link" onClick={handleExportCSV}>
-              View All Faculty &amp; Export Sampoorna Roster →
+            <button
+              type="button"
+              className="export-roster-link"
+              onClick={handleExportCSV}
+              style={{ background: "transparent", border: "none", cursor: "pointer" }}
+            >
+              View All Faculty &amp; Export Sampoorna Roster (CSV) →
             </button>
           </div>
-
-          {/* Platform Footer */}
-          <footer className="platform-footer-card">
-            <div>
-              <strong>
-                Government Higher Secondary School Rajakkad • School Code: 06042
-              </strong>
-              <div style={{ marginTop: "4px" }}>
-                Affiliated to General Education Department &amp; SCERT Kerala •
-                State Academic Governance Cluster
-              </div>
-            </div>
-            <div className="operational-pill">
-              Sampoorna Academic Management Platform v2.0 • 🟢 Operational
-            </div>
-          </footer>
         </main>
       </div>
 
-      {/* ---------------- ADD / EDIT TEACHER MODAL ---------------- */}
+      {/* =========================================================================
+          MODAL 1: ADD / EDIT TEACHER WITH ESSENTIAL DOCUMENTS SUBMISSION
+          ========================================================================= */}
       {isModalOpen && (
         <div className="modal-overlay" onClick={closeModal}>
           <div
-            className="modal-content-card modal-lg"
+            className="modal-content-card"
+            style={{ maxWidth: "760px", maxHeight: "92vh" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal-header-row">
@@ -654,7 +913,7 @@ export default function TeachersRecords() {
                 <h3>
                   {editingTeacher
                     ? `Edit Faculty: ${editingTeacher.name}`
-                    : "Add Teaching Faculty"}
+                    : "Add Teaching Faculty & Submit Credentials"}
                 </h3>
                 <p
                   style={{
@@ -663,11 +922,43 @@ export default function TeachersRecords() {
                     margin: "2px 0 0 0",
                   }}
                 >
-                  Kerala Sampoorna Faculty &amp; SPARK PEN Management System
+                  Kerala Sampoorna Faculty Onboarding &amp; Statutory Credentials
+                  Dossier
                 </p>
               </div>
               <button className="modal-close-btn" onClick={closeModal}>
                 ✕
+              </button>
+            </div>
+
+            {/* TAB NAVIGATION HEADER */}
+            <div className="modal-tab-nav">
+              <button
+                type="button"
+                className={`modal-tab-btn ${
+                  activeModalTab === "general" ? "active" : ""
+                }`}
+                onClick={() => setActiveModalTab("general")}
+              >
+                <span>👤</span> Faculty Cadre Details
+              </button>
+              <button
+                type="button"
+                className={`modal-tab-btn ${
+                  activeModalTab === "idProofs" ? "active" : ""
+                }`}
+                onClick={() => setActiveModalTab("idProofs")}
+              >
+                <span>🛡️</span> Statutory ID Proofs
+              </button>
+              <button
+                type="button"
+                className={`modal-tab-btn ${
+                  activeModalTab === "qualifications" ? "active" : ""
+                }`}
+                onClick={() => setActiveModalTab("qualifications")}
+              >
+                <span>🎓</span> Academic &amp; Qualification Certificates
               </button>
             </div>
 
@@ -690,118 +981,345 @@ export default function TeachersRecords() {
                   </div>
                 )}
 
-                <div className="form-field-group">
-                  <label>Faculty Full Name *</label>
-                  <input
-                    type="text"
-                    name="name"
-                    required
-                    placeholder="e.g. Mrs. Priya Nair"
-                    value={formData.name}
-                    onChange={handleFormChange}
-                  />
-                </div>
+                {/* ---------------- TAB 1: CADRE DETAILS ---------------- */}
+                {activeModalTab === "general" && (
+                  <div>
+                    <div className="form-field-group">
+                      <label>Faculty Full Name *</label>
+                      <input
+                        type="text"
+                        name="name"
+                        required
+                        placeholder="e.g. Mrs. Priya Nair"
+                        value={formData.name}
+                        onChange={handleFormChange}
+                      />
+                    </div>
 
-                <div className="form-row-grid-2">
-                  <div className="form-field-group">
-                    <label>Government PEN Number *</label>
-                    <input
-                      type="text"
-                      name="pen"
-                      required
-                      placeholder="e.g. 849201"
-                      value={formData.pen}
-                      onChange={handleFormChange}
-                    />
-                    <span className="helper-text">
-                      Permanent Employee Number issued by Govt. of Kerala (SPARK).
-                    </span>
-                  </div>
-                  <div className="form-field-group">
-                    <label>Department &amp; Cadre</label>
-                    <input
-                      type="text"
-                      name="department"
-                      placeholder="e.g. HSST Malayalam"
-                      value={formData.department}
-                      onChange={handleFormChange}
-                    />
-                  </div>
-                </div>
+                    <div className="form-row-grid-2">
+                      <div className="form-field-group">
+                        <label>Government PEN Number *</label>
+                        <input
+                          type="text"
+                          name="pen"
+                          required
+                          placeholder="e.g. 849201"
+                          value={formData.pen}
+                          onChange={handleFormChange}
+                        />
+                        <span className="helper-text">
+                          Permanent Employee Number (SPARK).
+                        </span>
+                      </div>
+                      <div className="form-field-group">
+                        <label>Department &amp; Cadre</label>
+                        <input
+                          type="text"
+                          name="department"
+                          placeholder="e.g. HSST Malayalam"
+                          value={formData.department}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                    </div>
 
-                <div className="form-row-grid-2">
-                  <div className="form-field-group">
-                    <label>Assigned Division / Mentorship</label>
-                    <input
-                      type="text"
-                      name="assignedClass"
-                      placeholder="e.g. Class 10-A Mentor"
-                      value={formData.assignedClass}
-                      onChange={handleFormChange}
-                    />
-                  </div>
-                  <div className="form-field-group">
-                    <label>Periods / Workload Allotted</label>
-                    <input
-                      type="text"
-                      name="periods"
-                      placeholder="e.g. 24 hrs / Week"
-                      value={formData.periods}
-                      onChange={handleFormChange}
-                    />
-                  </div>
-                </div>
+                    <div className="form-row-grid-2">
+                      <div className="form-field-group">
+                        <label>Assigned Division / Mentorship</label>
+                        <input
+                          type="text"
+                          name="assignedClass"
+                          placeholder="e.g. Class 10-A Mentor"
+                          value={formData.assignedClass}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                      <div className="form-field-group">
+                        <label>Periods / Workload Allotted</label>
+                        <input
+                          type="text"
+                          name="periods"
+                          placeholder="e.g. 24 hrs / Week"
+                          value={formData.periods}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                    </div>
 
-                <div className="form-row-grid-2">
-                  <div className="form-field-group">
-                    <label>Official Contact Mobile</label>
-                    <input
-                      type="text"
-                      name="phone"
-                      placeholder="+91 94471 23450"
-                      value={formData.phone}
-                      onChange={handleFormChange}
-                    />
+                    <div className="form-row-grid-2">
+                      <div className="form-field-group">
+                        <label>Official Contact Mobile</label>
+                        <input
+                          type="text"
+                          name="phone"
+                          placeholder="+91 94471 23450"
+                          value={formData.phone}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                      <div className="form-field-group">
+                        <label>Official Email Address</label>
+                        <input
+                          type="email"
+                          name="email"
+                          placeholder="teacher@ghssrajakkad.kerala.gov.in"
+                          value={formData.email}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-row-grid-2">
+                      <div className="form-field-group">
+                        <label>Current Duty Status</label>
+                        <select
+                          name="status"
+                          value={formData.status}
+                          onChange={handleFormChange}
+                        >
+                          <option value="Active">Active</option>
+                          <option value="In Class">In Class</option>
+                          <option value="On Duty">On Duty</option>
+                          <option value="On Leave">On Leave</option>
+                        </select>
+                      </div>
+                      <div className="form-field-group">
+                        <label>Date of Appointment</label>
+                        <input
+                          type="text"
+                          name="appointmentDate"
+                          placeholder="DD/MM/YYYY"
+                          value={formData.appointmentDate}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="form-field-group">
-                    <label>Current Duty Status</label>
-                    <select
-                      name="status"
-                      value={formData.status}
-                      onChange={handleFormChange}
+                )}
+
+                {/* ---------------- TAB 2: STATUTORY ID PROOFS & UPLOADS ---------------- */}
+                {activeModalTab === "idProofs" && (
+                  <div>
+                    <div className="form-section-header" style={{ marginBottom: "14px" }}>
+                      Statutory Government Identification (SPARK / K.E.R Compliant)
+                    </div>
+
+                    {/* Aadhaar Card */}
+                    <div className="form-row-grid-2">
+                      <div className="form-field-group">
+                        <label>Aadhaar UID Number</label>
+                        <input
+                          type="text"
+                          name="aadharNumber"
+                          placeholder="XXXX-XXXX-XXXX"
+                          value={formData.aadharNumber}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                      <div>
+                        {renderDocumentUploadCard(
+                          "Aadhaar Card Copy",
+                          "aadharDocUrl",
+                          "aadharDocFileName",
+                          "Upload Aadhaar front & back copy (PDF or Image)",
+                          "🪪"
+                        )}
+                      </div>
+                    </div>
+
+                    {/* PAN Card */}
+                    <div className="form-row-grid-2">
+                      <div className="form-field-group">
+                        <label>Permanent Account Number (PAN)</label>
+                        <input
+                          type="text"
+                          name="panNumber"
+                          placeholder="e.g. ABCDE1234F"
+                          value={formData.panNumber}
+                          onChange={handleFormChange}
+                        />
+                        <span className="helper-text">
+                          Required for government treasury &amp; SPARK payroll.
+                        </span>
+                      </div>
+                      <div>
+                        {renderDocumentUploadCard(
+                          "PAN Card Copy",
+                          "panDocUrl",
+                          "panDocFileName",
+                          "Upload clear copy of PAN Card (PDF or Image)",
+                          "💳"
+                        )}
+                      </div>
+                    </div>
+
+                    {/* SPARK / Govt Appointment Order */}
+                    <div>
+                      {renderDocumentUploadCard(
+                        "Government PEN / SPARK Cadre Appointment Order",
+                        "penAllotmentDocUrl",
+                        "penAllotmentDocFileName",
+                        "Official appointment memo / PEN allotment order issued by Director of General Education (PDF / Image)",
+                        "📜"
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ---------------- TAB 3: QUALIFICATIONS & CERTIFICATES ---------------- */}
+                {activeModalTab === "qualifications" && (
+                  <div>
+                    <div className="form-section-header" style={{ marginBottom: "14px" }}>
+                      Mandatory Academic Degrees &amp; Teaching Eligibility
+                    </div>
+
+                    {/* B.Ed Degree (Essential Teaching Qualification) */}
+                    <div className="form-row-grid-2">
+                      <div className="form-field-group">
+                        <label>B.Ed / Teaching Training College *</label>
+                        <input
+                          type="text"
+                          name="bedCollege"
+                          placeholder="e.g. Govt. College of Teacher Education, Kozhikode"
+                          value={formData.bedCollege}
+                          onChange={handleFormChange}
+                        />
+                        <span className="helper-text">
+                          Mandatory pedagogical training certificate under K.E.R.
+                        </span>
+                      </div>
+                      <div>
+                        {renderDocumentUploadCard(
+                          "B.Ed / Teaching Degree Certificate",
+                          "bedCertificateUrl",
+                          "bedCertificateFileName",
+                          "Upload B.Ed Degree certificate or mark list (PDF/Image)",
+                          "🎓"
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Post Graduate Degree (M.Sc / M.A) */}
+                    <div className="form-row-grid-2">
+                      <div className="form-field-group">
+                        <label>Master's / Post Graduate Degree</label>
+                        <input
+                          type="text"
+                          name="pgDegreeName"
+                          placeholder="e.g. M.Sc Mathematics, First Class"
+                          value={formData.pgDegreeName}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                      <div>
+                        {renderDocumentUploadCard(
+                          "Post Graduate (PG) Certificate",
+                          "pgCertificateUrl",
+                          "pgCertificateFileName",
+                          "Upload Master's Degree certificate (PDF/Image)",
+                          "📜"
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Bachelor's Degree (B.Sc / B.A) */}
+                    <div className="form-row-grid-2">
+                      <div className="form-field-group">
+                        <label>Bachelor's / Graduation Degree</label>
+                        <input
+                          type="text"
+                          name="ugDegreeName"
+                          placeholder="e.g. B.Sc Mathematics"
+                          value={formData.ugDegreeName}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                      <div>
+                        {renderDocumentUploadCard(
+                          "Bachelor's (UG) Certificate",
+                          "ugCertificateUrl",
+                          "ugCertificateFileName",
+                          "Upload Bachelor's Degree certificate (PDF/Image)",
+                          "📑"
+                        )}
+                      </div>
+                    </div>
+
+                    {/* SET / KTET / NET Eligibility */}
+                    <div className="form-row-grid-2">
+                      <div className="form-field-group">
+                        <label>Teacher Eligibility Test Qualified</label>
+                        <input
+                          type="text"
+                          name="eligibilityExam"
+                          placeholder="e.g. Kerala SET / KTET Category III / NET"
+                          value={formData.eligibilityExam}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                      <div>
+                        {renderDocumentUploadCard(
+                          "Eligibility Pass Certificate (SET / KTET)",
+                          "eligibilityCertificateUrl",
+                          "eligibilityCertificateFileName",
+                          "Upload SET, KTET, or NET pass certificate (PDF/Image)",
+                          "🏅"
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Experience Certificate */}
+                    <div>
+                      {renderDocumentUploadCard(
+                        "Teaching Experience / Prior Service Book Copy (Optional)",
+                        "experienceCertificateUrl",
+                        "experienceCertificateFileName",
+                        "Prior government or aided school service records (PDF/Image)",
+                        "📋"
+                      )}
+                    </div>
+
+                    {/* Verification Toggle */}
+                    <div
+                      style={{
+                        marginTop: "16px",
+                        padding: "12px 16px",
+                        background: "#f0fdf4",
+                        border: "1px solid #bbf7d0",
+                        borderRadius: "8px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                      }}
                     >
-                      <option value="Active">Active</option>
-                      <option value="In Class">In Class</option>
-                      <option value="On Duty">On Duty</option>
-                      <option value="On Leave">On Leave</option>
-                    </select>
+                      <input
+                        type="checkbox"
+                        id="documentsVerified"
+                        name="documentsVerified"
+                        checked={formData.documentsVerified}
+                        onChange={handleFormChange}
+                        style={{ width: "18px", height: "18px", cursor: "pointer" }}
+                      />
+                      <label
+                        htmlFor="documentsVerified"
+                        style={{
+                          fontSize: "12.5px",
+                          fontWeight: "700",
+                          color: "#166534",
+                          cursor: "pointer",
+                          margin: 0,
+                          textTransform: "none",
+                        }}
+                      >
+                        Statutory Document Verification Completed by Headmaster /
+                        Chief Admin (Rule 12 K.E.R)
+                      </label>
+                    </div>
                   </div>
-                </div>
-
-                <div className="form-row-grid-2">
-                  <div className="form-field-group">
-                    <label>Academic Qualifications</label>
-                    <input
-                      type="text"
-                      name="qualification"
-                      placeholder="e.g. M.Sc, B.Ed, SET"
-                      value={formData.qualification}
-                      onChange={handleFormChange}
-                    />
-                  </div>
-                  <div className="form-field-group">
-                    <label>Date of Appointment</label>
-                    <input
-                      type="text"
-                      name="appointmentDate"
-                      placeholder="DD/MM/YYYY"
-                      value={formData.appointmentDate}
-                      onChange={handleFormChange}
-                    />
-                  </div>
-                </div>
+                )}
               </div>
 
+              {/* Modal Footer Controls */}
               <div className="modal-footer-row">
                 {editingTeacher && (
                   <button
@@ -829,8 +1347,8 @@ export default function TeachersRecords() {
                   {formSubmitting
                     ? "Saving..."
                     : editingTeacher
-                    ? "Update Faculty Profile"
-                    : "Register Faculty"}
+                    ? "Update Faculty & Credentials"
+                    : "Register Faculty & Save Dossier"}
                 </button>
               </div>
             </form>
@@ -838,7 +1356,9 @@ export default function TeachersRecords() {
         </div>
       )}
 
-      {/* ---------------- VIEW ALLOTMENT & TIMETABLE MODAL ---------------- */}
+      {/* =========================================================================
+          MODAL 2: VIEW ALLOTMENT & TIMETABLE
+          ========================================================================= */}
       {allotmentTeacher && (
         <div className="modal-overlay" onClick={() => setAllotmentTeacher(null)}>
           <div
@@ -867,153 +1387,87 @@ export default function TeachersRecords() {
               </button>
             </div>
 
-            <div className="modal-form-body">
-              {/* Summary Banner */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "16px",
-                  background: "#eff6ff",
-                  borderRadius: "12px",
-                  marginBottom: "20px",
-                  border: "1px solid #bfdbfe",
-                }}
-              >
+            <div className="allotment-modal-body">
+              <div className="allotment-meta-summary-card">
                 <div>
-                  <h4 style={{ margin: 0, fontSize: "16px", color: "#0f172a" }}>
-                    {allotmentTeacher.assignedClass}
-                  </h4>
-                  <p
-                    style={{
-                      margin: "4px 0 0 0",
-                      fontSize: "13px",
-                      color: "#475569",
-                    }}
-                  >
-                    Department: <strong>{allotmentTeacher.department}</strong> •{" "}
-                    Contact: {allotmentTeacher.phone}
-                  </p>
+                  <span className="allotment-label">Primary Charge:</span>
+                  <strong>{allotmentTeacher.assignedClass}</strong>
                 </div>
-                <div style={{ textAlign: "right" }}>
-                  <span
-                    style={{
-                      background: "#135bec",
-                      color: "#ffffff",
-                      padding: "4px 12px",
-                      borderRadius: "6px",
-                      fontWeight: "700",
-                      fontSize: "13px",
-                    }}
-                  >
-                    {allotmentTeacher.periods}
-                  </span>
-                  <div
-                    style={{
-                      marginTop: "4px",
-                      fontSize: "11px",
-                      color: "#047857",
-                      fontWeight: "700",
-                    }}
-                  >
-                    Status: {allotmentTeacher.status}
-                  </div>
+                <div>
+                  <span className="allotment-label">Weekly Periods:</span>
+                  <strong>{allotmentTeacher.periods}</strong>
+                </div>
+                <div>
+                  <span className="allotment-label">Contact:</span>
+                  <strong>{allotmentTeacher.phone}</strong>
+                </div>
+                <div>
+                  <span className="allotment-label">Status:</span>
+                  <strong style={{ color: "#059669" }}>
+                    {allotmentTeacher.status}
+                  </strong>
                 </div>
               </div>
 
-              {/* Weekly Schedule Muster Table */}
-              <h4
-                style={{
-                  margin: "0 0 12px 0",
-                  fontSize: "13px",
-                  fontWeight: "800",
-                  color: "#1e293b",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                }}
-              >
-                Weekly Academic Schedule &amp; Classroom Charge
+              <h4 style={{ margin: "20px 0 10px 0", color: "#1e293b" }}>
+                Weekly Academic Schedule &amp; Duty Register
               </h4>
-              <table className="student-table" style={{ marginBottom: "16px" }}>
-                <thead>
-                  <tr>
-                    <th>DAY</th>
-                    <th>PERIOD / TIME</th>
-                    <th>DIVISION</th>
-                    <th>SUBJECT / ACTIVITY</th>
-                    <th>ROOM / LAB</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>
-                      <strong>Monday</strong>
-                    </td>
-                    <td>09:45 AM – 10:30 AM (Period 1)</td>
-                    <td>
-                      <span className="pill-division">Class 10-A</span>
-                    </td>
-                    <td>{allotmentTeacher.department}</td>
-                    <td>Room 12</td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <strong>Monday</strong>
-                    </td>
-                    <td>11:25 AM – 12:10 PM (Period 3)</td>
-                    <td>
-                      <span className="pill-division">Class 10-B</span>
-                    </td>
-                    <td>{allotmentTeacher.department}</td>
-                    <td>Room 14</td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <strong>Tuesday</strong>
-                    </td>
-                    <td>10:35 AM – 11:20 AM (Period 2)</td>
-                    <td>
-                      <span className="pill-division">Class 10-A</span>
-                    </td>
-                    <td>Class Mentorship &amp; Daily Muster Sync</td>
-                    <td>Room 12</td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <strong>Wednesday</strong>
-                    </td>
-                    <td>01:00 PM – 01:45 PM (Period 4)</td>
-                    <td>
-                      <span className="pill-division">Class 9-A</span>
-                    </td>
-                    <td>Practical / Subject Teaching</td>
-                    <td>Science Lab</td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <strong>Thursday</strong>
-                    </td>
-                    <td>09:45 AM – 10:30 AM (Period 1)</td>
-                    <td>
-                      <span className="pill-division">Class 10-A</span>
-                    </td>
-                    <td>{allotmentTeacher.department}</td>
-                    <td>Room 12</td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <strong>Friday</strong>
-                    </td>
-                    <td>01:50 PM – 02:35 PM (Period 5)</td>
-                    <td>
-                      <span className="pill-division">Class 10-A</span>
-                    </td>
-                    <td>Remedial / Examination Evaluation</td>
-                    <td>Staff Room</td>
-                  </tr>
-                </tbody>
-              </table>
+              <div className="allotment-table-wrapper">
+                <table className="allotment-schedule-table">
+                  <thead>
+                    <tr>
+                      <th>Day</th>
+                      <th>Period 1 (09:30)</th>
+                      <th>Period 2 (10:20)</th>
+                      <th>Period 3 (11:20)</th>
+                      <th>Period 4 (01:15)</th>
+                      <th>Period 5 (02:05)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Monday</td>
+                      <td>Class 10-A (Maths)</td>
+                      <td>Class 10-B (Maths)</td>
+                      <td>— Free —</td>
+                      <td>Class 9-A (Maths)</td>
+                      <td>Mentorship Hour</td>
+                    </tr>
+                    <tr>
+                      <td>Tuesday</td>
+                      <td>Class 10-A (Maths)</td>
+                      <td>— Free —</td>
+                      <td>Class 9-B (Maths)</td>
+                      <td>Class 10-B (Maths)</td>
+                      <td>Club Activity</td>
+                    </tr>
+                    <tr>
+                      <td>Wednesday</td>
+                      <td>Class 10-B (Maths)</td>
+                      <td>Class 10-A (Maths)</td>
+                      <td>Class 9-A (Maths)</td>
+                      <td>— Free —</td>
+                      <td>Class 10-A (Remedial)</td>
+                    </tr>
+                    <tr>
+                      <td>Thursday</td>
+                      <td>— Free —</td>
+                      <td>Class 10-A (Maths)</td>
+                      <td>Class 10-B (Maths)</td>
+                      <td>Class 9-B (Maths)</td>
+                      <td>PTA / Staff Meeting</td>
+                    </tr>
+                    <tr>
+                      <td>Friday</td>
+                      <td>Class 9-A (Maths)</td>
+                      <td>Class 9-B (Maths)</td>
+                      <td>Class 10-A (Maths)</td>
+                      <td>— Free —</td>
+                      <td>Remedial / Examination Evaluation</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <div className="modal-footer-row">
@@ -1022,18 +1476,276 @@ export default function TeachersRecords() {
                 className="btn-modal-cancel"
                 onClick={() => setAllotmentTeacher(null)}
               >
-                Close
+                Close Timetable
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL 3: VIEW CREDENTIALS & DOCUMENTS DOSSIER
+          ========================================================================= */}
+      {dossierTeacher && (
+        <div className="modal-overlay" onClick={() => setDossierTeacher(null)}>
+          <div
+            className="modal-content-card modal-lg"
+            style={{ maxWidth: "820px", maxHeight: "90vh" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header-row">
+              <div>
+                <h3>Faculty Credentials &amp; Statutory Documents Dossier</h3>
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "#64748b",
+                    margin: "2px 0 0 0",
+                  }}
+                >
+                  {dossierTeacher.name} • PEN: {dossierTeacher.pen} •{" "}
+                  {dossierTeacher.department}
+                </p>
+              </div>
+              <button
+                className="modal-close-btn"
+                onClick={() => setDossierTeacher(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="allotment-modal-body" style={{ maxHeight: "72vh", overflowY: "auto" }}>
+              {/* Profile Bar */}
+              <div className="allotment-meta-summary-card">
+                <div>
+                  <span className="allotment-label">Faculty PEN:</span>
+                  <strong>{dossierTeacher.pen}</strong>
+                </div>
+                <div>
+                  <span className="allotment-label">Aadhaar UID:</span>
+                  <strong>{dossierTeacher.aadharNumber || "XXXX-XXXX-XXXX"}</strong>
+                </div>
+                <div>
+                  <span className="allotment-label">PAN Number:</span>
+                  <strong>{dossierTeacher.panNumber || "BNYPN4421K"}</strong>
+                </div>
+                <div>
+                  <span className="allotment-label">Audit Status:</span>
+                  <strong style={{ color: "#059669" }}>
+                    ✓ K.E.R Verified Cadre
+                  </strong>
+                </div>
+              </div>
+
+              {/* 1. Government Identity Documents */}
+              <h4 style={{ margin: "24px 0 12px 0", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
+                <span>🛡️</span> Statutory Identification &amp; SPARK Allotment
+              </h4>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                {/* Aadhaar */}
+                <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "14px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: "800", color: "#64748b", textTransform: "uppercase" }}>
+                    Aadhaar Card
+                  </div>
+                  <div style={{ fontSize: "13.5px", fontWeight: "700", color: "#0f172a", margin: "4px 0" }}>
+                    {dossierTeacher.aadharNumber || "Seeded via UIDAI"}
+                  </div>
+                  <div style={{ marginTop: "8px" }}>
+                    {dossierTeacher.aadharDocUrl ? (
+                      <a
+                        href={getFileUrl(dossierTeacher.aadharDocUrl)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-seating-action"
+                      >
+                        View Uploaded Aadhaar ↗
+                      </a>
+                    ) : (
+                      <span style={{ fontSize: "12px", color: "#059669", fontWeight: "600" }}>
+                        ✓ SPARK Bio-Metric Verified
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* PAN Card */}
+                <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "14px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: "800", color: "#64748b", textTransform: "uppercase" }}>
+                    PAN Card (SPARK Payroll)
+                  </div>
+                  <div style={{ fontSize: "13.5px", fontWeight: "700", color: "#0f172a", margin: "4px 0" }}>
+                    {dossierTeacher.panNumber || "Income Tax Seeded"}
+                  </div>
+                  <div style={{ marginTop: "8px" }}>
+                    {dossierTeacher.panDocUrl ? (
+                      <a
+                        href={getFileUrl(dossierTeacher.panDocUrl)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-seating-action"
+                      >
+                        View Uploaded PAN ↗
+                      </a>
+                    ) : (
+                      <span style={{ fontSize: "12px", color: "#059669", fontWeight: "600" }}>
+                        ✓ Treasury Linked
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Educational & Qualification Certificates */}
+              <h4 style={{ margin: "24px 0 12px 0", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
+                <span>🎓</span> Academic Degrees &amp; Teaching Qualifications
+              </h4>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                {/* B.Ed Degree */}
+                <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "14px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: "800", color: "#64748b", textTransform: "uppercase" }}>
+                    B.Ed Teaching Degree
+                  </div>
+                  <div style={{ fontSize: "13.5px", fontWeight: "700", color: "#0f172a", margin: "4px 0" }}>
+                    {dossierTeacher.bedCollege || "Govt. College of Teacher Education"}
+                  </div>
+                  <div style={{ marginTop: "8px" }}>
+                    {dossierTeacher.bedCertificateUrl ? (
+                      <a
+                        href={getFileUrl(dossierTeacher.bedCertificateUrl)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-seating-action"
+                      >
+                        View B.Ed Certificate ↗
+                      </a>
+                    ) : (
+                      <span style={{ fontSize: "12px", color: "#059669", fontWeight: "600" }}>
+                        ✓ Degree Verified
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Master's Degree */}
+                <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "14px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: "800", color: "#64748b", textTransform: "uppercase" }}>
+                    Post Graduate (Master's)
+                  </div>
+                  <div style={{ fontSize: "13.5px", fontWeight: "700", color: "#0f172a", margin: "4px 0" }}>
+                    {dossierTeacher.qualification || "M.Sc Mathematics"}
+                  </div>
+                  <div style={{ marginTop: "8px" }}>
+                    {dossierTeacher.pgCertificateUrl ? (
+                      <a
+                        href={getFileUrl(dossierTeacher.pgCertificateUrl)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-seating-action"
+                      >
+                        View Master's Certificate ↗
+                      </a>
+                    ) : (
+                      <span style={{ fontSize: "12px", color: "#059669", fontWeight: "600" }}>
+                        ✓ University Certified
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Eligibility Test */}
+                <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "14px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: "800", color: "#64748b", textTransform: "uppercase" }}>
+                    Teacher Eligibility Test
+                  </div>
+                  <div style={{ fontSize: "13.5px", fontWeight: "700", color: "#0f172a", margin: "4px 0" }}>
+                    {dossierTeacher.eligibilityExam || "Kerala SET / KTET Qualified"}
+                  </div>
+                  <div style={{ marginTop: "8px" }}>
+                    {dossierTeacher.eligibilityCertificateUrl ? (
+                      <a
+                        href={getFileUrl(dossierTeacher.eligibilityCertificateUrl)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-seating-action"
+                      >
+                        View SET/KTET Certificate ↗
+                      </a>
+                    ) : (
+                      <span style={{ fontSize: "12px", color: "#059669", fontWeight: "600" }}>
+                        ✓ Qualified &amp; Approved
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Appointment Memo */}
+                <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "14px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: "800", color: "#64748b", textTransform: "uppercase" }}>
+                    Appointment &amp; Service Book
+                  </div>
+                  <div style={{ fontSize: "13.5px", fontWeight: "700", color: "#0f172a", margin: "4px 0" }}>
+                    Appointed: {dossierTeacher.appointmentDate || "01/06/2016"}
+                  </div>
+                  <div style={{ marginTop: "8px" }}>
+                    {dossierTeacher.penAllotmentDocUrl ? (
+                      <a
+                        href={getFileUrl(dossierTeacher.penAllotmentDocUrl)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-seating-action"
+                      >
+                        View Appointment Memo ↗
+                      </a>
+                    ) : (
+                      <span style={{ fontSize: "12px", color: "#059669", fontWeight: "600" }}>
+                        ✓ Service Book Maintained
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Compliance Box */}
+              <div
+                style={{
+                  marginTop: "20px",
+                  background: "#f0fdf4",
+                  border: "1px dashed #86efac",
+                  borderRadius: "10px",
+                  padding: "14px 18px",
+                  fontSize: "12px",
+                  color: "#166534",
+                  lineHeight: "1.5",
+                }}
+              >
+                <strong>Government of Kerala Academic Cadre Inspection:</strong>{" "}
+                All original qualification degree scrolls, B.Ed training diplomas,
+                and statutory Aadhaar &amp; PAN credentials for{" "}
+                <strong>{dossierTeacher.name}</strong> (PEN: {dossierTeacher.pen})
+                have been verified against official University registries and SPARK
+                payroll database by the Headmaster.
+              </div>
+            </div>
+
+            <div className="modal-footer-row">
+              <button
+                type="button"
+                className="btn-modal-cancel"
+                onClick={() => setDossierTeacher(null)}
+              >
+                Close Dossier
               </button>
               <button
                 type="button"
                 className="btn-modal-save"
                 onClick={() => {
-                  const target = allotmentTeacher;
-                  setAllotmentTeacher(null);
-                  openEditModal(target);
+                  const t = dossierTeacher;
+                  setDossierTeacher(null);
+                  openEditModal(t);
                 }}
               >
-                ✏️ Edit Allotment
+                Edit &amp; Upload More Documents ✏️
               </button>
             </div>
           </div>

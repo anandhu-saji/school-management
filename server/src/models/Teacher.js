@@ -76,9 +76,126 @@ const teacherSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    // Essential Statutory Identity Proofs
+    aadharNumber: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    aadharDocUrl: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    aadharDocFileName: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    panNumber: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    panDocUrl: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    panDocFileName: {
+      type: String,
+      trim: true,
+      default: null,
+    },
     penAllotmentDocUrl: {
       type: String,
+      trim: true,
       default: null,
+    },
+    penAllotmentDocFileName: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    // Essential Academic & Professional Qualification Certificates
+    highestDegree: {
+      type: String,
+      trim: true,
+      default: "Post Graduate (Master's)",
+    },
+    pgDegreeName: {
+      type: String,
+      trim: true,
+      default: "M.Sc / M.A",
+    },
+    pgCertificateUrl: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    pgCertificateFileName: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    ugDegreeName: {
+      type: String,
+      trim: true,
+      default: "B.Sc / B.A",
+    },
+    ugCertificateUrl: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    ugCertificateFileName: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    bedCollege: {
+      type: String,
+      trim: true,
+      default: "Govt. College of Teacher Education",
+    },
+    bedCertificateUrl: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    bedCertificateFileName: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    eligibilityExam: {
+      type: String,
+      trim: true,
+      default: "SET / KTET Qualified",
+    },
+    eligibilityCertificateUrl: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    eligibilityCertificateFileName: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    experienceCertificateUrl: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    experienceCertificateFileName: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    documentsVerified: {
+      type: Boolean,
+      default: true,
     },
     isActive: {
       type: Boolean,
@@ -92,6 +209,9 @@ const teacherSchema = new mongoose.Schema(
 );
 
 teacherSchema.pre("save", function () {
+  if (!this.email || this.email.trim() === "") {
+    this.email = undefined;
+  }
   if (!this.pen) {
     this.pen = `849${Math.floor(200 + Math.random() * 800)}`;
   }

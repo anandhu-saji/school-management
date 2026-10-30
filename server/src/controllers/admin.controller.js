@@ -161,6 +161,32 @@ export const getTeachersRecords = async (req, res) => {
       qualification: t.qualification || "B.Ed",
       appointmentDate: t.appointmentDate || "01/06/2018",
       avatarUrl: t.avatarUrl || null,
+      // Statutory ID Proofs & Submitted Documents
+      aadharNumber: t.aadharNumber || "",
+      aadharDocUrl: t.aadharDocUrl || null,
+      aadharDocFileName: t.aadharDocFileName || null,
+      panNumber: t.panNumber || "",
+      panDocUrl: t.panDocUrl || null,
+      panDocFileName: t.panDocFileName || null,
+      penAllotmentDocUrl: t.penAllotmentDocUrl || null,
+      penAllotmentDocFileName: t.penAllotmentDocFileName || null,
+      // Qualifications & Certificates
+      highestDegree: t.highestDegree || "Post Graduate (Master's)",
+      pgDegreeName: t.pgDegreeName || "M.Sc / M.A",
+      pgCertificateUrl: t.pgCertificateUrl || null,
+      pgCertificateFileName: t.pgCertificateFileName || null,
+      ugDegreeName: t.ugDegreeName || "B.Sc / B.A",
+      ugCertificateUrl: t.ugCertificateUrl || null,
+      ugCertificateFileName: t.ugCertificateFileName || null,
+      bedCollege: t.bedCollege || "Govt. College of Teacher Education",
+      bedCertificateUrl: t.bedCertificateUrl || null,
+      bedCertificateFileName: t.bedCertificateFileName || null,
+      eligibilityExam: t.eligibilityExam || "SET / KTET Qualified",
+      eligibilityCertificateUrl: t.eligibilityCertificateUrl || null,
+      eligibilityCertificateFileName: t.eligibilityCertificateFileName || null,
+      experienceCertificateUrl: t.experienceCertificateUrl || null,
+      experienceCertificateFileName: t.experienceCertificateFileName || null,
+      documentsVerified: t.documentsVerified !== false,
     }));
 
     return res.status(200).json({
@@ -178,19 +204,7 @@ export const getTeachersRecords = async (req, res) => {
 // 3b. Create New Teacher Record
 export const createTeacher = async (req, res) => {
   try {
-    const {
-      name,
-      pen,
-      department,
-      assignedClass,
-      phone,
-      email,
-      periods,
-      status,
-      qualification,
-      appointmentDate,
-    } = req.body;
-
+    const { name } = req.body;
     if (!name || !name.trim()) {
       return res.status(400).json({
         success: false,
@@ -198,18 +212,26 @@ export const createTeacher = async (req, res) => {
       });
     }
 
-    const newTeacher = await Teacher.create({
+    const teacherData = {
+      ...req.body,
       name: name.trim(),
-      pen: pen?.trim() || `849${Math.floor(100 + Math.random() * 900)}`,
-      department: department?.trim() || "High School",
-      assignedClass: assignedClass?.trim() || "Faculty Mentor",
-      phone: phone?.trim() || "+91 94471 00000",
-      email: email?.trim() || "",
-      periods: periods?.trim() || "24 hrs / Week",
-      status: status || "Active",
-      qualification: qualification?.trim() || "B.Ed",
-      appointmentDate: appointmentDate?.trim() || "01/06/2020",
-    });
+      pen: req.body.pen?.trim() || `849${Math.floor(100 + Math.random() * 900)}`,
+      department: req.body.department?.trim() || "High School",
+      assignedClass: req.body.assignedClass?.trim() || "Faculty Mentor",
+      phone: req.body.phone?.trim() || "+91 94471 00000",
+      periods: req.body.periods?.trim() || "24 hrs / Week",
+      status: req.body.status || "Active",
+      qualification: req.body.qualification?.trim() || "B.Ed",
+      appointmentDate: req.body.appointmentDate?.trim() || "01/06/2020",
+    };
+
+    if (req.body.email && req.body.email.trim()) {
+      teacherData.email = req.body.email.trim().toLowerCase();
+    } else {
+      delete teacherData.email;
+    }
+
+    const newTeacher = await Teacher.create(teacherData);
 
     return res.status(201).json({
       success: true,
@@ -227,11 +249,17 @@ export const updateTeacher = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = { ...req.body };
+    const updateOps = { $set: updateData };
+
+    if (!updateData.email || !updateData.email.trim()) {
+      delete updateData.email;
+      updateOps.$unset = { email: 1 };
+    }
 
     const updated = await Teacher.findByIdAndUpdate(
       id,
-      { $set: updateData },
-      { new: true }
+      updateOps,
+      { returnDocument: "after", runValidators: true }
     );
 
     if (!updated) {
