@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosclient";
+import { clearAuthSession } from "../../utils/auth";
 import "../../Styles/AdminDash.css";
 
 export default function DivisionAttendance() {
@@ -17,6 +18,11 @@ export default function DivisionAttendance() {
       .catch((err) => console.error("Error loading muster:", err));
   }, []);
 
+  const handleLogout = () => {
+    clearAuthSession();
+    navigate("/login");
+  };
+
   const filtered = divisions.filter(
     (d) =>
       d.standardDivision.toLowerCase().includes(search.toLowerCase()) ||
@@ -25,30 +31,99 @@ export default function DivisionAttendance() {
 
   return (
     <div className="admin-layout">
+      {/* ---------------- SIDEBAR ---------------- */}
       <aside className="admin-sidebar">
         <div>
-          <div className="school-code-label">School Code: 06042</div>
-          <div className="sampoorna-live-pill">
-            <span className="dot"></span> SAMPOORNA 2.0 LIVE
+          <div className="sidebar-header">
+            <div className="school-code-label">School Code: 06042</div>
+            <div className="sampoorna-live-pill">
+              <span className="dot"></span> SAMPOORNA 2.0 LIVE
+            </div>
           </div>
+
+          <div className="sidebar-section-title">CONSOLE NAVIGATION</div>
           <nav className="console-nav-list">
             <button
               className="console-nav-item"
               onClick={() => navigate("/admin/dashboard")}
             >
-              Overview and Dashboard
+              <span>▦</span> Overview and Dashboard
             </button>
             <button className="console-nav-item active">
-              Division wise Attendance
+              <span>👥</span> Division wise Attendance
+            </button>
+            <button
+              className="console-nav-item"
+              onClick={() => navigate("/admin/teachers")}
+            >
+              <span>🗂</span> Teachers Records
+            </button>
+            <button
+              className="console-nav-item"
+              onClick={() => navigate("/admin/students")}
+            >
+              <span>🎓</span> Students Records
+            </button>
+            <button
+              className="console-nav-item"
+              onClick={() => navigate("/admin/exams")}
+            >
+              <span>📅</span> Exam Timetables
             </button>
           </nav>
+        </div>
+
+        {/* Bottom Profile Card */}
+        <div className="sidebar-bottom-profile">
+          <div className="profile-avatar-circle">
+            <span>🛡</span>
+          </div>
+          <div className="profile-details-column">
+            <div className="profile-name-row">
+              <span>Sri. K. R. Madhavan</span>
+              <span className="verified-badge-icon">✓</span>
+            </div>
+            <p className="profile-role-subtext">Headmaster / Chief Admin</p>
+            <p className="profile-id-code">ADM-GHSS-01</p>
+          </div>
+          <button
+            className="logout-icon-btn"
+            onClick={handleLogout}
+            title="Sign Out"
+            aria-label="Sign Out"
+          >
+            ⇥
+          </button>
         </div>
       </aside>
 
       <div className="admin-main-wrapper">
         <header className="admin-top-header">
-          <span>Sampoorna Admin Console • Division Muster</span>
+          <span>
+            Kerala General Education Dept. •{" "}
+            <strong>Sampoorna Admin Console</strong> • Division Muster
+          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <span className="badge-sync">🟢 AY 2025–2026</span>
+            <button
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "50%",
+                background: "#135bec",
+                color: "#ffffff",
+                border: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
+            >
+              👤
+            </button>
+          </div>
         </header>
+
         <main className="admin-content-area">
           <div className="hero-banner">
             <h1>Division–Wise Live Attendance Muster &amp; Analytics</h1>

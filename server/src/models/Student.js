@@ -34,6 +34,10 @@ const studentSchema = new mongoose.Schema(
       sparse: true,
       trim: true,
     },
+    sampoornaId: {
+      type: String,
+      trim: true,
+    },
     classDivision: {
       type: String,
       required: true,
@@ -49,9 +53,22 @@ const studentSchema = new mongoose.Schema(
       enum: ["Male", "Female", "Other", "Boy", "Girl"],
       default: "Male",
     },
+    dob: {
+      type: String,
+      trim: true,
+    },
+    guardian: {
+      type: String,
+      trim: true,
+    },
     parentContact: {
       type: String,
       trim: true,
+    },
+    category: {
+      type: String,
+      trim: true,
+      default: "General",
     },
     monthlyLeavesTaken: {
       type: Number,
@@ -59,7 +76,7 @@ const studentSchema = new mongoose.Schema(
     },
     overallAttendance: {
       type: String,
-      default: "100",
+      default: "98.4",
     },
     avatarUrl: {
       type: String,
@@ -93,6 +110,10 @@ studentSchema.pre("validate", function () {
     this.studentId = this.admissionNumber;
   } else if (!this.admissionNumber && this.studentId) {
     this.admissionNumber = this.studentId;
+  }
+
+  if (!this.sampoornaId && this.rollNumber) {
+    this.sampoornaId = `SMP-06042-${880 + Number(this.rollNumber)}`;
   }
 });
 

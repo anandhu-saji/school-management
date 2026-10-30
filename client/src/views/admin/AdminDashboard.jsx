@@ -33,46 +33,94 @@ export default function AdminOverview() {
       {/* Sidebar Navigation */}
       <aside className="admin-sidebar">
         <div>
-          <div className="school-code-label">School Code: 06042</div>
-          <div className="sampoorna-live-pill">
-            <span className="dot"></span> SAMPOORNA 2.0 LIVE
+          <div className="sidebar-header">
+            <div className="school-code-label">School Code: 06042</div>
+            <div className="sampoorna-live-pill">
+              <span className="dot"></span> SAMPOORNA 2.0 LIVE
+            </div>
           </div>
+
+          <div className="sidebar-section-title">CONSOLE NAVIGATION</div>
           <nav className="console-nav-list">
             <button className="console-nav-item active">
-              Overview and Dashboard
+              <span>▦</span> Overview and Dashboard
             </button>
             <button
               className="console-nav-item"
               onClick={() => navigate("/admin/attendance")}
             >
-              Division Attendance
+              <span>👥</span> Division wise Attendance
+            </button>
+            <button
+              className="console-nav-item"
+              onClick={() => navigate("/admin/teachers")}
+            >
+              <span>🗂</span> Teachers Records
+            </button>
+            <button
+              className="console-nav-item"
+              onClick={() => navigate("/admin/students")}
+            >
+              <span>🎓</span> Students Records
+            </button>
+            <button
+              className="console-nav-item"
+              onClick={() => navigate("/admin/exams")}
+            >
+              <span>📅</span> Exam Timetables
             </button>
           </nav>
         </div>
 
-        <button
-          onClick={handleLogout}
-          style={{
-            margin: "20px 16px",
-            padding: "10px",
-            background: "#ffebe6",
-            color: "#de350b",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontWeight: "600",
-          }}
-        >
-          Sign Out
-        </button>
+        {/* Bottom Profile Card */}
+        <div className="sidebar-bottom-profile">
+          <div className="profile-avatar-circle">
+            <span>🛡</span>
+          </div>
+          <div className="profile-details-column">
+            <div className="profile-name-row">
+              <span>Sri. K. R. Madhavan</span>
+              <span className="verified-badge-icon">✓</span>
+            </div>
+            <p className="profile-role-subtext">Headmaster / Chief Admin</p>
+            <p className="profile-id-code">ADM-GHSS-01</p>
+          </div>
+          <button
+            className="logout-icon-btn"
+            onClick={handleLogout}
+            title="Sign Out"
+            aria-label="Sign Out"
+          >
+            ⇥
+          </button>
+        </div>
       </aside>
 
       <div className="admin-main-wrapper">
         <header className="admin-top-header">
           <span>
-            Kerala General Education Dept. • Sampoorna Admin Console • School Code:
-            06042
+            Kerala General Education Dept. •{" "}
+            <strong>Sampoorna Admin Console</strong> • School Code: 06042
           </span>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <span className="badge-sync">🟢 AY 2025–2026</span>
+            <button
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "50%",
+                background: "#135bec",
+                color: "#ffffff",
+                border: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
+            >
+              👤
+            </button>
+          </div>
         </header>
 
         <main className="admin-content-area">
@@ -83,7 +131,7 @@ export default function AdminOverview() {
                 🟢 Sampoorna Core 2.0 Live Synchronized
               </span>
             </div>
-            <h1>Good morning, Headmaster</h1>
+            <h1>Good morning, Headmaster Madhavan</h1>
             <p>
               G.H.S.S Rajakkad • Institutional Governance, Staff Muster &amp;
               SCERT Repository Control Terminal.

@@ -4,6 +4,7 @@ import ForgotPassword from "./views/auth/ForgotPassword.jsx";
 import ResetPassword from "./views/auth/ResetPassword.jsx";
 import AdminDashboard from "./views/admin/AdminDashboard.jsx";
 import DivisionAttendance from "./views/admin/DivisionAttendance.jsx";
+import StudentsRecords from "./views/admin/StudentsRecords.jsx";
 import TeacherDashboard from "./views/teacher/TeacherDashboard.jsx";
 import Dashboard from "./views/student/Dashboard.jsx";
 import { isSessionValid, getRoleDashboardPath, clearAuthSession } from "./utils/auth";
@@ -102,7 +103,7 @@ function App() {
           }
         />
 
-        {/* Admin Dashboard */}
+        {/* Admin Dashboard Routes */}
         <Route
           path="/admin/dashboard"
           element={
@@ -116,6 +117,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <DivisionAttendance />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/students"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <StudentsRecords />
             </ProtectedRoute>
           }
         />
