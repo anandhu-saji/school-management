@@ -21,6 +21,7 @@ const teacherSchema = new mongoose.Schema(
       type: String,
       lowercase: true,
       trim: true,
+      sparse: true,
     },
     phone: {
       type: String,
@@ -89,6 +90,19 @@ const teacherSchema = new mongoose.Schema(
     collection: "teachers",
   }
 );
+
+teacherSchema.pre("save", function () {
+  if (!this.pen) {
+    this.pen = `849${Math.floor(200 + Math.random() * 800)}`;
+  }
+  if (this.mentorClass && (!this.assignedClass || !this.assignedClass.includes("Mentor"))) {
+    const cleanClass = this.mentorClass.replace(/^Class\s*/i, "").trim();
+    this.assignedClass = `Class ${cleanClass} Mentor`;
+  }
+  if (!this.periods) {
+    this.periods = "24 hrs / Week";
+  }
+});
 
 const Teacher =
   mongoose.models.Teacher || mongoose.model("Teacher", teacherSchema);

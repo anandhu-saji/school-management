@@ -38,6 +38,25 @@ const seedDatabase = async () => {
       // index does not exist or already dropped
     }
 
+    try {
+      const teachersColl = mongoose.connection.collection("teachers");
+      const teacherIndexes = await teachersColl.indexes();
+      for (const idx of teacherIndexes) {
+        if (
+          idx.name === "teacherId_1" ||
+          (idx.name === "userId_1" && !idx.sparse) ||
+          (idx.name === "email_1" && !idx.sparse)
+        ) {
+          await teachersColl.dropIndex(idx.name);
+          console.log(`ℹ️ Dropped legacy index: ${idx.name} from teachers collection.`);
+        }
+      }
+      await teachersColl.createIndex({ userId: 1 }, { unique: true, sparse: true });
+      await teachersColl.createIndex({ email: 1 }, { unique: true, sparse: true });
+    } catch (e) {
+      // index handling fallback
+    }
+
     // 1. Clean existing records for this division
     await Student.deleteMany({ classDivision: "Class 10-A" });
     await Attendance.deleteMany({ classDivision: "Class 10-A" });
@@ -55,11 +74,11 @@ const seedDatabase = async () => {
       });
     }
 
-    // 3. Ensure Teacher Account & Profile Exist
+    // 3. Ensure Teacher Account & Complete Profile Exist
     let teacherUser = await User.findOne({ email: "kathalanx@gmail.com" });
     if (!teacherUser) {
       teacherUser = await User.create({
-        name: "Indu B Nair",
+        name: "Mrs. Indu B Nair",
         username: "indubnair",
         email: "kathalanx@gmail.com",
         password: "Teacher@123",
@@ -71,14 +90,103 @@ const seedDatabase = async () => {
     await Teacher.deleteMany({ email: "kathalanx@gmail.com" });
     await Teacher.create({
       userId: teacherUser._id,
-      name: "Indu B Nair",
+      name: "Mrs. Indu B Nair",
+      pen: "849201",
       email: "kathalanx@gmail.com",
-      assignedClass: "Class 10-A",
-      mentorClass: "Class 10-A",
-      department: "Mathematics",
+      department: "HST Mathematics",
+      designation: "HST",
+      assignedClass: "Class 10-A Mentor",
+      mentorClass: "10-A",
+      subject: "Mathematics",
       phone: "+91 98470 12345",
+      periods: "24 hrs / Week",
+      status: "In Class",
+      qualification: "M.Sc Mathematics, B.Ed",
+      appointmentDate: "01/06/2016",
       isActive: true,
     });
+
+    // Seed remaining cadre teachers if not present
+    const cadre = [
+      {
+        name: "Sri. George K.",
+        email: "george.k@ghssrajakkad.kerala.gov.in",
+        department: "HST Mathematics",
+        designation: "HST",
+        assignedClass: "Class 10-B Mentor",
+        mentorClass: "10-B",
+        pen: "849202",
+        phone: "+91 94462 88219",
+        periods: "26 hrs / Week",
+        status: "Active",
+        qualification: "M.Sc Mathematics, B.Ed",
+        appointmentDate: "01/06/2015",
+      },
+      {
+        name: "Smt. Bindu S.",
+        email: "bindu.s@ghssrajakkad.kerala.gov.in",
+        department: "HST Physical Science",
+        designation: "HST",
+        assignedClass: "Class 9-A Mentor",
+        mentorClass: "9-A",
+        pen: "849205",
+        phone: "+91 98470 55123",
+        periods: "22 hrs / Week + Lab",
+        status: "Active",
+        qualification: "M.Sc Physics, B.Ed",
+        appointmentDate: "15/07/2017",
+      },
+      {
+        name: "Sri. Suresh C. K.",
+        email: "suresh.ck@ghssrajakkad.kerala.gov.in",
+        department: "HSST Chemistry",
+        designation: "HSST",
+        assignedClass: "Class 11 Science",
+        mentorClass: "11-A",
+        pen: "849219",
+        phone: "+91 94956 77123",
+        periods: "Practical Exam Observer",
+        status: "On Duty",
+        qualification: "M.Sc Chemistry, B.Ed, SET",
+        appointmentDate: "02/06/2012",
+      },
+      {
+        name: "Sri. Thomas Joseph",
+        email: "thomas.joseph@ghssrajakkad.kerala.gov.in",
+        department: "HSST English",
+        designation: "HSST",
+        assignedClass: "Class 12 Humanities",
+        mentorClass: "12-A",
+        pen: "849210",
+        phone: "+91 94951 44321",
+        periods: "25 hrs / Week",
+        status: "Active",
+        qualification: "M.A English, B.Ed, NET",
+        appointmentDate: "01/06/2014",
+      },
+      {
+        name: "Smt. Radhakrishnan N.",
+        email: "radhakrishnan.n@ghssrajakkad.kerala.gov.in",
+        department: "HST Social Science",
+        designation: "HST",
+        assignedClass: "Class 8-C Mentor",
+        mentorClass: "8-C",
+        pen: "849214",
+        phone: "+91 94468 11902",
+        periods: "22 hrs / Week",
+        status: "Active",
+        qualification: "M.A History, B.Ed",
+        appointmentDate: "01/06/2019",
+      },
+    ];
+
+    for (const t of cadre) {
+      const exists = await Teacher.findOne({ pen: t.pen });
+      if (!exists) {
+        await Teacher.create(t);
+      }
+    }
+    console.log("✅ Ensured full faculty cadre in DB.");
 
     // 4. Ensure Test Student Login Account Exists
     let studentUser = await User.findOne({

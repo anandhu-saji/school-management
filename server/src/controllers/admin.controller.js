@@ -58,18 +58,8 @@ export const getTeachersRecords = async (req, res) => {
     if (teachersRaw.length < 6) {
       const defaultCadre = [
         {
-          name: "Mrs. Priya Nair",
-          department: "HSST Malayalam",
-          assignedClass: "Class 10-A Mentor",
-          mentorClass: "10-A",
-          pen: "849201",
-          phone: "+91 94471 23450",
-          periods: "24 hrs / Week",
-          status: "In Class",
-          qualification: "M.A Malayalam, B.Ed, SET",
-        },
-        {
           name: "Sri. George K.",
+          email: "george.k@ghssrajakkad.kerala.gov.in",
           department: "HST Mathematics",
           assignedClass: "Class 10-B Mentor",
           mentorClass: "10-B",
@@ -81,6 +71,7 @@ export const getTeachersRecords = async (req, res) => {
         },
         {
           name: "Smt. Bindu S.",
+          email: "bindu.s@ghssrajakkad.kerala.gov.in",
           department: "HST Physical Science",
           assignedClass: "Class 9-A Mentor",
           mentorClass: "9-A",
@@ -92,6 +83,7 @@ export const getTeachersRecords = async (req, res) => {
         },
         {
           name: "Sri. Suresh C. K.",
+          email: "suresh.ck@ghssrajakkad.kerala.gov.in",
           department: "HSST Chemistry",
           assignedClass: "Class 11 Science",
           mentorClass: "11-A",
@@ -103,6 +95,7 @@ export const getTeachersRecords = async (req, res) => {
         },
         {
           name: "Sri. Thomas Joseph",
+          email: "thomas.joseph@ghssrajakkad.kerala.gov.in",
           department: "HSST English",
           assignedClass: "Class 12 Humanities",
           mentorClass: "12-A",
@@ -114,6 +107,7 @@ export const getTeachersRecords = async (req, res) => {
         },
         {
           name: "Smt. Radhakrishnan N.",
+          email: "radhakrishnan.n@ghssrajakkad.kerala.gov.in",
           department: "HST Social Science",
           assignedClass: "Class 8-C Mentor",
           mentorClass: "8-C",
@@ -126,12 +120,16 @@ export const getTeachersRecords = async (req, res) => {
       ];
 
       for (const t of defaultCadre) {
-        const exists = teachersRaw.some(
-          (ex) => ex.pen === t.pen || ex.name === t.name
-        );
-        if (!exists) {
-          const created = await Teacher.create(t);
-          teachersRaw.push(created.toObject());
+        try {
+          const exists = teachersRaw.some(
+            (ex) => ex.pen === t.pen || ex.name === t.name
+          );
+          if (!exists) {
+            const created = await Teacher.create(t);
+            teachersRaw.push(created.toObject());
+          }
+        } catch (e) {
+          console.warn("Notice seeding default faculty item:", e.message);
         }
       }
     }
