@@ -12,6 +12,10 @@ import {
   updateStudent,
   deleteStudent,
   getExamTimetables,
+  createExam,
+  updateExam,
+  deleteExam,
+  getExamSeatingPlan,
 } from "../controllers/admin.controller.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 import { requireAdmin } from "../middleware/role.middleware.js";
@@ -39,5 +43,9 @@ router.delete("/students/:id", deleteStudent);
 
 // Exam Timetables
 router.get("/exams", getExamTimetables);
+router.post("/exams", createExam);
+router.put("/exams/:id", updateExam);
+router.delete("/exams/:id", deleteExam);
+router.get("/exams/:id/seating", getExamSeatingPlan);
 
 export default router;

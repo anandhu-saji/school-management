@@ -1585,3 +1585,295 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   EXAM TIMETABLES & SEATING REGISTRY STYLES
+   ========================================================================== */
+
+.exam-table-container {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+  margin-bottom: 24px;
+}
+
+.exam-registry-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.exam-registry-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding: 14px 18px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.exam-registry-table td {
+  padding: 16px 18px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 13.5px;
+}
+
+.exam-registry-table tr:hover {
+  background: #fbfcfe;
+}
+
+.exam-date-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.exam-date-primary {
+  font-weight: 800;
+  color: #0f172a;
+  font-size: 13.5px;
+}
+
+.exam-date-subtext {
+  font-size: 11.5px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.exam-time-primary {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 13px;
+}
+
+.exam-duration-subtext {
+  font-size: 11.5px;
+  color: #64748b;
+}
+
+.exam-standard-badge {
+  display: inline-block;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #dbeafe;
+}
+
+.exam-subject-title {
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+  font-size: 13.5px;
+}
+
+.exam-subject-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.exam-qp-badge {
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #334155;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+}
+
+.exam-marks-meta {
+  font-size: 11.5px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.exam-hall-primary {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.exam-candidates-meta {
+  font-size: 11.5px;
+  color: #64748b;
+}
+
+.exam-invigilator-text {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.exam-status-published {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 14px;
+}
+
+.exam-status-draft {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fef3c7;
+  color: #b45309;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 14px;
+}
+
+.exam-actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-seating-action {
+  background: #f8fafc;
+  color: #1d4ed8;
+  border: 1px solid #cbd5e1;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-seating-action:hover {
+  background: #eff6ff;
+  border-color: #1d4ed8;
+}
+
+.btn-exam-edit {
+  color: #475569;
+  background: transparent;
+  border: none;
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.btn-exam-edit:hover {
+  color: #135bec;
+  background: #f1f5f9;
+}
+
+.btn-exam-delete {
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.btn-exam-delete:hover {
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+/* Seating Plan Modal Cards */
+.seating-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.seating-hall-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.seating-hall-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.seating-hall-badge {
+  background: #1d4ed8;
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+
+.seating-candidate-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: #065f46;
+  background: #d1fae5;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.seating-room-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.seating-roll-range {
+  font-size: 12.5px;
+  color: #475569;
+}
+
+.seating-invigilator-box {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.seating-invigilator-label {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.seating-invigilator-value {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .seating-plan-grid {
+    grid-template-columns: 1fr;
+  }
+}

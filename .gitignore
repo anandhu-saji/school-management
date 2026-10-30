@@ -17,3 +17,6 @@ npm-debug.log*
 .DS_STore
 .vscode/
 .idea/
+
+uploads/
+server/uploads/

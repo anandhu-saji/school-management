@@ -6,6 +6,7 @@ import AdminDashboard from "./views/admin/AdminDashboard.jsx";
 import DivisionAttendance from "./views/admin/DivisionAttendance.jsx";
 import TeachersRecords from "./views/admin/TeachersRecords.jsx";
 import StudentsRecords from "./views/admin/StudentsRecords.jsx";
+import ExamTimetables from "./views/admin/ExamTimetables.jsx";
 import TeacherDashboard from "./views/teacher/TeacherDashboard.jsx";
 import Dashboard from "./views/student/Dashboard.jsx";
 import { isSessionValid, getRoleDashboardPath, clearAuthSession } from "./utils/auth";
@@ -134,6 +135,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <StudentsRecords />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/exams"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ExamTimetables />
             </ProtectedRoute>
           }
         />

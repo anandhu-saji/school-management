@@ -1,6 +1,7 @@
 import Student from "../models/Student.js";
 import Attendance from "../models/Attendance.js";
 import Teacher from "../models/Teacher.js";
+import Exam from "../models/Exam.js";
 
 // Helper to extract initials: "Mrs. Priya Nair" -> "PN", "Sri. George K." -> "GK"
 const getInitials = (fullName) => {
@@ -669,15 +670,529 @@ export const deleteStudent = async (req, res) => {
   }
 };
 
-// 8. Get Exam Timetables
+// 8. Get Exam Timetables & Stats
 export const getExamTimetables = async (req, res) => {
   try {
-    const exams = [
-      { date: "12 March 2026, Thu", time: "09:30 AM – 12:15 PM", standard: "Standard 10 (SSLC)", subject: "First Language – Malayalam Part I", qpCode: "MAL-101", hall: "Halls 01, 02, 03", status: "Approved" },
-      { date: "13 March 2026, Fri", time: "09:30 AM – 12:15 PM", standard: "Standard 10 (SSLC)", subject: "Second Language – English", qpCode: "ENG-102", hall: "Halls 01, 02, 03", status: "Approved" },
-    ];
-    return res.status(200).json({ success: true, exams });
+    let count = await Exam.countDocuments();
+    if (count === 0) {
+      const defaultExams = [
+        {
+          term: "SSLC Board Examination March 2026",
+          standard: "Standard 10 (SSLC)",
+          date: "12 March 2026, Thu",
+          startTime: "09:30 AM",
+          endTime: "11:45 AM",
+          duration: "2 hrs 15 mins",
+          subject: "First Language – Malayalam Part I",
+          qpCode: "MAL-101",
+          hall: "Halls 01, 02, 03, 04",
+          totalCandidates: 242,
+          invigilator: "Mrs. Indu B Nair, Sri. George K.",
+          maxMarks: 40,
+          passMarks: 12,
+          status: "Approved & Published",
+          instructions:
+            "15 minutes cool-off time provided (09:30 AM – 09:45 AM). Writing starts at 09:45 AM. Electronic devices strictly prohibited.",
+          seatingPlan: [
+            {
+              hallNumber: "Hall 01",
+              roomName: "Room 101 - Main Academic Block",
+              rollRange: "ADM-14920 to ADM-14960",
+              candidateCount: 40,
+              invigilatorName: "Mrs. Indu B Nair",
+              invigilatorPen: "849201",
+            },
+            {
+              hallNumber: "Hall 02",
+              roomName: "Room 102 - Main Academic Block",
+              rollRange: "ADM-14961 to ADM-15000",
+              candidateCount: 40,
+              invigilatorName: "Sri. George K.",
+              invigilatorPen: "849202",
+            },
+            {
+              hallNumber: "Hall 03",
+              roomName: "Room 201 - Science Wing First Floor",
+              rollRange: "ADM-15001 to ADM-15080",
+              candidateCount: 80,
+              invigilatorName: "Smt. Bindu S.",
+              invigilatorPen: "849205",
+            },
+            {
+              hallNumber: "Hall 04",
+              roomName: "Room 202 - Science Wing First Floor",
+              rollRange: "ADM-15081 to ADM-15162",
+              candidateCount: 82,
+              invigilatorName: "Sri. Thomas Joseph",
+              invigilatorPen: "849210",
+            },
+          ],
+        },
+        {
+          term: "SSLC Board Examination March 2026",
+          standard: "Standard 10 (SSLC)",
+          date: "16 March 2026, Mon",
+          startTime: "09:30 AM",
+          endTime: "12:15 PM",
+          duration: "2 hrs 45 mins",
+          subject: "Second Language – English",
+          qpCode: "ENG-102",
+          hall: "Halls 01, 02, 03, 04",
+          totalCandidates: 242,
+          invigilator: "Sri. Thomas Joseph, Smt. Radhakrishnan N.",
+          maxMarks: 80,
+          passMarks: 24,
+          status: "Approved & Published",
+          instructions:
+            "15 minutes mandatory cool-off period. Candidates must present official Sampoorna photo hall tickets.",
+          seatingPlan: [
+            {
+              hallNumber: "Hall 01",
+              roomName: "Room 101 - Main Academic Block",
+              rollRange: "ADM-14920 to ADM-14960",
+              candidateCount: 40,
+              invigilatorName: "Sri. Thomas Joseph",
+              invigilatorPen: "849210",
+            },
+            {
+              hallNumber: "Hall 02",
+              roomName: "Room 102 - Main Academic Block",
+              rollRange: "ADM-14961 to ADM-15000",
+              candidateCount: 40,
+              invigilatorName: "Smt. Radhakrishnan N.",
+              invigilatorPen: "849214",
+            },
+            {
+              hallNumber: "Hall 03",
+              roomName: "Room 201 - Science Wing First Floor",
+              rollRange: "ADM-15001 to ADM-15080",
+              candidateCount: 80,
+              invigilatorName: "Mrs. Indu B Nair",
+              invigilatorPen: "849201",
+            },
+            {
+              hallNumber: "Hall 04",
+              roomName: "Room 202 - Science Wing First Floor",
+              rollRange: "ADM-15081 to ADM-15162",
+              candidateCount: 82,
+              invigilatorName: "Sri. Suresh C. K.",
+              invigilatorPen: "849219",
+            },
+          ],
+        },
+        {
+          term: "SSLC Board Examination March 2026",
+          standard: "Standard 10 (SSLC)",
+          date: "19 March 2026, Thu",
+          startTime: "09:30 AM",
+          endTime: "12:15 PM",
+          duration: "2 hrs 45 mins",
+          subject: "Mathematics",
+          qpCode: "MAT-104",
+          hall: "Halls 01, 02, 03, 04",
+          totalCandidates: 242,
+          invigilator: "Mrs. Indu B Nair, Sri. George K.",
+          maxMarks: 80,
+          passMarks: 24,
+          status: "Approved & Published",
+          instructions:
+            "Mathematical instruments & geometry boxes permitted. Calculators prohibited.",
+          seatingPlan: [
+            {
+              hallNumber: "Hall 01",
+              roomName: "Room 101 - Main Academic Block",
+              rollRange: "ADM-14920 to ADM-14960",
+              candidateCount: 40,
+              invigilatorName: "Mrs. Indu B Nair",
+              invigilatorPen: "849201",
+            },
+            {
+              hallNumber: "Hall 02",
+              roomName: "Room 102 - Main Academic Block",
+              rollRange: "ADM-14961 to ADM-15000",
+              candidateCount: 40,
+              invigilatorName: "Sri. George K.",
+              invigilatorPen: "849202",
+            },
+            {
+              hallNumber: "Hall 03",
+              roomName: "Room 201 - Science Wing First Floor",
+              rollRange: "ADM-15001 to ADM-15080",
+              candidateCount: 80,
+              invigilatorName: "Smt. Bindu S.",
+              invigilatorPen: "849205",
+            },
+            {
+              hallNumber: "Hall 04",
+              roomName: "Room 202 - Science Wing First Floor",
+              rollRange: "ADM-15081 to ADM-15162",
+              candidateCount: 82,
+              invigilatorName: "Sri. Thomas Joseph",
+              invigilatorPen: "849210",
+            },
+          ],
+        },
+        {
+          term: "SSLC Board Examination March 2026",
+          standard: "Standard 10 (SSLC)",
+          date: "23 March 2026, Mon",
+          startTime: "09:30 AM",
+          endTime: "11:45 AM",
+          duration: "2 hrs 15 mins",
+          subject: "Physics / Physical Science",
+          qpCode: "PHY-105",
+          hall: "Halls 01, 02, 03, 04",
+          totalCandidates: 242,
+          invigilator: "Smt. Bindu S., Sri. Suresh C. K.",
+          maxMarks: 40,
+          passMarks: 12,
+          status: "Approved & Published",
+          instructions: "15 min cool-off period before writing.",
+        },
+        {
+          term: "SSLC Board Examination March 2026",
+          standard: "Standard 10 (SSLC)",
+          date: "26 March 2026, Thu",
+          startTime: "09:30 AM",
+          endTime: "11:45 AM",
+          duration: "2 hrs 15 mins",
+          subject: "Chemistry",
+          qpCode: "CHE-106",
+          hall: "Halls 01, 02, 03, 04",
+          totalCandidates: 242,
+          invigilator: "Sri. Suresh C. K., Smt. Bindu S.",
+          maxMarks: 40,
+          passMarks: 12,
+          status: "Approved & Published",
+          instructions: "15 min cool-off period before writing.",
+        },
+        {
+          term: "SSLC Board Examination March 2026",
+          standard: "Standard 10 (SSLC)",
+          date: "30 March 2026, Mon",
+          startTime: "09:30 AM",
+          endTime: "12:15 PM",
+          duration: "2 hrs 45 mins",
+          subject: "Social Science",
+          qpCode: "SOC-108",
+          hall: "Halls 01, 02, 03, 04",
+          totalCandidates: 242,
+          invigilator: "Smt. Radhakrishnan N., Sri. Thomas Joseph",
+          maxMarks: 80,
+          passMarks: 24,
+          status: "Approved & Published",
+          instructions: "Map pointing sheet provided with question booklet.",
+        },
+        {
+          term: "Plus Two Higher Secondary Board Examination 2026",
+          standard: "Standard 12 (Plus Two Science)",
+          date: "10 March 2026, Tue",
+          startTime: "01:30 PM",
+          endTime: "04:15 PM",
+          duration: "2 hrs 45 mins",
+          subject: "Part I English",
+          qpCode: "HSE-201",
+          hall: "Auditorium Wing A & B",
+          totalCandidates: 180,
+          invigilator: "Sri. Thomas Joseph",
+          maxMarks: 80,
+          passMarks: 24,
+          status: "Approved & Published",
+          instructions: "Afternoon session. Seating commences at 01:15 PM.",
+        },
+        {
+          term: "Plus Two Higher Secondary Board Examination 2026",
+          standard: "Standard 12 (Plus Two Science)",
+          date: "14 March 2026, Sat",
+          startTime: "01:30 PM",
+          endTime: "04:15 PM",
+          duration: "2 hrs 45 mins",
+          subject: "Chemistry",
+          qpCode: "HSE-204",
+          hall: "Auditorium Wing A",
+          totalCandidates: 120,
+          invigilator: "Sri. Suresh C. K.",
+          maxMarks: 60,
+          passMarks: 18,
+          status: "Approved & Published",
+          instructions: "Afternoon session. Periodic tables provided in question booklet.",
+        },
+        {
+          term: "Plus Two Higher Secondary Board Examination 2026",
+          standard: "Standard 12 (Plus Two Science)",
+          date: "18 March 2026, Wed",
+          startTime: "01:30 PM",
+          endTime: "04:15 PM",
+          duration: "2 hrs 45 mins",
+          subject: "Mathematics (Science)",
+          qpCode: "HSE-206",
+          hall: "Auditorium Wing A",
+          totalCandidates: 120,
+          invigilator: "Sri. George K.",
+          maxMarks: 80,
+          passMarks: 24,
+          status: "Draft / Scheduled",
+          instructions: "Draft timetable pending Directorate gazette publication.",
+        },
+        {
+          term: "High School Annual Evaluation (Class 8 & 9)",
+          standard: "Standard 9",
+          date: "02 April 2026, Thu",
+          startTime: "09:30 AM",
+          endTime: "11:45 AM",
+          duration: "2 hrs 15 mins",
+          subject: "Annual Evaluation – Basic Science",
+          qpCode: "HS-903",
+          hall: "Classrooms 9-A & 9-B",
+          totalCandidates: 92,
+          invigilator: "Smt. Bindu S.",
+          maxMarks: 40,
+          passMarks: 12,
+          status: "Draft / Scheduled",
+          instructions: "Internal school evaluation conducted under SCERT guidelines.",
+        },
+        {
+          term: "High School Annual Evaluation (Class 8 & 9)",
+          standard: "Standard 8",
+          date: "03 April 2026, Fri",
+          startTime: "09:30 AM",
+          endTime: "11:45 AM",
+          duration: "2 hrs 15 mins",
+          subject: "Annual Evaluation – Mathematics",
+          qpCode: "HS-804",
+          hall: "Classrooms 8-A, 8-B, 8-C",
+          totalCandidates: 134,
+          invigilator: "Mrs. Indu B Nair",
+          maxMarks: 40,
+          passMarks: 12,
+          status: "Draft / Scheduled",
+          instructions: "Annual terminal examination for lower secondary promotion.",
+        },
+      ];
+      await Exam.insertMany(defaultExams);
+    }
+
+    const { search, standard, term, status } = req.query;
+    let query = {};
+    if (standard && standard !== "All") {
+      query.standard = { $regex: standard, $options: "i" };
+    }
+    if (term && term !== "All") {
+      query.term = { $regex: term, $options: "i" };
+    }
+    if (status && status !== "All") {
+      query.status = status;
+    }
+    if (search) {
+      const q = search.trim();
+      query.$or = [
+        { subject: { $regex: q, $options: "i" } },
+        { qpCode: { $regex: q, $options: "i" } },
+        { standard: { $regex: q, $options: "i" } },
+        { hall: { $regex: q, $options: "i" } },
+        { invigilator: { $regex: q, $options: "i" } },
+      ];
+    }
+
+    const exams = await Exam.find(query).sort({ date: 1, _id: 1 }).lean();
+    const allExams = await Exam.find().lean();
+
+    const stats = {
+      totalSchedules: allExams.length,
+      upcomingCount: allExams.filter((e) => e.status === "Approved & Published").length,
+      hallsAllocated: 12,
+      invigilatorCadre: 24,
+    };
+
+    return res.status(200).json({ success: true, exams, stats });
   } catch (error) {
+    console.error("Error in getExamTimetables:", error);
     return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 9. Create New Exam Schedule
+export const createExam = async (req, res) => {
+  try {
+    const {
+      term,
+      standard,
+      date,
+      startTime,
+      endTime,
+      duration,
+      subject,
+      qpCode,
+      hall,
+      totalCandidates,
+      invigilator,
+      maxMarks,
+      passMarks,
+      status,
+      instructions,
+    } = req.body;
+
+    if (!subject || !date || !standard || !qpCode) {
+      return res.status(400).json({
+        success: false,
+        message: "Subject, Exam Date, Standard, and QP Code are required.",
+      });
+    }
+
+    const candidates = Number(totalCandidates) || 40;
+    const defaultSeating = [
+      {
+        hallNumber: hall ? hall.split(",")[0].trim() : "Hall 01",
+        roomName: "Academic Block - Examination Hall",
+        rollRange: `ADM-14920 to ADM-${14920 + Math.min(candidates, 40) - 1}`,
+        candidateCount: Math.min(candidates, 40),
+        invigilatorName: invigilator || "Mrs. Indu B Nair",
+        invigilatorPen: "849201",
+      },
+    ];
+
+    const newExam = await Exam.create({
+      term: term || "SSLC Board Examination March 2026",
+      standard,
+      date,
+      startTime: startTime || "09:30 AM",
+      endTime: endTime || "12:15 PM",
+      duration: duration || "2 hrs 45 mins",
+      subject,
+      qpCode,
+      hall: hall || "Hall 01",
+      totalCandidates: candidates,
+      invigilator: invigilator || "Mrs. Indu B Nair",
+      maxMarks: Number(maxMarks) || 80,
+      passMarks: Number(passMarks) || 24,
+      status: status || "Approved & Published",
+      instructions:
+        instructions ||
+        "15 minutes cool-off time provided before writing starts. Candidates must be seated by 09:15 AM.",
+      seatingPlan: defaultSeating,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: `Exam session for ${subject} scheduled successfully.`,
+      exam: newExam,
+    });
+  } catch (error) {
+    console.error("Error creating exam schedule:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to create exam schedule.",
+    });
+  }
+};
+
+// 10. Update Exam Schedule
+export const updateExam = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updated = await Exam.findByIdAndUpdate(id, req.body, {
+      returnDocument: "after",
+      runValidators: true,
+    });
+
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        message: "Exam schedule not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Exam schedule for ${updated.subject} updated successfully.`,
+      exam: updated,
+    });
+  } catch (error) {
+    console.error("Error updating exam schedule:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update exam schedule.",
+    });
+  }
+};
+
+// 11. Delete Exam Schedule
+export const deleteExam = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await Exam.findByIdAndDelete(id);
+
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Exam schedule not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Exam schedule removed successfully.`,
+    });
+  } catch (error) {
+    console.error("Error deleting exam schedule:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to delete exam schedule.",
+    });
+  }
+};
+
+// 12. Get Exam Seating Plan & Hall Distribution
+export const getExamSeatingPlan = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const exam = await Exam.findById(id).lean();
+
+    if (!exam) {
+      return res.status(404).json({
+        success: false,
+        message: "Exam schedule not found.",
+      });
+    }
+
+    let seating = exam.seatingPlan || [];
+    if (seating.length === 0) {
+      seating = [
+        {
+          hallNumber: "Hall 01",
+          roomName: "Room 101 - Main Academic Block",
+          rollRange: "ADM-14920 to ADM-14960",
+          candidateCount: 40,
+          invigilatorName: "Mrs. Indu B Nair",
+          invigilatorPen: "849201",
+        },
+        {
+          hallNumber: "Hall 02",
+          roomName: "Room 102 - Main Academic Block",
+          rollRange: "ADM-14961 to ADM-15000",
+          candidateCount: 40,
+          invigilatorName: "Sri. George K.",
+          invigilatorPen: "849202",
+        },
+      ];
+    }
+
+    return res.status(200).json({
+      success: true,
+      examId: exam._id,
+      subject: exam.subject,
+      qpCode: exam.qpCode,
+      standard: exam.standard,
+      date: exam.date,
+      time: `${exam.startTime} – ${exam.endTime}`,
+      totalCandidates: exam.totalCandidates,
+      seatingPlan: seating,
+    });
+  } catch (error) {
+    console.error("Error getting exam seating plan:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch exam seating plan.",
+    });
   }
 };
