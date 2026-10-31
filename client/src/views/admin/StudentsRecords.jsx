@@ -40,6 +40,7 @@ export default function StudentsRecords() {
 
   const initialForm = {
     name: "",
+    email: "",
     rollNumber: "",
     admissionNumber: "",
     sampoornaId: "",
@@ -155,6 +156,7 @@ export default function StudentsRecords() {
     const nextRoll = students.length + 1;
     setFormData({
       ...initialForm,
+      email: "",
       rollNumber: nextRoll,
       admissionNumber: `ADM-${14920 + nextRoll}`,
       sampoornaId: `SMP-06042-${880 + nextRoll}`,
@@ -169,6 +171,7 @@ export default function StudentsRecords() {
     setActiveModalTab("personal");
     setFormData({
       name: student.name || "",
+      email: student.email || "",
       rollNumber: student.rollNumber || "",
       admissionNumber: student.admissionNumber || "",
       sampoornaId: student.sampoornaId || "",
@@ -755,6 +758,14 @@ export default function StudentsRecords() {
                             {std.name}
                           </strong>
                           <span className="subtext-dim">DOB: {std.dob}</span>
+                          {std.email && (
+                            <span
+                              className="subtext-dim"
+                              style={{ color: "#2563eb", fontSize: "11px", display: "block", marginTop: "2px" }}
+                            >
+                              ✉ {std.email}
+                            </span>
+                          )}
                         </td>
                         <td>
                           <span className="pill-division">{std.division}</span>
@@ -975,16 +986,28 @@ export default function StudentsRecords() {
                 {/* TAB 1: ACADEMIC & PERSONAL */}
                 {activeModalTab === "personal" && (
                   <div>
-                    <div className="form-field-group">
-                      <label>Student Full Name *</label>
-                      <input
-                        type="text"
-                        name="name"
-                        required
-                        placeholder="e.g. Aaditya S. Kumar"
-                        value={formData.name}
-                        onChange={handleFormChange}
-                      />
+                    <div className="form-row-grid-2">
+                      <div className="form-field-group">
+                        <label>Student Full Name *</label>
+                        <input
+                          type="text"
+                          name="name"
+                          required
+                          placeholder="e.g. Aaditya S. Kumar"
+                          value={formData.name}
+                          onChange={handleFormChange}
+                        />
+                      </div>
+                      <div className="form-field-group">
+                        <label>Student Email ID (Mail ID)</label>
+                        <input
+                          type="email"
+                          name="email"
+                          placeholder="student@ghss.edu"
+                          value={formData.email}
+                          onChange={handleFormChange}
+                        />
+                      </div>
                     </div>
 
                     <div className="form-row-grid-2">
@@ -1797,6 +1820,21 @@ export default function StudentsRecords() {
                     <span className="label">Contact Mobile:</span>
                     <span className="value">
                       {dossierStudent.parentContact}
+                    </span>
+                  </div>
+                  <div className="dossier-field-row">
+                    <span className="label">Student Mail ID:</span>
+                    <span className="value">
+                      {dossierStudent.email ? (
+                        <a
+                          href={"mailto:" + dossierStudent.email}
+                          style={{ color: "#2563eb", textDecoration: "none", fontWeight: "600" }}
+                        >
+                          ✉ {dossierStudent.email}
+                        </a>
+                      ) : (
+                        <span style={{ color: "#94a3b8" }}>Not registered</span>
+                      )}
                     </span>
                   </div>
                   <div className="dossier-field-row">

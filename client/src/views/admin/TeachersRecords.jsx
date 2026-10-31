@@ -801,6 +801,12 @@ export default function TeachersRecords() {
                         <span className="teacher-meta-value">{t.phone}</span>
                       </div>
                       <div className="teacher-meta-row">
+                        <span className="teacher-meta-label">Official Mail ID</span>
+                        <span className="teacher-meta-value" style={{ fontSize: "12px", color: "#2563eb", wordBreak: "break-all" }}>
+                          {t.email ? "✉ " + t.email : "Not registered"}
+                        </span>
+                      </div>
+                      <div className="teacher-meta-row">
                         <span className="teacher-meta-label">Periods Allotted</span>
                         <span className="teacher-meta-value">{t.periods}</span>
                       </div>
@@ -1072,7 +1078,7 @@ export default function TeachersRecords() {
                         />
                       </div>
                       <div className="form-field-group">
-                        <label>Official Email Address</label>
+                        <label>Official Email ID (Mail ID)</label>
                         <input
                           type="email"
                           name="email"
@@ -1550,6 +1556,19 @@ export default function TeachersRecords() {
                     ✓ K.E.R Verified Cadre
                   </strong>
                 </div>
+              </div>
+
+              <div style={{ marginTop: "10px", padding: "8px 14px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: "12px", color: "#64748b" }}>Official Mail ID:</span>
+                <strong style={{ color: "#2563eb", fontSize: "12.5px" }}>
+                  {dossierTeacher.email ? (
+                    <a href={"mailto:" + dossierTeacher.email} style={{ color: "#2563eb", textDecoration: "none" }}>
+                      ✉ {dossierTeacher.email}
+                    </a>
+                  ) : (
+                    "Not registered"
+                  )}
+                </strong>
               </div>
 
               {/* 1. Government Identity Documents */}

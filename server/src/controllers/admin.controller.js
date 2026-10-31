@@ -2,6 +2,7 @@ import Student from "../models/Student.js";
 import Attendance from "../models/Attendance.js";
 import Teacher from "../models/Teacher.js";
 import Exam from "../models/Exam.js";
+import User from "../models/user.js";
 import { ACADEMIC_WINGS, ALL_CLASSES } from "../utils/classData.js";
 
 // Helper to extract initials: "Mrs. Priya Nair" -> "PN", "Sri. George K." -> "GK"
@@ -574,7 +575,7 @@ export const getTeachersRecords = async (req, res) => {
 // 3b. Create New Teacher Record
 export const createTeacher = async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, email } = req.body;
     if (!name || !name.trim()) {
       return res.status(400).json({
         success: false,
@@ -595,8 +596,16 @@ export const createTeacher = async (req, res) => {
       appointmentDate: req.body.appointmentDate?.trim() || "01/06/2020",
     };
 
-    if (req.body.email && req.body.email.trim()) {
-      teacherData.email = req.body.email.trim().toLowerCase();
+    if (email && email.trim()) {
+      const cleanEmail = email.trim().toLowerCase();
+      const existing = await Teacher.findOne({ email: cleanEmail });
+      if (existing) {
+        return res.status(400).json({
+          success: false,
+          message: `A teacher with email ID "${cleanEmail}" already exists (${existing.name}).`,
+        });
+      }
+      teacherData.email = cleanEmail;
     } else {
       delete teacherData.email;
     }
@@ -621,9 +630,24 @@ export const updateTeacher = async (req, res) => {
     const updateData = { ...req.body };
     const updateOps = { $set: updateData };
 
-    if (!updateData.email || !updateData.email.trim()) {
-      delete updateData.email;
-      updateOps.$unset = { email: 1 };
+    if (updateData.email !== undefined) {
+      if (updateData.email && updateData.email.trim()) {
+        const cleanEmail = updateData.email.trim().toLowerCase();
+        const existing = await Teacher.findOne({
+          _id: { $ne: id },
+          email: cleanEmail,
+        });
+        if (existing) {
+          return res.status(400).json({
+            success: false,
+            message: `A teacher with email ID "${cleanEmail}" already exists (${existing.name}).`,
+          });
+        }
+        updateData.email = cleanEmail;
+      } else {
+        delete updateData.email;
+        updateOps.$unset = { email: 1 };
+      }
     }
 
     const updated = await Teacher.findByIdAndUpdate(
@@ -637,6 +661,10 @@ export const updateTeacher = async (req, res) => {
         success: false,
         message: "Teacher record not found.",
       });
+    }
+
+    if (updated.userId && updateData.email) {
+      await User.findByIdAndUpdate(updated.userId, { email: updateData.email });
     }
 
     return res.status(200).json({
@@ -770,6 +798,7 @@ export const getStudentsRecords = async (req, res) => {
         parentContact: s.parentContact || `+91 94473 ${11800 + roll}`,
         category: categoryTag,
         gender: s.gender || (isFemale ? "Female" : "Male"),
+        email: s.email || "",
         attendance: s.overallAttendance
           ? s.overallAttendance.includes("%")
             ? s.overallAttendance
@@ -905,6 +934,7 @@ export const createStudent = async (req, res) => {
   try {
     const {
       name,
+      email,
       rollNumber,
       admissionNumber,
       sampoornaId,
@@ -991,7 +1021,19 @@ export const createStudent = async (req, res) => {
     const primaryGuardian =
       guardian?.trim() || fatherName?.trim() || motherName?.trim() || "Parent/Guardian";
 
-    const newStudent = await Student.create({
+    let cleanEmail = undefined;
+    if (email && email.trim()) {
+      cleanEmail = email.trim().toLowerCase();
+      const existing = await Student.findOne({ email: cleanEmail });
+      if (existing) {
+        return res.status(400).json({
+          success: false,
+          message: `A student with email ID "${cleanEmail}" is already registered (${existing.name}).`,
+        });
+      }
+    }
+
+    const studentToCreate = {
       name: name.trim(),
       rollNumber: nextRoll,
       admissionNumber: admNo,
@@ -1026,7 +1068,13 @@ export const createStudent = async (req, res) => {
       identificationMarks: identificationMarks?.trim() || "",
       overallAttendance: "100.0", // Newly admitted student starts with clean attendance
       status: "Present",
-    });
+    };
+
+    if (cleanEmail) {
+      studentToCreate.email = cleanEmail;
+    }
+
+    const newStudent = await Student.create(studentToCreate);
 
     return res.status(201).json({
       success: true,
@@ -1047,6 +1095,27 @@ export const updateStudent = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = { ...req.body };
+    const updateOps = { $set: updateData };
+
+    if (updateData.email !== undefined) {
+      if (updateData.email && updateData.email.trim()) {
+        const cleanEmail = updateData.email.trim().toLowerCase();
+        const existing = await Student.findOne({
+          _id: { $ne: id },
+          email: cleanEmail,
+        });
+        if (existing) {
+          return res.status(400).json({
+            success: false,
+            message: `A student with email ID "${cleanEmail}" is already registered (${existing.name}).`,
+          });
+        }
+        updateData.email = cleanEmail;
+      } else {
+        delete updateData.email;
+        updateOps.$unset = { email: 1 };
+      }
+    }
 
     if (updateData.division) {
       const div = updateData.division.trim();
@@ -1083,8 +1152,8 @@ export const updateStudent = async (req, res) => {
 
     const updated = await Student.findByIdAndUpdate(
       id,
-      { $set: updateData },
-      { new: true }
+      updateOps,
+      { new: true, runValidators: true }
     );
 
     if (!updated) {
@@ -1092,6 +1161,10 @@ export const updateStudent = async (req, res) => {
         success: false,
         message: "Student record not found.",
       });
+    }
+
+    if (updated.userId && updateData.email) {
+      await User.findByIdAndUpdate(updated.userId, { email: updateData.email });
     }
 
     return res.status(200).json({
