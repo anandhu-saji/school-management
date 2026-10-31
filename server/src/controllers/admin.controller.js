@@ -19,14 +19,167 @@ export const getAdminOverviewStats = async (req, res) => {
   try {
     const totalStudents = await Student.countDocuments();
     const totalTeachers = await Teacher.countDocuments();
+    const todayStr = new Date().toISOString().split("T")[0];
+
+    // Find any attendance recorded today
+    const todayAttendances = await Attendance.find({ date: todayStr }).lean();
+
+    const sectionDefinitions = [
+      {
+        id: "high_school",
+        title: "High School Section Attendance",
+        classes: "Classes 8–10",
+        divisionsText: "Classes 8–10 (6 Divisions)",
+        description:
+          "Classes 8–10 consolidated roll-call sync from teacher terminals with Kerala Pareeksha Bhavan portal.",
+        turnout: "96.4%",
+        turnoutDiff: "+1.2% vs yesterday",
+        totalEnrolled: 364,
+        totalPresent: 351,
+        totalAbsent: 13,
+        divisionsCount: 6,
+        divisionsLocked: "6 / 6",
+        syncStatus: "100% High School Synced",
+        presentStatus: "Marked in class",
+        absentStatus: "Auto-SMS dispatched",
+        classPrefixes: ["Class 8", "Class 9", "Class 10", "8-", "9-", "10-"],
+      },
+      {
+        id: "up_school",
+        title: "UP School Attendance",
+        classes: "Classes 5–7",
+        divisionsText: "Classes 5–7 (6 Divisions)",
+        description:
+          "Classes 5–7 consolidated roll-call sync from teacher terminals with Kerala Pareeksha Bhavan portal.",
+        turnout: "96.7%",
+        turnoutDiff: "+0.8% vs yesterday",
+        totalEnrolled: 276,
+        totalPresent: 267,
+        totalAbsent: 9,
+        divisionsCount: 6,
+        divisionsLocked: "6 / 6",
+        syncStatus: "100% UP School Synced",
+        presentStatus: "Marked in class",
+        absentStatus: "Auto-SMS dispatched",
+        classPrefixes: ["Class 5", "Class 6", "Class 7", "5-", "6-", "7-"],
+      },
+      {
+        id: "lp_school",
+        title: "LP School Attendance",
+        classes: "Classes 1–4",
+        divisionsText: "Classes 1–4 (8 Divisions)",
+        description:
+          "Classes 1–4 consolidated roll-call sync from teacher terminals with General Education Department portal.",
+        turnout: "96.5%",
+        turnoutDiff: "+1.5% vs yesterday",
+        totalEnrolled: 312,
+        totalPresent: 301,
+        totalAbsent: 11,
+        divisionsCount: 8,
+        divisionsLocked: "8 / 8",
+        syncStatus: "100% LP School Synced",
+        presentStatus: "Marked in class",
+        absentStatus: "Auto-SMS dispatched",
+        classPrefixes: ["Class 1", "Class 2", "Class 3", "Class 4", "1-", "2-", "3-", "4-"],
+      },
+      {
+        id: "higher_secondary",
+        title: "Higher Secondary Attendance",
+        classes: "Classes 11–12",
+        divisionsText: "Classes 11–12 (6 Divisions)",
+        description:
+          "Classes 11–12 consolidated roll-call sync from teacher terminals with Kerala DHSE portal.",
+        turnout: "95.9%",
+        turnoutDiff: "+0.5% vs yesterday",
+        totalEnrolled: 296,
+        totalPresent: 284,
+        totalAbsent: 12,
+        divisionsCount: 6,
+        divisionsLocked: "6 / 6",
+        syncStatus: "100% Higher Secondary Synced",
+        presentStatus: "Marked in class",
+        absentStatus: "Auto-SMS dispatched",
+        classPrefixes: ["Class 11", "Class 12", "11-", "12-", "Plus One", "Plus Two"],
+      },
+    ];
+
+    const sections = sectionDefinitions.map((sec) => {
+      const matched = todayAttendances.filter((att) =>
+        sec.classPrefixes.some((p) =>
+          (att.classDivision || "").toLowerCase().includes(p.toLowerCase())
+        )
+      );
+
+      let enrolled = sec.totalEnrolled;
+      let present = sec.totalPresent;
+      let absent = sec.totalAbsent;
+
+      if (matched.length > 0) {
+        let livePresent = 0;
+        let liveAbsent = 0;
+        matched.forEach((m) => {
+          livePresent += m.totalPresent || 0;
+          liveAbsent += m.totalAbsent || 0;
+        });
+        if (livePresent + liveAbsent > 0) {
+          present = livePresent;
+          absent = liveAbsent;
+          enrolled = livePresent + liveAbsent;
+          return {
+            id: sec.id,
+            title: sec.title,
+            classes: sec.classes,
+            divisionsText: sec.divisionsText,
+            description: sec.description,
+            turnout: ((present / enrolled) * 100).toFixed(1) + "%",
+            turnoutDiff: sec.turnoutDiff,
+            totalEnrolled: enrolled,
+            totalPresent: present,
+            totalAbsent: absent,
+            divisionsLocked: `${matched.length} / ${sec.divisionsCount}`,
+            syncStatus: sec.syncStatus,
+            presentStatus: sec.presentStatus,
+            absentStatus: sec.absentStatus,
+          };
+        }
+      }
+
+      return {
+        id: sec.id,
+        title: sec.title,
+        classes: sec.classes,
+        divisionsText: sec.divisionsText,
+        description: sec.description,
+        turnout: sec.turnout,
+        turnoutDiff: sec.turnoutDiff,
+        totalEnrolled: enrolled,
+        totalPresent: present,
+        totalAbsent: absent,
+        divisionsLocked: sec.divisionsLocked,
+        syncStatus: sec.syncStatus,
+        presentStatus: sec.presentStatus,
+        absentStatus: sec.absentStatus,
+      };
+    });
+
+    const totalEnrolledAll = sections.reduce((sum, s) => sum + s.totalEnrolled, 0);
+    const totalPresentAll = sections.reduce((sum, s) => sum + s.totalPresent, 0);
+    const totalAbsentAll = sections.reduce((sum, s) => sum + s.totalAbsent, 0);
+    const overallTurnout =
+      totalEnrolledAll > 0
+        ? ((totalPresentAll / totalEnrolledAll) * 100).toFixed(1) + "%"
+        : "96.4%";
 
     return res.status(200).json({
       success: true,
       stats: {
-        totalPupils: totalStudents > 0 ? totalStudents : 1248,
+        totalPupils: totalStudents > 0 ? totalStudents : totalEnrolledAll,
         totalStaff: totalTeachers > 0 ? totalTeachers : 64,
-        turnout: "96.4%",
+        turnout: overallTurnout,
+        totalPresent: totalPresentAll,
+        totalAbsent: totalAbsentAll,
       },
+      sections,
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
@@ -36,14 +189,51 @@ export const getAdminOverviewStats = async (req, res) => {
 // 2. Get Division-Wise Attendance Muster
 export const getDivisionMuster = async (req, res) => {
   try {
-    const divisions = [
-      { id: "8-A", standardDivision: "Class 8–A", stream: "(General)", mentor: "Smt. Bindu S. (HST)", enrolled: 45, present: 44, absent: 1, turnoutRate: "97.8%", syncStatus: "Verified & Locked" },
-      { id: "8-B", standardDivision: "Class 8–B", stream: "(General)", mentor: "Sri. Radhakrishnan N. (HST)", enrolled: 44, present: 42, absent: 2, turnoutRate: "95.5%", syncStatus: "Verified & Locked" },
-      { id: "9-A", standardDivision: "Class 9–A", stream: "(General)", mentor: "Sri. George K. (HST)", enrolled: 46, present: 45, absent: 1, turnoutRate: "97.8%", syncStatus: "Verified & Locked" },
-      { id: "9-B", standardDivision: "Class 9–B", stream: "(General)", mentor: "Smt. Sunitha R. (HST)", enrolled: 47, present: 45, absent: 2, turnoutRate: "95.7%", syncStatus: "Verified & Locked" },
-      { id: "10-A", standardDivision: "Class 10–A", stream: "(General)", mentor: "Mrs. Indu B Nair (HST)", enrolled: 48, present: 47, absent: 1, turnoutRate: "97.9%", syncStatus: "Verified & Locked" },
-      { id: "10-B", standardDivision: "Class 10–B", stream: "(General)", mentor: "Sri. George K. (HST)", enrolled: 46, present: 44, absent: 2, turnoutRate: "95.6%", syncStatus: "Verified & Locked" },
+    const { section } = req.query;
+    const allDivisions = [
+      // High School Section (Classes 8–10)
+      { id: "8-A", section: "high_school", sectionLabel: "High School", standardDivision: "Class 8–A", stream: "(General)", mentor: "Smt. Bindu S. (HST)", enrolled: 45, present: 44, absent: 1, turnoutRate: "97.8%", syncStatus: "Verified & Locked" },
+      { id: "8-B", section: "high_school", sectionLabel: "High School", standardDivision: "Class 8–B", stream: "(General)", mentor: "Sri. Radhakrishnan N. (HST)", enrolled: 44, present: 42, absent: 2, turnoutRate: "95.5%", syncStatus: "Verified & Locked" },
+      { id: "9-A", section: "high_school", sectionLabel: "High School", standardDivision: "Class 9–A", stream: "(General)", mentor: "Sri. George K. (HST)", enrolled: 46, present: 45, absent: 1, turnoutRate: "97.8%", syncStatus: "Verified & Locked" },
+      { id: "9-B", section: "high_school", sectionLabel: "High School", standardDivision: "Class 9–B", stream: "(General)", mentor: "Smt. Sunitha R. (HST)", enrolled: 47, present: 45, absent: 2, turnoutRate: "95.7%", syncStatus: "Verified & Locked" },
+      { id: "10-A", section: "high_school", sectionLabel: "High School", standardDivision: "Class 10–A", stream: "(General)", mentor: "Mrs. Indu B Nair (HST)", enrolled: 48, present: 47, absent: 1, turnoutRate: "97.9%", syncStatus: "Verified & Locked" },
+      { id: "10-B", section: "high_school", sectionLabel: "High School", standardDivision: "Class 10–B", stream: "(General)", mentor: "Sri. George K. (HST)", enrolled: 46, present: 44, absent: 2, turnoutRate: "95.6%", syncStatus: "Verified & Locked" },
+
+      // UP School Section (Classes 5–7)
+      { id: "5-A", section: "up_school", sectionLabel: "UP School", standardDivision: "Class 5–A", stream: "(General)", mentor: "Smt. Mini V. (UPSA)", enrolled: 46, present: 45, absent: 1, turnoutRate: "97.8%", syncStatus: "Verified & Locked" },
+      { id: "5-B", section: "up_school", sectionLabel: "UP School", standardDivision: "Class 5–B", stream: "(General)", mentor: "Sri. Rajesh Kumar (UPSA)", enrolled: 45, present: 43, absent: 2, turnoutRate: "95.6%", syncStatus: "Verified & Locked" },
+      { id: "6-A", section: "up_school", sectionLabel: "UP School", standardDivision: "Class 6–A", stream: "(General)", mentor: "Smt. Sheela Thomas (UPSA)", enrolled: 47, present: 46, absent: 1, turnoutRate: "97.9%", syncStatus: "Verified & Locked" },
+      { id: "6-B", section: "up_school", sectionLabel: "UP School", standardDivision: "Class 6–B", stream: "(General)", mentor: "Sri. Deepu Varghese (UPSA)", enrolled: 45, present: 43, absent: 2, turnoutRate: "95.6%", syncStatus: "Verified & Locked" },
+      { id: "7-A", section: "up_school", sectionLabel: "UP School", standardDivision: "Class 7–A", stream: "(General)", mentor: "Smt. Mary K. J. (UPSA)", enrolled: 47, present: 46, absent: 1, turnoutRate: "97.9%", syncStatus: "Verified & Locked" },
+      { id: "7-B", section: "up_school", sectionLabel: "UP School", standardDivision: "Class 7–B", stream: "(General)", mentor: "Sri. Suresh Babu (UPSA)", enrolled: 46, present: 44, absent: 2, turnoutRate: "95.7%", syncStatus: "Verified & Locked" },
+
+      // LP School Section (Classes 1–4)
+      { id: "1-A", section: "lp_school", sectionLabel: "LP School", standardDivision: "Class 1–A", stream: "(Primary)", mentor: "Smt. Beena P. (LPSA)", enrolled: 39, present: 38, absent: 1, turnoutRate: "97.4%", syncStatus: "Verified & Locked" },
+      { id: "1-B", section: "lp_school", sectionLabel: "LP School", standardDivision: "Class 1–B", stream: "(Primary)", mentor: "Smt. Asha Mohan (LPSA)", enrolled: 38, present: 37, absent: 1, turnoutRate: "97.4%", syncStatus: "Verified & Locked" },
+      { id: "2-A", section: "lp_school", sectionLabel: "LP School", standardDivision: "Class 2–A", stream: "(Primary)", mentor: "Smt. Sreeja K. (LPSA)", enrolled: 40, present: 39, absent: 1, turnoutRate: "97.5%", syncStatus: "Verified & Locked" },
+      { id: "2-B", section: "lp_school", sectionLabel: "LP School", standardDivision: "Class 2–B", stream: "(Primary)", mentor: "Sri. Anilkumar (LPSA)", enrolled: 39, present: 37, absent: 2, turnoutRate: "94.9%", syncStatus: "Verified & Locked" },
+      { id: "3-A", section: "lp_school", sectionLabel: "LP School", standardDivision: "Class 3–A", stream: "(Primary)", mentor: "Smt. Manju R. (LPSA)", enrolled: 39, present: 38, absent: 1, turnoutRate: "97.4%", syncStatus: "Verified & Locked" },
+      { id: "3-B", section: "lp_school", sectionLabel: "LP School", standardDivision: "Class 3–B", stream: "(Primary)", mentor: "Smt. Rema Devi (LPSA)", enrolled: 39, present: 37, absent: 2, turnoutRate: "94.9%", syncStatus: "Verified & Locked" },
+      { id: "4-A", section: "lp_school", sectionLabel: "LP School", standardDivision: "Class 4–A", stream: "(Primary)", mentor: "Sri. Shaji Mathew (LPSA)", enrolled: 39, present: 38, absent: 1, turnoutRate: "97.4%", syncStatus: "Verified & Locked" },
+      { id: "4-B", section: "lp_school", sectionLabel: "LP School", standardDivision: "Class 4–B", stream: "(Primary)", mentor: "Smt. Latha K. (LPSA)", enrolled: 39, present: 37, absent: 2, turnoutRate: "94.9%", syncStatus: "Verified & Locked" },
+
+      // Higher Secondary Section (Classes 11–12)
+      { id: "11-Sci", section: "higher_secondary", sectionLabel: "Higher Secondary", standardDivision: "Class 11–Science", stream: "(Bio-Maths)", mentor: "Sri. Suresh C. K. (HSST)", enrolled: 50, present: 48, absent: 2, turnoutRate: "96.0%", syncStatus: "Verified & Locked" },
+      { id: "11-Com", section: "higher_secondary", sectionLabel: "Higher Secondary", standardDivision: "Class 11–Commerce", stream: "(Computer App)", mentor: "Smt. Priya Nair (HSST)", enrolled: 49, present: 47, absent: 2, turnoutRate: "95.9%", syncStatus: "Verified & Locked" },
+      { id: "11-Hum", section: "higher_secondary", sectionLabel: "Higher Secondary", standardDivision: "Class 11–Humanities", stream: "(Sociology/Hist)", mentor: "Sri. Thomas Joseph (HSST)", enrolled: 48, present: 46, absent: 2, turnoutRate: "95.8%", syncStatus: "Verified & Locked" },
+      { id: "12-Sci", section: "higher_secondary", sectionLabel: "Higher Secondary", standardDivision: "Class 12–Science", stream: "(Bio-Maths)", mentor: "Sri. Manoj P. (HSST)", enrolled: 50, present: 48, absent: 2, turnoutRate: "96.0%", syncStatus: "Verified & Locked" },
+      { id: "12-Com", section: "higher_secondary", sectionLabel: "Higher Secondary", standardDivision: "Class 12–Commerce", stream: "(Computer App)", mentor: "Smt. Deepa Nair (HSST)", enrolled: 50, present: 48, absent: 2, turnoutRate: "96.0%", syncStatus: "Verified & Locked" },
+      { id: "12-Hum", section: "higher_secondary", sectionLabel: "Higher Secondary", standardDivision: "Class 12–Humanities", stream: "(Sociology/Hist)", mentor: "Sri. Thomas Joseph (HSST)", enrolled: 49, present: 47, absent: 2, turnoutRate: "95.9%", syncStatus: "Verified & Locked" },
     ];
+
+    let divisions = allDivisions;
+    if (section && section !== "all") {
+      divisions = allDivisions.filter(
+        (d) =>
+          d.section === section ||
+          d.sectionLabel.toLowerCase() === section.toLowerCase()
+      );
+    }
     return res.status(200).json({ success: true, divisions });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

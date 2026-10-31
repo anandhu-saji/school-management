@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import api from "../../api/axiosclient";
 import { clearAuthSession } from "../../utils/auth";
 import "../../Styles/AdminDash.css";
 
 export default function DivisionAttendance() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [activeSection, setActiveSection] = useState(
+    location.state?.section || "all"
+  );
   const [divisions, setDivisions] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -57,14 +61,22 @@ export default function DivisionAttendance() {
     navigate("/login");
   };
 
-  // Filter divisions in main table
+  // Filter divisions in main table by search and academic section
   const filteredDivisions = useMemo(() => {
-    return divisions.filter(
-      (d) =>
+    return divisions.filter((d) => {
+      const matchSearch =
         d.standardDivision.toLowerCase().includes(search.toLowerCase()) ||
-        d.mentor.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [divisions, search]);
+        d.mentor.toLowerCase().includes(search.toLowerCase()) ||
+        (d.sectionLabel && d.sectionLabel.toLowerCase().includes(search.toLowerCase()));
+
+      const matchSection =
+        activeSection === "all" ||
+        d.section === activeSection ||
+        (d.sectionLabel && d.sectionLabel.toLowerCase() === activeSection.toLowerCase());
+
+      return matchSearch && matchSection;
+    });
+  }, [divisions, search, activeSection]);
 
   // Open Class Attendance Register Modal
   const handleOpenRegister = async (div) => {
@@ -399,6 +411,45 @@ export default function DivisionAttendance() {
                 onChange={(e) => setSearch(e.target.value)}
                 className="search-box"
               />
+            </div>
+
+            {/* Academic Wing Section Filter Pills */}
+            <div className="section-filter-pills-row">
+              <button
+                type="button"
+                className={`section-tab-pill ${activeSection === "all" ? "active" : ""}`}
+                onClick={() => setActiveSection("all")}
+              >
+                All Wings ({divisions.length || 26} Divisions)
+              </button>
+              <button
+                type="button"
+                className={`section-tab-pill ${activeSection === "high_school" ? "active" : ""}`}
+                onClick={() => setActiveSection("high_school")}
+              >
+                High School (Classes 8–10)
+              </button>
+              <button
+                type="button"
+                className={`section-tab-pill ${activeSection === "up_school" ? "active" : ""}`}
+                onClick={() => setActiveSection("up_school")}
+              >
+                UP School (Classes 5–7)
+              </button>
+              <button
+                type="button"
+                className={`section-tab-pill ${activeSection === "lp_school" ? "active" : ""}`}
+                onClick={() => setActiveSection("lp_school")}
+              >
+                LP School (Classes 1–4)
+              </button>
+              <button
+                type="button"
+                className={`section-tab-pill ${activeSection === "higher_secondary" ? "active" : ""}`}
+                onClick={() => setActiveSection("higher_secondary")}
+              >
+                Higher Secondary (Classes 11–12)
+              </button>
             </div>
 
             {loading ? (
