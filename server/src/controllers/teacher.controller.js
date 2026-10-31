@@ -58,7 +58,7 @@ export const getStudentsByDivision = async (req, res) => {
       ],
     });
 
-    const roster = students.map((std) => {
+    const roster = studentList.map((std) => {
       let status = "Present";
       if (existingAttendance && existingAttendance.records) {
         const found = existingAttendance.records.find(

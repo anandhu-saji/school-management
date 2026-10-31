@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosclient";
 import { clearAuthSession } from "../../utils/auth";
 import "../../Styles/AdminDash.css";
+import { ACADEMIC_WINGS, ALL_CLASSES } from "../../utils/classData";
 
 export default function AdminOverview() {
   const navigate = useNavigate();
@@ -388,6 +389,137 @@ export default function AdminOverview() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* ---------------- COMPLETE 26 ACADEMIC DIVISIONS DIRECTORY ---------------- */}
+          <div className="section-attendance-wrapper" style={{ marginTop: "28px" }}>
+            <div className="section-attendance-heading-bar">
+              <div>
+                <h2 className="section-att-main-heading">
+                  All 26 Institutional Academic Divisions Directory
+                </h2>
+                <p className="section-att-main-subtext">
+                  Complete division-wise breakdown across Lower Primary, Upper Primary, High School, and Higher Secondary wings.
+                </p>
+              </div>
+              <div className="section-filter-pills-row" style={{ margin: 0 }}>
+                <button
+                  type="button"
+                  className={`section-tab-pill ${selectedWingTab === "all" ? "active" : ""}`}
+                  onClick={() => setSelectedWingTab("all")}
+                >
+                  All 26 Divisions
+                </button>
+                <button
+                  type="button"
+                  className={`section-tab-pill ${selectedWingTab === "lp_school" ? "active" : ""}`}
+                  onClick={() => setSelectedWingTab("lp_school")}
+                >
+                  LP (8)
+                </button>
+                <button
+                  type="button"
+                  className={`section-tab-pill ${selectedWingTab === "up_school" ? "active" : ""}`}
+                  onClick={() => setSelectedWingTab("up_school")}
+                >
+                  UP (6)
+                </button>
+                <button
+                  type="button"
+                  className={`section-tab-pill ${selectedWingTab === "high_school" ? "active" : ""}`}
+                  onClick={() => setSelectedWingTab("high_school")}
+                >
+                  High School (6)
+                </button>
+                <button
+                  type="button"
+                  className={`section-tab-pill ${selectedWingTab === "higher_secondary" ? "active" : ""}`}
+                  onClick={() => setSelectedWingTab("higher_secondary")}
+                >
+                  Higher Secondary (6)
+                </button>
+              </div>
+            </div>
+
+            <div className="muster-card" style={{ marginTop: "14px" }}>
+              <table className="muster-table">
+                <thead>
+                  <tr>
+                    <th>Division &amp; Standard</th>
+                    <th>Academic Wing</th>
+                    <th>Class Mentor</th>
+                    <th>Room Allocation</th>
+                    <th>Stream</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ALL_CLASSES.filter(
+                    (c) => selectedWingTab === "all" || c.wingCode === selectedWingTab
+                  ).map((c) => (
+                    <tr key={c.id}>
+                      <td>
+                        <strong>{c.name}</strong>
+                      </td>
+                      <td>
+                        <span
+                          style={{
+                            display: "inline-block",
+                            padding: "3px 8px",
+                            borderRadius: "6px",
+                            fontSize: "11px",
+                            fontWeight: "700",
+                            background:
+                              c.wingCode === "lp_school"
+                                ? "#fef3c7"
+                                : c.wingCode === "up_school"
+                                ? "#e0f2fe"
+                                : c.wingCode === "high_school"
+                                ? "#dcfce7"
+                                : "#ede9fe",
+                            color:
+                              c.wingCode === "lp_school"
+                                ? "#92400e"
+                                : c.wingCode === "up_school"
+                                ? "#0369a1"
+                                : c.wingCode === "high_school"
+                                ? "#15803d"
+                                : "#6d28d9",
+                          }}
+                        >
+                          {c.wingShort}
+                        </span>
+                      </td>
+                      <td>{c.mentor}</td>
+                      <td>
+                        <span style={{ color: "#64748b", fontSize: "12.5px" }}>
+                          📍 {c.room}
+                        </span>
+                      </td>
+                      <td>
+                        <span style={{ fontSize: "12px", color: "#475569" }}>
+                          {c.stream}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="btn-register"
+                          onClick={() =>
+                            navigate("/admin/attendance", {
+                              state: { section: c.wingCode },
+                            })
+                          }
+                          title={`Open ${c.name} in Division Attendance`}
+                        >
+                          Muster 📖
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </main>

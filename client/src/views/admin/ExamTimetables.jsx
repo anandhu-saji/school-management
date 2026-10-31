@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosclient";
 import { clearAuthSession } from "../../utils/auth";
 import "../../Styles/AdminDash.css";
+import { ACADEMIC_WINGS, ALL_CLASSES } from "../../utils/classData";
 
 export default function ExamTimetables() {
   const navigate = useNavigate();
@@ -486,7 +487,7 @@ export default function ExamTimetables() {
                 </option>
               </select>
 
-              {/* Standard Filter */}
+              {/* Standard & Academic Wing Filter across Classes 1 to 12 */}
               <select
                 className="registry-select-dropdown"
                 value={selectedStandard}
@@ -495,11 +496,27 @@ export default function ExamTimetables() {
                   setCurrentPage(1);
                 }}
               >
-                <option value="All">All Standards</option>
-                <option value="Standard 10">Standard 10 (SSLC)</option>
-                <option value="Standard 12">Standard 12 (Plus Two)</option>
-                <option value="Standard 9">Standard 9</option>
-                <option value="Standard 8">Standard 8</option>
+                <option value="All">All Standards &amp; Wings (Classes 1 to 12)</option>
+                <optgroup label="High School (Classes 8 to 10)">
+                  <option value="Standard 10">Standard 10 (SSLC Cadre)</option>
+                  <option value="Standard 9">Standard 9</option>
+                  <option value="Standard 8">Standard 8</option>
+                </optgroup>
+                <optgroup label="Higher Secondary (Classes 11 & 12)">
+                  <option value="Standard 12">Standard 12 (Plus Two Higher Secondary)</option>
+                  <option value="Standard 11">Standard 11 (Plus One Board Evaluation)</option>
+                </optgroup>
+                <optgroup label="Upper Primary (Classes 5 to 7)">
+                  <option value="Standard 7">Class 7 (UP Evaluation)</option>
+                  <option value="Standard 6">Class 6 (UP Evaluation)</option>
+                  <option value="Standard 5">Class 5 (UP Evaluation)</option>
+                </optgroup>
+                <optgroup label="Lower Primary (Classes 1 to 4)">
+                  <option value="Standard 4">Class 4 (LP Primary Evaluation)</option>
+                  <option value="Standard 3">Class 3 (LP Primary Evaluation)</option>
+                  <option value="Standard 2">Class 2 (LP Primary Evaluation)</option>
+                  <option value="Standard 1">Class 1 (LP Primary Evaluation)</option>
+                </optgroup>
               </select>
 
               {/* Add Exam Schedule Button */}

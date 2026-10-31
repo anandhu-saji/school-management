@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosclient";
 import { clearAuthSession } from "../../utils/auth";
 import "../../Styles/AdminDash.css";
+import { ACADEMIC_WINGS, ALL_CLASSES } from "../../utils/classData";
 
 export default function TeachersRecords() {
   const navigate = useNavigate();
@@ -127,7 +128,12 @@ export default function TeachersRecords() {
 
       const matchDept =
         selectedDept === "All" ||
-        t.department.toLowerCase().includes(selectedDept.toLowerCase());
+        t.department.toLowerCase().includes(selectedDept.toLowerCase()) ||
+        t.assignedClass?.toLowerCase().includes(selectedDept.toLowerCase()) ||
+        (selectedDept === "Lower Primary" && (t.department.includes("LPS") || t.designation === "LPSA" || t.assignedClass?.includes("Class 1") || t.assignedClass?.includes("Class 2") || t.assignedClass?.includes("Class 3") || t.assignedClass?.includes("Class 4"))) ||
+        (selectedDept === "Upper Primary" && (t.department.includes("UPS") || t.designation === "UPSA" || t.assignedClass?.includes("Class 5") || t.assignedClass?.includes("Class 6") || t.assignedClass?.includes("Class 7"))) ||
+        (selectedDept === "High School" && (t.department.includes("HST") || t.designation === "HST" || t.assignedClass?.includes("Class 8") || t.assignedClass?.includes("Class 9") || t.assignedClass?.includes("Class 10"))) ||
+        (selectedDept === "Higher Secondary" && (t.department.includes("HSST") || t.designation === "HSST" || t.assignedClass?.includes("Class 11") || t.assignedClass?.includes("Class 12")));
 
       return matchSearch && matchDept;
     });
@@ -670,7 +676,7 @@ export default function TeachersRecords() {
                 />
               </div>
 
-              {/* Department Filter */}
+              {/* Department & Wing Filter across all 64 Cadre */}
               <select
                 className="registry-select-dropdown"
                 value={selectedDept}
@@ -679,16 +685,24 @@ export default function TeachersRecords() {
                   setCurrentPage(1);
                 }}
               >
-                <option value="All">
-                  All Departments (High School, Higher Secondary, LP/UP)
-                </option>
-                <option value="Malayalam">Malayalam</option>
-                <option value="Mathematics">Mathematics</option>
-                <option value="Physical Science">Physical Science</option>
-                <option value="Chemistry">Chemistry</option>
-                <option value="English">English</option>
-                <option value="Social Science">Social Science</option>
-                <option value="Natural Science">Natural Science</option>
+                <option value="All">All Departments &amp; Wings (64 Cadre)</option>
+                <optgroup label="Academic Wings">
+                  <option value="Lower Primary">Lower Primary (LPSA Cadre)</option>
+                  <option value="Upper Primary">Upper Primary (UPSA Cadre)</option>
+                  <option value="High School">High School (HST Cadre)</option>
+                  <option value="Higher Secondary">Higher Secondary (HSST Cadre)</option>
+                </optgroup>
+                <optgroup label="Subject Specialization">
+                  <option value="Malayalam">Malayalam</option>
+                  <option value="Mathematics">Mathematics</option>
+                  <option value="Physical Science">Physical Science</option>
+                  <option value="Chemistry">Chemistry</option>
+                  <option value="English">English</option>
+                  <option value="Social Science">Social Science</option>
+                  <option value="Commerce">Commerce</option>
+                  <option value="Natural Science">Natural Science</option>
+                  <option value="Primary Education">Primary Education</option>
+                </optgroup>
               </select>
 
               {/* Add Teacher Button */}

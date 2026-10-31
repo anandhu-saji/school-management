@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosclient";
 import { clearAuthSession } from "../../utils/auth";
 import "../../Styles/TeacherDash.css";
+import { ACADEMIC_WINGS, ALL_CLASSES } from "../../utils/classData";
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
 
   const todayStr = new Date().toISOString().split("T")[0];
   const [selectedDate, setSelectedDate] = useState(todayStr);
+  const [selectedDivision, setSelectedDivision] = useState("Class 10-A");
   const [teacherProfile, setTeacherProfile] = useState({
     name: "Indu B Nair",
     email: "kathalanx@gmail.com",
@@ -41,8 +43,8 @@ export default function TeacherDashboard() {
   };
 
   useEffect(() => {
-    fetchRoster();
-  }, [selectedDate]);
+    fetchRoster(selectedDivision, selectedDate);
+  }, [selectedDivision, selectedDate]);
 
   const setStatus = (studentId, newStatus) => {
     setStudents((prev) =>
@@ -73,7 +75,7 @@ export default function TeacherDashboard() {
 
       const payload = {
         date: selectedDate,
-        classDivision: "Class 10-A",
+        classDivision: selectedDivision,
         records: students.map((s) => ({
           studentId: s._id,
           rollNumber: s.rollNumber,
@@ -184,9 +186,41 @@ export default function TeacherDashboard() {
           </button>
           <div className="header-breadcrumbs">
             <span>Academics</span> / <span>Attendance Register</span> /{" "}
-            <strong>{teacherProfile.assignedClass}</strong>
+            <strong>{selectedDivision}</strong>
           </div>
-          <div className="header-controls">
+          <div className="header-controls" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <label style={{ fontSize: "12px", fontWeight: "700", color: "#64748b" }}>Division:</label>
+              <select
+                className="teacher-class-select"
+                value={selectedDivision}
+                onChange={(e) => {
+                  const newClass = e.target.value;
+                  setSelectedDivision(newClass);
+                  fetchRoster(newClass, selectedDate);
+                }}
+                style={{
+                  padding: "7px 12px",
+                  borderRadius: "8px",
+                  border: "1px solid #cbd5e1",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  color: "#0f172a",
+                  background: "#ffffff",
+                  cursor: "pointer",
+                }}
+              >
+                {ACADEMIC_WINGS.map((wing) => (
+                  <optgroup key={wing.code} label={wing.wing}>
+                    {wing.classes.map((c) => (
+                      <option key={c.id} value={c.name}>
+                        {c.name} ({c.stream})
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </div>
             <input
               type="date"
               className="date-input"

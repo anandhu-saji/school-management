@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import api from "../../api/axiosclient";
 import { clearAuthSession } from "../../utils/auth";
 import "../../Styles/AdminDash.css";
+import { ACADEMIC_WINGS, ALL_CLASSES } from "../../utils/classData";
 
 export default function DivisionAttendance() {
   const navigate = useNavigate();
@@ -10,7 +11,21 @@ export default function DivisionAttendance() {
   const [activeSection, setActiveSection] = useState(
     location.state?.section || "all"
   );
-  const [divisions, setDivisions] = useState([]);
+  const [divisions, setDivisions] = useState(
+    ALL_CLASSES.map((c) => ({
+      id: c.id,
+      standardDivision: c.name,
+      stream: c.stream ? `(${c.stream})` : "(General)",
+      mentor: c.mentor,
+      enrolled: c.enrolled || 45,
+      present: c.present || 43,
+      absent: c.absent || 2,
+      turnoutRate: c.turnoutRate || "95.6%",
+      syncStatus: "Verified & Locked",
+      section: c.code || (c.standard?.includes("11") || c.standard?.includes("12") ? "higher_secondary" : c.standard?.includes("8") || c.standard?.includes("9") || c.standard?.includes("10") ? "high_school" : c.standard?.includes("5") || c.standard?.includes("6") || c.standard?.includes("7") ? "up_school" : "lp_school"),
+      sectionLabel: c.wingShort || "General",
+    }))
+  );
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 

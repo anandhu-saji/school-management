@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosclient";
 import { clearAuthSession } from "../../utils/auth";
 import "../../Styles/AdminDash.css";
+import { ACADEMIC_WINGS, ALL_CLASSES } from "../../utils/classData";
 
 export default function StudentsRecords() {
   const navigate = useNavigate();
@@ -132,7 +133,8 @@ export default function StudentsRecords() {
       const matchDivision =
         selectedDivision === "All" ||
         s.division.toLowerCase() === selectedDivision.toLowerCase() ||
-        s.division.toLowerCase().includes(selectedDivision.toLowerCase());
+        s.division.toLowerCase().includes(selectedDivision.toLowerCase()) ||
+        s.division.replace(/^Class\s*/i, "").toLowerCase() === selectedDivision.replace(/^Class\s*/i, "").toLowerCase();
 
       return matchSearch && matchDivision;
     });
@@ -623,13 +625,16 @@ export default function StudentsRecords() {
                   setCurrentPage(1);
                 }}
               >
-                <option value="All">All Divisions (Standard 8 - 10)</option>
-                <option value="10-A">Class 10-A</option>
-                <option value="10-B">Class 10-B</option>
-                <option value="9-A">Class 9-A</option>
-                <option value="9-B">Class 9-B</option>
-                <option value="8-A">Class 8-A</option>
-                <option value="8-B">Class 8-B</option>
+                <option value="All">All Divisions (26 Academic Divisions)</option>
+                {ACADEMIC_WINGS.map((wing) => (
+                  <optgroup key={wing.code} label={wing.wing}>
+                    {wing.classes.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} ({c.stream})
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
               </select>
 
               {/* New Admission Button */}
@@ -1000,12 +1005,15 @@ export default function StudentsRecords() {
                           value={formData.division}
                           onChange={handleFormChange}
                         >
-                          <option value="10-A">Class 10-A</option>
-                          <option value="10-B">Class 10-B</option>
-                          <option value="9-A">Class 9-A</option>
-                          <option value="9-B">Class 9-B</option>
-                          <option value="8-A">Class 8-A</option>
-                          <option value="8-B">Class 8-B</option>
+                          {ACADEMIC_WINGS.map((wing) => (
+                            <optgroup key={wing.code} label={wing.wing}>
+                              {wing.classes.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                  {c.name} ({c.stream})
+                                </option>
+                              ))}
+                            </optgroup>
+                          ))}
                         </select>
                       </div>
                     </div>
