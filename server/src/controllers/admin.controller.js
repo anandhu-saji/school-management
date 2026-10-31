@@ -105,11 +105,26 @@ export const getAdminOverviewStats = async (req, res) => {
     ];
 
     const sections = sectionDefinitions.map((sec) => {
-      const matched = todayAttendances.filter((att) =>
-        sec.classPrefixes.some((p) =>
-          (att.classDivision || "").toLowerCase().includes(p.toLowerCase())
-        )
-      );
+      const wing = ACADEMIC_WINGS.find((w) => w.code === sec.id);
+      const wingClassNames = wing ? wing.classes.map((c) => c.name.toLowerCase()) : [];
+      const wingClassIds = wing ? wing.classes.map((c) => c.id.toLowerCase()) : [];
+
+      const matched = todayAttendances.filter((att) => {
+        const cd = (att.classDivision || "").toLowerCase().trim();
+        return (
+          wingClassNames.includes(cd) ||
+          wingClassIds.includes(cd) ||
+          sec.classPrefixes.some((p) => {
+            const cleanP = p.toLowerCase().trim();
+            return (
+              cd === cleanP ||
+              cd.startsWith(cleanP + "-") ||
+              cd.startsWith(cleanP + " ") ||
+              cd.endsWith(" " + cleanP)
+            );
+          })
+        );
+      });
 
       let enrolled = sec.totalEnrolled;
       let present = sec.totalPresent;
@@ -255,9 +270,13 @@ export const getDivisionAttendanceRegister = async (req, res) => {
     }
 
     // 1. Fetch Students in this division
-    const divRegex = new RegExp(cleanDiv.replace(/^Classs*/i, ""), "i");
+    const pureDiv = cleanDiv.replace(/^Class\s*/i, "").trim();
+    const divRegex = new RegExp("(^|\\b|Class\\s*)" + pureDiv + "($|\\b)", "i");
     let students = await Student.find({
       $or: [
+        { classDivision: normalizedDivision },
+        { classDivision: cleanDiv },
+        { classDivision: pureDiv },
         { classDivision: { $regex: divRegex } },
         { className: { $regex: divRegex } },
       ],
@@ -287,7 +306,12 @@ export const getDivisionAttendanceRegister = async (req, res) => {
     // 2. Fetch Attendance register sheet from MongoDB for this date & division
     const attendanceDoc = await Attendance.findOne({
       date: targetDate,
-      classDivision: { $regex: divRegex },
+      $or: [
+        { classDivision: normalizedDivision },
+        { classDivision: cleanDiv },
+        { classDivision: pureDiv },
+        { classDivision: { $regex: divRegex } },
+      ],
     }).lean();
 
     const recordStatusMap = {};
