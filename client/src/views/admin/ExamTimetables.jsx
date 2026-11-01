@@ -342,6 +342,12 @@ export default function ExamTimetables() {
             <button className="console-nav-item active">
               <span>📅</span> Exam Timetables
             </button>
+            <button
+              className="console-nav-item"
+              onClick={() => navigate("/admin/payments")}
+            >
+              <span>💳</span> Fee & Payments Console
+            </button>
           </nav>
         </div>
 

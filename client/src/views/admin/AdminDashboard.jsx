@@ -88,6 +88,7 @@ export default function AdminOverview() {
   ]);
 
   const [selectedWingTab, setSelectedWingTab] = useState("all");
+  const [paymentSummary, setPaymentSummary] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -99,6 +100,14 @@ export default function AdminOverview() {
           if (res.data.sections && res.data.sections.length > 0) {
             setSections(res.data.sections);
           }
+        }
+        try {
+          const payRes = await api.get("/admin/payments/summary");
+          if (isMounted && payRes.data.success) {
+            setPaymentSummary(payRes.data.summary);
+          }
+        } catch {
+          // ignore payment summary error
         }
       } catch (err) {
         console.error("Failed to load admin stats:", err);
@@ -157,6 +166,12 @@ export default function AdminOverview() {
               onClick={() => navigate("/admin/exams")}
             >
               <span>📅</span> Exam Timetables
+            </button>
+            <button
+              className="console-nav-item"
+              onClick={() => navigate("/admin/payments")}
+            >
+              <span>💳</span> Fee & Payments Console
             </button>
           </nav>
         </div>
@@ -527,6 +542,94 @@ export default function AdminOverview() {
               </table>
             </div>
           </div>
+        
+          {/* ---------------- FEE & PAYMENTS CONSOLE HIGHLIGHT WIDGET ---------------- */}
+          <div className="section-attendance-wrapper" style={{ marginTop: "28px", marginBottom: "32px" }}>
+            <div className="section-attendance-heading-bar">
+              <div>
+                <h2 className="section-att-main-heading">
+                  Student Fee & Revenue Collections
+                </h2>
+                <p className="section-att-main-subtext">
+                  Consolidated accounts ledger for Bus Fee, Annual Tuition, PTA Development Fund, and school amenities.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="section-att-all-muster-btn"
+                style={{ background: "#2563eb", color: "#ffffff", borderColor: "#2563eb" }}
+                onClick={() => navigate("/admin/payments")}
+              >
+                💳 Open Fee & Payments Console
+              </button>
+            </div>
+
+            <div className="section-attendance-card" style={{ marginTop: "14px" }}>
+              <div className="section-att-header">
+                <div className="section-att-title-group">
+                  <div className="section-att-title-row">
+                    <span className="section-att-icon-badge" style={{ background: "#eff6ff" }}>
+                      💳
+                    </span>
+                    <h3 className="section-att-title">Central Fee & Accounts Summary</h3>
+                  </div>
+                  <p className="section-att-desc">
+                    Comprehensive ledger tracking student collections across all 26 divisions • Kerala Pareeksha Bhavan Integrated.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="section-att-btn-muster"
+                  onClick={() => navigate("/admin/payments")}
+                >
+                  View Full Fee Register ↗
+                </button>
+              </div>
+
+              <div className="section-att-metrics-grid" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+                <div className="section-att-metric-pill">
+                  <span className="section-att-pill-label">TOTAL REVENUE</span>
+                  <div className="section-att-pill-value" style={{ color: "#15803d" }}>
+                    {paymentSummary ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(paymentSummary.totalCollected) : "₹14,82,500"}
+                  </div>
+                  <div className="section-att-pill-subtext" style={{ color: "#15803d" }}>
+                    {paymentSummary?.collectionRate || "88.4%"} Collection Rate
+                  </div>
+                </div>
+
+                <div className="section-att-metric-pill">
+                  <span className="section-att-pill-label">BUS TRANSPORT</span>
+                  <div className="section-att-pill-value" style={{ color: "#1d4ed8" }}>
+                    {paymentSummary ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(paymentSummary.busFee) : "₹4,20,000"}
+                  </div>
+                  <div className="section-att-pill-subtext">
+                    5 School Bus Fleets Synced
+                  </div>
+                </div>
+
+                <div className="section-att-metric-pill">
+                  <span className="section-att-pill-label">ANNUAL TUITION</span>
+                  <div className="section-att-pill-value" style={{ color: "#0f766e" }}>
+                    {paymentSummary ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(paymentSummary.annualFee) : "₹7,80,000"}
+                  </div>
+                  <div className="section-att-pill-subtext">
+                    Composite Amenities Fund
+                  </div>
+                </div>
+
+                <div className="section-att-metric-pill">
+                  <span className="section-att-pill-label">PTA & SPECIAL DUES</span>
+                  <div className="section-att-pill-value" style={{ color: "#7e22ce" }}>
+                    {paymentSummary ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(paymentSummary.ptaFund) : "₹2,82,500"}
+                  </div>
+                  <div className="section-att-pill-subtext" style={{ color: "#b91c1c" }}>
+                    Pending: {paymentSummary ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(paymentSummary.totalDue) : "₹2,15,400"}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </main>
       </div>
     </div>

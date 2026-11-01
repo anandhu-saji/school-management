@@ -18,6 +18,11 @@ import {
   updateExam,
   deleteExam,
   getExamSeatingPlan,
+  getFeePayments,
+  getPaymentSummary,
+  createFeePayment,
+  updateFeePayment,
+  deleteFeePayment,
 } from "../controllers/admin.controller.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 import { requireAdmin } from "../middleware/role.middleware.js";
@@ -51,5 +56,13 @@ router.post("/exams", createExam);
 router.put("/exams/:id", updateExam);
 router.delete("/exams/:id", deleteExam);
 router.get("/exams/:id/seating", getExamSeatingPlan);
+
+
+// Fee & Payment Endpoints
+router.get("/payments", getFeePayments);
+router.get("/payments/summary", getPaymentSummary);
+router.post("/payments", createFeePayment);
+router.put("/payments/:id", updateFeePayment);
+router.delete("/payments/:id", deleteFeePayment);
 
 export default router;

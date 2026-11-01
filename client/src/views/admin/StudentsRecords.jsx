@@ -495,6 +495,12 @@ export default function StudentsRecords() {
             >
               <span>📅</span> Exam Timetables
             </button>
+            <button
+              className="console-nav-item"
+              onClick={() => navigate("/admin/payments")}
+            >
+              <span>💳</span> Fee & Payments Console
+            </button>
           </nav>
         </div>
 
