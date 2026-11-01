@@ -66,11 +66,13 @@ function ResetPassword() {
     <div className="login-page">
       <div className="login-header">
         <div className="university-logo">
-          <div className="shield">⚝</div>
-          <span className="verified">✿</span>
+          <div className="shield">🏛️</div>
+          <span className="verified">✓</span>
         </div>
-        <p className="university-name">STATE UNIVERSITY</p>
-        <h1>Campus Gateway</h1>
+        <p className="university-name">GOVT. OF KERALA • GENERAL EDUCATION DEPT.</p>
+        <div className="school-code-badge">School Code: 06042 • GHSS Rajakkad</div>
+        <h1>Sampoorna 2.0 Portal</h1>
+        <p className="login-portal-tagline">Secure Password Recovery &amp; Reset</p>
       </div>
 
       <div className="login-card">

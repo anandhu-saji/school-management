@@ -351,7 +351,7 @@ export default function ExamTimetables() {
           </nav>
         </div>
 
-        {/* Bottom Profile Card */}
+                {/* Bottom Profile Card */}
         <div className="sidebar-bottom-profile">
           <div className="profile-avatar-circle">
             <span>🛡</span>
@@ -361,8 +361,8 @@ export default function ExamTimetables() {
               <span>Sri. K. R. Madhavan</span>
               <span className="verified-badge-icon">✓</span>
             </div>
-            <p className="profile-role-subtext">Headmaster / Chief Admin</p>
-            <p className="profile-id-code">ADM-GHSS-01</p>
+            <p className="profile-role-subtext">Headmaster &amp; Chief Admin</p>
+            <p className="profile-id-code">ADM-GHSS-01 • PEN: 849201</p>
           </div>
           <button
             className="logout-icon-btn"
@@ -370,7 +370,7 @@ export default function ExamTimetables() {
             title="Sign Out"
             aria-label="Sign Out"
           >
-            ⇥
+            🚪
           </button>
         </div>
       </aside>

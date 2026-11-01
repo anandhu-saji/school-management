@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosclient";
 import { clearAuthSession } from "../../utils/auth";
+import "../../Styles/AdminDash.css";
 import "../../Styles/TeacherDash.css";
 import { ACADEMIC_WINGS } from "../../utils/classData";
 
@@ -154,42 +155,54 @@ export default function TeacherDashboard() {
       )}
 
       {/* Sidebar */}
-      <aside className={`teacher-sidebar ${sidebarOpen ? "open" : ""}`}>
-        <div className="sidebar-brand">
-          <div className="brand-badge">GHSS RAJAKKAD</div>
-          <h2>Sampoorna 2.0</h2>
-          <span className="portal-sub">Teacher Console</span>
+      <aside className={`admin-sidebar teacher-sidebar ${sidebarOpen ? "open" : ""}`}>
+        <div>
+          <div className="sidebar-header">
+            <div className="school-code-label">School Code: 06042</div>
+            <div className="sampoorna-live-pill">
+              <span className="dot"></span> SAMPOORNA 2.0 LIVE
+            </div>
+          </div>
+
+          <div className="sidebar-section-title">TEACHER CONSOLE</div>
+          <nav className="console-nav-list">
+            <button className="console-nav-item active">
+              <span>📅</span> Mark Daily Attendance
+            </button>
+            <button className="console-nav-item" onClick={() => navigate("/dashboard")}>
+              <span>📊</span> Academic Records
+            </button>
+            <button className="console-nav-item" onClick={() => navigate("/dashboard")}>
+              <span>📝</span> Internal Marks
+            </button>
+            <button className="console-nav-item" onClick={() => navigate("/dashboard")}>
+              <span>🗓️</span> Class Timetable
+            </button>
+          </nav>
         </div>
 
-        <nav className="teacher-nav">
-          <button className="nav-btn active">
-            <span>📅</span> Mark Daily Attendance
-          </button>
-          <button className="nav-btn" onClick={() => navigate("/dashboard")}>
-            <span>📊</span> Academic Records
-          </button>
-          <button className="nav-btn" onClick={() => navigate("/dashboard")}>
-            <span>📝</span> Internal Marks
-          </button>
-          <button className="nav-btn" onClick={() => navigate("/dashboard")}>
-            <span>🗓️</span> Timetable
-          </button>
-        </nav>
-
-        <div className="sidebar-teacher-card">
-          <div className="teacher-avatar">
-            {teacherProfile.name ? teacherProfile.name.charAt(0) : "T"}
+        {/* Bottom Profile Card */}
+        <div className="sidebar-bottom-profile">
+          <div className="profile-avatar-circle" style={{ background: "#2563eb" }}>
+            <span>👩‍🏫</span>
           </div>
-          <div className="teacher-info">
-            <strong>{teacherProfile.name}</strong>
-            <span>{teacherProfile.department}</span>
-            <span className="mentor-pill">{teacherProfile.assignedClass}</span>
+          <div className="profile-details-column">
+            <div className="profile-name-row">
+              <span>{teacherProfile.name || "Mrs. Indu B Nair"}</span>
+              <span className="verified-badge-icon">✓</span>
+            </div>
+            <p className="profile-role-subtext">{teacherProfile.department || "HST Mathematics"}</p>
+            <p className="profile-id-code">{teacherProfile.assignedClass || "Class 10-A Mentor"} • PEN: 849204</p>
           </div>
+          <button
+            className="logout-icon-btn"
+            onClick={handleLogout}
+            title="Sign Out"
+            aria-label="Sign Out"
+          >
+            🚪
+          </button>
         </div>
-
-        <button className="sidebar-logout" onClick={handleLogout}>
-          Sign Out
-        </button>
       </aside>
 
       {/* Main Content Area */}
@@ -202,8 +215,8 @@ export default function TeacherDashboard() {
             ☰
           </button>
           <div className="header-breadcrumbs">
-            <span>Academics</span> / <span>Attendance Register</span> /{" "}
-            <strong>{selectedDivision}</strong>
+            <span>Teacher Console</span> / <span>Academics</span> /{" "}
+            <strong>{selectedDivision} Daily Attendance Register</strong>
           </div>
           <div className="header-controls" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -248,23 +261,40 @@ export default function TeacherDashboard() {
         </header>
 
         <main className="teacher-content">
-          {/* Quick Metrics Bar */}
-          <div className="stats-row">
-            <div className="stat-pill">
-              <span className="stat-label">Enrolled:</span>
-              <strong>{totalCount}</strong>
+          {/* Hero Banner Card matching Admin Portal */}
+          <section className="headmaster-hero-card" style={{ marginBottom: "22px" }}>
+            <div className="badge-row">
+              <span className="badge-governance">CLASS MENTOR TERMINAL</span>
+              <span className="badge-sync">🟢 Kerala Pareeksha Bhavan Integrated</span>
             </div>
-            <div className="stat-pill green">
-              <span className="stat-label">Present:</span>
-              <strong>{presentCount}</strong>
+            <h1>Good morning, {teacherProfile.name || "Mrs. Indu B Nair"}</h1>
+            <p>
+              GHSS Rajakkad • {teacherProfile.assignedClass || "Class 10-A"} Academic Division &amp;
+              General Education Pareeksha Bhavan Roll-Call Interface.
+            </p>
+          </section>
+
+          {/* Unified 4 KPI Overview Stats Grid */}
+          <div className="overview-stats-grid" style={{ marginBottom: "22px" }}>
+            <div className="overview-stat-card">
+              <span className="card-label">TOTAL ENROLLED</span>
+              <div className="overview-number">{totalCount} Pupils</div>
+              <div className="sub-text">{selectedDivision} Official Roster</div>
             </div>
-            <div className="stat-pill red">
-              <span className="stat-label">Absent:</span>
-              <strong>{absentCount}</strong>
+            <div className="overview-stat-card">
+              <span className="card-label">TODAY'S PRESENT</span>
+              <div className="overview-number text-green">{presentCount} Present</div>
+              <div className="sub-text text-green">Marked in class roll-call</div>
             </div>
-            <div className="stat-pill blue">
-              <span className="stat-label">Turnout:</span>
-              <strong>{attendanceRate}%</strong>
+            <div className="overview-stat-card">
+              <span className="card-label">TODAY'S ABSENT</span>
+              <div className="overview-number text-red">{absentCount} Absent</div>
+              <div className="sub-text text-red">Auto-SMS alert pending</div>
+            </div>
+            <div className="overview-stat-card">
+              <span className="card-label">CLASS TURNOUT</span>
+              <div className="overview-number text-teal">{attendanceRate}%</div>
+              <div className="sub-text">Pareeksha Bhavan Synced</div>
             </div>
           </div>
 

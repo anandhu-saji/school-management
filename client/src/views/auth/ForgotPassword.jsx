@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../api/axiosclient";
 import "../../Styles/ForgotPassword.css";
 
 const OTP_TOTAL_DURATION = 120; // 5 minutes (in seconds)
@@ -67,7 +67,7 @@ export default function ForgotPassword() {
 
     try {
       setIsLoading(true);
-      const res = await axios.post("http://localhost:5000/api/auth/forgot-password", {
+      const res = await api.post("/auth/forgot-password", {
         email: email.trim(),
       });
 
@@ -89,7 +89,7 @@ export default function ForgotPassword() {
 
     try {
       setIsLoading(true);
-      const res = await axios.post("http://localhost:5000/api/auth/forgot-password", {
+      const res = await api.post("/auth/forgot-password", {
         email: email.trim(),
       });
 
@@ -122,7 +122,7 @@ export default function ForgotPassword() {
 
     try {
       setIsLoading(true);
-      const res = await axios.post("http://localhost:5000/api/auth/verify-otp", {
+      const res = await api.post("/auth/verify-otp", {
         email: email.trim(),
         otp: otp.trim(),
       });
@@ -155,7 +155,7 @@ export default function ForgotPassword() {
 
     try {
       setIsLoading(true);
-      const res = await axios.post("http://localhost:5000/api/auth/reset-password", {
+      const res = await api.post("/auth/reset-password", {
         email: email.trim(),
         otp: otp.trim(),
         newPassword,
@@ -181,9 +181,12 @@ export default function ForgotPassword() {
   return (
     <div className="auth-page-container">
       <div className="auth-header">
-        <div className="auth-logo-badge">⭐</div>
-        <p className="auth-subtitle">State University</p>
-        <h1 className="auth-title">Campus Gateway</h1>
+        <div className="auth-logo-badge">🏛️</div>
+        <p className="auth-subtitle">GOVT. OF KERALA • GENERAL EDUCATION DEPT.</p>
+        <div className="school-code-badge" style={{ display: "inline-block", background: "#eff6ff", color: "#1d4ed8", padding: "3px 10px", borderRadius: "6px", fontSize: "11px", fontWeight: "700", marginBottom: "8px" }}>
+          School Code: 06042 • GHSS Rajakkad
+        </div>
+        <h1 className="auth-title">Sampoorna 2.0 Portal</h1>
       </div>
 
       <div className="auth-card">

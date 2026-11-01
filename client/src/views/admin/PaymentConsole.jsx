@@ -363,15 +363,25 @@ export default function PaymentConsole() {
           </nav>
         </div>
 
-        {/* Headmaster Profile Info Box */}
-        <div className="sidebar-admin-footer">
-          <div className="admin-avatar">HM</div>
-          <div className="admin-details">
-            <span className="admin-name">Sri. K. R. Madhavan</span>
-            <span className="admin-title">Headmaster & Accounts Officer</span>
-            <span className="admin-pen">PEN: 849201</span>
+        {/* Bottom Profile Card */}
+        <div className="sidebar-bottom-profile">
+          <div className="profile-avatar-circle">
+            <span>🛡</span>
           </div>
-          <button className="btn-logout-sidebar" onClick={handleLogout} title="Sign Out">
+          <div className="profile-details-column">
+            <div className="profile-name-row">
+              <span>Sri. K. R. Madhavan</span>
+              <span className="verified-badge-icon">✓</span>
+            </div>
+            <p className="profile-role-subtext">Headmaster &amp; Chief Admin</p>
+            <p className="profile-id-code">ADM-GHSS-01 • PEN: 849201</p>
+          </div>
+          <button
+            className="logout-icon-btn"
+            onClick={handleLogout}
+            title="Sign Out"
+            aria-label="Sign Out"
+          >
             🚪
           </button>
         </div>

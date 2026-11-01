@@ -175,72 +175,70 @@ function StudentDashboard() {
   return (
     <div className="portal">
       {/* Sidebar Navigation */}
-      <aside className="sidebar">
-        <div className="school-brand">
-          <h2>G.H.S.S Rajakkad</h2>
-          <p>School Code: 06042</p>
-
-          <div className="sampoorna-badge">
-            <span className="live-dot" />
-            SAMPOORNA 2.0 LIVE
+      <aside className="admin-sidebar sidebar">
+        <div>
+          <div className="sidebar-header">
+            <div className="school-code-label">School Code: 06042</div>
+            <div className="sampoorna-live-pill">
+              <span className="dot"></span> SAMPOORNA 2.0 LIVE
+            </div>
           </div>
 
-          <span className="govt-label">Govt. of Kerala</span>
+          <div className="sidebar-section-title">STUDENT CONSOLE</div>
+          <nav className="console-nav-list sidebar-nav">
+            <a className="console-nav-item active nav-item" href="#overview">
+              <span>▦</span> Overview &amp; Dashboard
+            </a>
+            <a className="console-nav-item nav-item" href="#attendance">
+              <span>◷</span> Monthly Attendance
+            </a>
+            <a className="console-nav-item nav-item" href="#timetable">
+              <span>▤</span> Exam Timetable
+            </a>
+            <a className="console-nav-item nav-item" href="#results">
+              <span>☆</span> Term Results
+            </a>
+          </nav>
         </div>
 
-        <nav className="sidebar-nav">
-          <a className="nav-item active" href="#overview">
-            <span>▦</span> Overview &amp; Dashboard
-          </a>
-          <a className="nav-item" href="#attendance">
-            <span>◷</span> Monthly Attendance
-          </a>
-          <a className="nav-item" href="#timetable">
-            <span>▤</span> Exam Timetable
-          </a>
-          <a className="nav-item" href="#results">
-            <span>☆</span> Result
-          </a>
-        </nav>
-
-        <div className="sidebar-profile">
-          <div className="avatar small-avatar">{getInitials(displayName)}</div>
-          <div className="profile-info">
-            <strong>{displayName}</strong>
-            <span>{user?.email || studentProfile?.email || "student@school.edu"}</span>
-            <span className="profile-role">
-              {user?.role ? user.role.toUpperCase() : "STUDENT"} · {displayClass}
-            </span>
+        {/* Bottom Profile Card */}
+        <div className="sidebar-bottom-profile">
+          <div className="profile-avatar-circle" style={{ background: "#7c3aed" }}>
+            <span>🎓</span>
+          </div>
+          <div className="profile-details-column">
+            <div className="profile-name-row">
+              <span>{displayName}</span>
+              <span className="verified-badge-icon">✓</span>
+            </div>
+            <p className="profile-role-subtext">{displayClass} • Student</p>
+            <p className="profile-id-code">Adm: {studentProfile?.studentId || "ADM-14920"}</p>
           </div>
           <button
-            className="logout-button"
-            type="button"
+            className="logout-icon-btn"
             onClick={handleLogout}
-            aria-label="Log out"
-            title="Log out"
+            title="Sign Out"
+            aria-label="Sign Out"
           >
-            ⇥
+            🚪
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
       <div className="portal-main">
-        <header className="topbar">
-          <div className="topbar-class">
-            <strong>{displayClass}</strong>
-            <span>•</span>
-            <span>SSLC Board Batch 2025-26</span>
-            <span className="topbar-divider">|</span>
-            <span className="department-badge">
-              Kerala General Education Dept.
-            </span>
-            <span className="portal-name">Sampoorna Student Portal</span>
+        <header className="topbar admin-header" style={{ padding: "0 28px" }}>
+          <div className="header-breadcrumbs">
+            <span>Student Portal</span> / <span>Academics</span> / <strong>Overview &amp; Dashboard</strong>
           </div>
 
-          <div className="topbar-right">
-            <span>Malayalam Medium</span>
-            <span className="division-badge">Div A</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ background: "#eff6ff", color: "#1d4ed8", padding: "5px 12px", borderRadius: "20px", fontWeight: "700", fontSize: "12px", border: "1px solid #bfdbfe" }}>
+              {displayClass} (Malayalam Medium)
+            </span>
+            <span style={{ background: "#dcfce7", color: "#15803d", padding: "5px 12px", borderRadius: "20px", fontWeight: "700", fontSize: "11px", border: "1px solid #bbf7d0" }}>
+              🟢 SCERT Core Active
+            </span>
           </div>
         </header>
 

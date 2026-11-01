@@ -117,11 +117,50 @@ function Login() {
     <div className="login-page">
       <div className="login-header">
         <div className="university-logo">
-          <div className="shield">⚝</div>
-          <span className="verified">✿</span>
+          <div className="shield">🏛️</div>
+          <span className="verified">✓</span>
         </div>
-        <p className="university-name">STATE UNIVERSITY</p>
-        <h1>Campus Gateway</h1>
+        <p className="university-name">GOVT. OF KERALA • GENERAL EDUCATION DEPT.</p>
+        <div className="school-code-badge">School Code: 06042 • GHSS Rajakkad</div>
+        <h1>Sampoorna 2.0 Portal</h1>
+        <p className="login-portal-tagline">Institutional Governance &amp; Academic Management Gateway</p>
+      </div>
+
+      {/* Quick Demo Fill Pills for Uniform Access */}
+      <div className="quick-demo-accounts">
+        <span className="demo-accounts-label">Quick Sign-In As:</span>
+        <div className="demo-btn-group">
+          <button
+            type="button"
+            className="demo-pill-btn"
+            onClick={() => {
+              setEmail("admin@ghss.edu");
+              setPassword("Admin@12345");
+            }}
+          >
+            👑 Admin (HM)
+          </button>
+          <button
+            type="button"
+            className="demo-pill-btn"
+            onClick={() => {
+              setEmail("kathalanx@gmail.com");
+              setPassword("Teacher@123");
+            }}
+          >
+            👩‍🏫 Teacher (Mentor)
+          </button>
+          <button
+            type="button"
+            className="demo-pill-btn"
+            onClick={() => {
+              setEmail("student@ghss.edu");
+              setPassword("Student@123");
+            }}
+          >
+            🎓 Student
+          </button>
+        </div>
       </div>
 
       <div className="login-card">
@@ -132,7 +171,7 @@ function Login() {
             <input
               id="email"
               type="email"
-              placeholder="name@university.edu"
+              placeholder="e.g. admin@ghss.edu or kathalanx@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="username"

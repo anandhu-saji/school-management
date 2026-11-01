@@ -581,7 +581,7 @@ export default function TeachersRecords() {
             title="Sign Out"
             aria-label="Sign Out"
           >
-            ⇥
+            🚪
           </button>
         </div>
       </aside>
