@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosclient";
 import { clearAuthSession } from "../../utils/auth";
 import "../../Styles/AdminDash.css";
-import { ACADEMIC_WINGS, ALL_CLASSES } from "../../utils/classData";
+import { ALL_CLASSES } from "../../utils/classData";
 
 export default function AdminOverview() {
   const navigate = useNavigate();
@@ -87,20 +87,25 @@ export default function AdminOverview() {
     },
   ]);
 
+  const [selectedWingTab, setSelectedWingTab] = useState("all");
+
   useEffect(() => {
-    api
-      .get("/admin/overview-stats")
-      .then((res) => {
-        if (res.data.success) {
+    let isMounted = true;
+    const fetchStats = async () => {
+      try {
+        const res = await api.get("/admin/overview-stats");
+        if (isMounted && res.data.success) {
           if (res.data.stats) setStats(res.data.stats);
           if (res.data.sections && res.data.sections.length > 0) {
             setSections(res.data.sections);
           }
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Failed to load admin stats:", err);
-      });
+      }
+    };
+    fetchStats();
+    return () => { isMounted = false; };
   }, []);
 
   const handleLogout = () => {

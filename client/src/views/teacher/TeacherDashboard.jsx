@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosclient";
 import { clearAuthSession } from "../../utils/auth";
 import "../../Styles/TeacherDash.css";
-import { ACADEMIC_WINGS, ALL_CLASSES } from "../../utils/classData";
+import { ACADEMIC_WINGS } from "../../utils/classData";
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
@@ -25,14 +25,14 @@ export default function TeacherDashboard() {
   const [feedback, setFeedback] = useState({ message: "", type: "" });
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const fetchRoster = async () => {
+  const fetchRoster = async (divisionToFetch = selectedDivision, dateToFetch = selectedDate) => {
     try {
       const res = await api.get(
-        `/teacher/students?division=Class 10-A&date=${selectedDate}`
+        `/teacher/students?division=${encodeURIComponent(divisionToFetch)}&date=${dateToFetch}`
       );
 
       if (res.data.success) {
-        setStudents(res.data.students);
+        setStudents(res.data.students || []);
         if (res.data.teacher) {
           setTeacherProfile(res.data.teacher);
         }
@@ -43,7 +43,24 @@ export default function TeacherDashboard() {
   };
 
   useEffect(() => {
-    fetchRoster(selectedDivision, selectedDate);
+    let isMounted = true;
+    const loadRoster = async () => {
+      try {
+        const res = await api.get(
+          `/teacher/students?division=${encodeURIComponent(selectedDivision)}&date=${selectedDate}`
+        );
+        if (isMounted && res.data.success) {
+          setStudents(res.data.students || []);
+          if (res.data.teacher) {
+            setTeacherProfile(res.data.teacher);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load students:", err);
+      }
+    };
+    loadRoster();
+    return () => { isMounted = false; };
   }, [selectedDivision, selectedDate]);
 
   const setStatus = (studentId, newStatus) => {
@@ -92,7 +109,7 @@ export default function TeacherDashboard() {
           type: "success",
         });
         setTimeout(() => setFeedback({ message: "", type: "" }), 3000);
-        fetchRoster();
+        fetchRoster(selectedDivision, selectedDate);
       }
     } catch (err) {
       setFeedback({

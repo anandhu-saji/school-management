@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosclient";
 import { isSessionValid, clearAuthSession } from "../../utils/auth";
@@ -49,9 +49,15 @@ const notices = [
 
 function StudentDashboard() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const [user] = useState(() => {
+    try {
+      const stored = localStorage.getItem("user");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
   const [dashboardData, setDashboardData] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // 1. Verify session validity
@@ -59,16 +65,6 @@ function StudentDashboard() {
       clearAuthSession();
       navigate("/login?session=expired", { replace: true });
       return;
-    }
-
-    // 2. Read stored user profile from localStorage
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (err) {
-        console.error("Error reading user data:", err);
-      }
     }
 
     // 3. Block browser back button from navigating back to login
@@ -89,15 +85,12 @@ function StudentDashboard() {
     // 5. Fetch live student profile and attendance metrics from backend
     async function fetchDashboardMetrics() {
       try {
-        setLoading(true);
         const res = await api.get("/student/dashboard-data");
         if (res.data.success) {
           setDashboardData(res.data.data);
         }
       } catch (err) {
         console.error("Failed to load student dashboard data:", err);
-      } finally {
-        setLoading(false);
       }
     }
 

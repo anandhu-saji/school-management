@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import api from "../../api/axiosclient";
@@ -13,7 +13,12 @@ function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [connectionMessage, setConnectionMessage] = useState("");
+  const [connectionMessage, setConnectionMessage] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("session") === "expired"
+      ? "Your session expired after 1 hour. Please log in again."
+      : "";
+  });
   const [isLoading, setIsLoading] = useState(false);
 
   const [lockoutModal, setLockoutModal] = useState({
@@ -28,7 +33,7 @@ function Login() {
         "Your session expired after 1 hour. Please log in again."
       );
     }
-  }, [location]);
+  }, [location.search]);
 
   async function handleSignIn(e) {
     e.preventDefault();

@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosclient";
 import { clearAuthSession } from "../../utils/auth";
 import "../../Styles/AdminDash.css";
-import { ACADEMIC_WINGS, ALL_CLASSES } from "../../utils/classData";
 
 export default function ExamTimetables() {
   const navigate = useNavigate();
@@ -20,7 +19,7 @@ export default function ExamTimetables() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTerm, setSelectedTerm] = useState("All");
   const [selectedStandard, setSelectedStandard] = useState("All");
-  const [selectedStatus, setSelectedStatus] = useState("All");
+  const [selectedStatus] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 8;
 
@@ -33,7 +32,7 @@ export default function ExamTimetables() {
   // Seating Plan Modal State
   const [isSeatingModalOpen, setIsSeatingModalOpen] = useState(false);
   const [activeSeatingExam, setActiveSeatingExam] = useState(null);
-  const [seatingLoading, setSeatingLoading] = useState(false);
+  const [, setSeatingLoading] = useState(false);
 
   // Form Initial Data
   const initialForm = {
@@ -75,7 +74,23 @@ export default function ExamTimetables() {
   };
 
   useEffect(() => {
-    fetchExams();
+    let isMounted = true;
+    const loadExams = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get("/admin/exams");
+        if (isMounted && res.data.success) {
+          setExams(res.data.exams || []);
+          if (res.data.stats) setStats(res.data.stats);
+        }
+      } catch (err) {
+        console.error("Failed to load exams:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    loadExams();
+    return () => { isMounted = false; };
   }, []);
 
   const handleLogout = () => {

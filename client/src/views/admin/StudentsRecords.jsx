@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosclient";
 import { clearAuthSession } from "../../utils/auth";
 import "../../Styles/AdminDash.css";
-import { ACADEMIC_WINGS, ALL_CLASSES } from "../../utils/classData";
+import { ACADEMIC_WINGS } from "../../utils/classData";
 
 export default function StudentsRecords() {
   const navigate = useNavigate();
@@ -111,7 +111,23 @@ export default function StudentsRecords() {
   };
 
   useEffect(() => {
-    fetchStudents();
+    let isMounted = true;
+    const loadStudents = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get("/admin/students");
+        if (isMounted && res.data.success) {
+          setStudents(res.data.students || []);
+          if (res.data.stats) setStats(res.data.stats);
+        }
+      } catch (err) {
+        console.error("Failed to load students:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    loadStudents();
+    return () => { isMounted = false; };
   }, []);
 
   const handleLogout = () => {

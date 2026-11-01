@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import api from "../../api/axiosclient";
 import { clearAuthSession } from "../../utils/auth";
 import "../../Styles/AdminDash.css";
-import { ACADEMIC_WINGS, ALL_CLASSES } from "../../utils/classData";
+import { ALL_CLASSES } from "../../utils/classData";
 
 export default function DivisionAttendance() {
   const navigate = useNavigate();
@@ -68,7 +68,22 @@ export default function DivisionAttendance() {
   };
 
   useEffect(() => {
-    fetchMuster();
+    let isMounted = true;
+    const loadMuster = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get("/admin/division-muster");
+        if (isMounted && res.data.success) {
+          setDivisions(res.data.divisions || []);
+        }
+      } catch (err) {
+        console.error("Error loading muster:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    loadMuster();
+    return () => { isMounted = false; };
   }, []);
 
   const handleLogout = () => {
