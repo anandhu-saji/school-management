@@ -6,6 +6,7 @@ import Exam from "../models/Exam.js";
 import FeePayment from "../models/FeePayment.js";
 import { ALL_CLASSES } from "../utils/classData.js";
 import { ApiError } from "../utils/ApiError.js";
+import { validateStudentAgeForClass } from "../validators/student.validator.js";
 
 export class StudentService {
   /**
@@ -624,9 +625,16 @@ export class StudentService {
       throw ApiError.badRequest("Student full name is required for admission.");
     }
 
+    const targetDivision = data.classDivision || data.division || "Class 10-A";
+    if (data.dob) {
+      const ageCheck = validateStudentAgeForClass(data.dob, targetDivision);
+      if (ageCheck !== true) {
+        throw ApiError.badRequest(ageCheck);
+      }
+    }
+
     const count = await Student.countDocuments();
     const nextRoll = data.rollNumber ? Number(data.rollNumber) : count + 1;
-    const targetDivision = data.classDivision || data.division || "Class 10-A";
     const formattedDiv = targetDivision.startsWith("Class ") ? targetDivision : `Class ${targetDivision}`;
 
     const admNo = data.admissionNumber?.trim() || `ADM-${14920 + nextRoll}`;
@@ -715,6 +723,14 @@ export class StudentService {
    * Update student admission record
    */
   static async updateStudent(id, data) {
+    if (data.dob) {
+      const targetDivision = data.classDivision || data.division;
+      const ageCheck = validateStudentAgeForClass(data.dob, targetDivision);
+      if (ageCheck !== true) {
+        throw ApiError.badRequest(ageCheck);
+      }
+    }
+
     const updateData = { ...data };
     const updateOps = { $set: updateData };
 

@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { ACADEMIC_WINGS } from "../../../utils/classData";
 import { getDocumentUrl } from "../../../utils/documentUrl";
+import { checkStudentAgeEligibility } from "../../../utils/ageValidator";
 
 export default function StudentFormModal({
   isOpen,
@@ -194,13 +195,35 @@ export default function StudentFormModal({
 
                 <div className="form-row-grid-3">
                   <div className="form-field-group">
-                    <label>Date of Birth</label>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <label style={{ margin: 0 }}>Date of Birth *</label>
+                      {formData.dob && (
+                        (() => {
+                          const check = checkStudentAgeEligibility(formData.dob, formData.division);
+                          return (
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                fontWeight: "600",
+                                color: check.valid ? "#16a34a" : "#dc2626",
+                                background: check.valid ? "#f0fdf4" : "#fef2f2",
+                                padding: "2px 6px",
+                                borderRadius: "4px",
+                              }}
+                            >
+                              {check.valid ? `✓ ${check.message}` : `⚠ ${check.message}`}
+                            </span>
+                          );
+                        })()
+                      )}
+                    </div>
                     <input
                       type="text"
                       name="dob"
-                      placeholder="DD/MM/YYYY"
+                      placeholder="DD/MM/YYYY (e.g. 14/05/2010)"
                       value={formData.dob}
                       onChange={handleFormChange}
+                      required
                     />
                   </div>
                   <div className="form-field-group">

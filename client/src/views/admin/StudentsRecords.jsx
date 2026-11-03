@@ -8,6 +8,7 @@ import AdminHeader from "../../components/admin/AdminHeader";
 import StudentStatsCards from "../../components/admin/students/StudentStatsCards";
 import StudentFormModal from "../../components/admin/students/StudentFormModal";
 import StudentDossierModal from "../../components/admin/students/StudentDossierModal";
+import { checkStudentAgeEligibility } from "../../utils/ageValidator";
 
 export default function StudentsRecords() {
   const fileInputRef = useRef(null);
@@ -308,6 +309,19 @@ export default function StudentsRecords() {
       setActiveModalTab("personal");
       setFeedback({ type: "error", message: "Student Name is required." });
       return;
+    }
+
+    // Comprehensive Age & Eligibility Verification
+    if (formData.dob) {
+      const ageCheck = checkStudentAgeEligibility(formData.dob, formData.division);
+      if (!ageCheck.valid) {
+        setActiveModalTab("personal");
+        setFeedback({
+          type: "error",
+          message: ageCheck.message,
+        });
+        return;
+      }
     }
 
     try {
