@@ -1,4 +1,4 @@
-import express from "express";
+import { Router } from "express";
 import {
   getStudentDashboardData,
   getStudentExamsData,
@@ -7,7 +7,7 @@ import {
 import { authenticate } from "../middleware/auth.middleware.js";
 import { requireStudent } from "../middleware/role.middleware.js";
 
-const router = express.Router();
+const router = Router();
 
 // Apply auth + student role guard to all student routes
 router.use(authenticate, requireStudent);

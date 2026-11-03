@@ -1,12 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import api from "../../api/axiosclient";
-import { clearAuthSession } from "../../utils/auth";
 import "../../Styles/AdminDash.css";
 import { ALL_CLASSES } from "../../utils/classData";
 
+import AdminSidebar from "../../components/admin/AdminSidebar";
+import AdminHeader from "../../components/admin/AdminHeader";
+import AttendanceRegisterModal from "../../components/admin/attendance/AttendanceRegisterModal";
+
 export default function DivisionAttendance() {
-  const navigate = useNavigate();
   const location = useLocation();
   const [activeSection, setActiveSection] = useState(
     location.state?.section || "all"
@@ -22,7 +24,15 @@ export default function DivisionAttendance() {
       absent: c.absent || 2,
       turnoutRate: c.turnoutRate || "95.6%",
       syncStatus: "Verified & Locked",
-      section: c.code || (c.standard?.includes("11") || c.standard?.includes("12") ? "higher_secondary" : c.standard?.includes("8") || c.standard?.includes("9") || c.standard?.includes("10") ? "high_school" : c.standard?.includes("5") || c.standard?.includes("6") || c.standard?.includes("7") ? "up_school" : "lp_school"),
+      section:
+        c.code ||
+        (c.standard?.includes("11") || c.standard?.includes("12")
+          ? "higher_secondary"
+          : c.standard?.includes("8") || c.standard?.includes("9") || c.standard?.includes("10")
+          ? "high_school"
+          : c.standard?.includes("5") || c.standard?.includes("6") || c.standard?.includes("7")
+          ? "up_school"
+          : "lp_school"),
       sectionLabel: c.wingShort || "General",
     }))
   );
@@ -83,13 +93,10 @@ export default function DivisionAttendance() {
       }
     };
     loadMuster();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, []);
-
-  const handleLogout = () => {
-    clearAuthSession();
-    navigate("/login");
-  };
 
   // Filter divisions in main table by search and academic section
   const filteredDivisions = useMemo(() => {
@@ -107,16 +114,6 @@ export default function DivisionAttendance() {
       return matchSearch && matchSection;
     });
   }, [divisions, search, activeSection]);
-
-  // Open Class Attendance Register Modal
-  const handleOpenRegister = async (div) => {
-    setSelectedDivision(div);
-    setIsRegisterOpen(true);
-    setRegisterFeedback({ type: "", message: "" });
-    setRegisterSearch("");
-    setRegisterFilter("All");
-    await fetchRegisterData(div.standardDivision, registerDate);
-  };
 
   // Fetch Register Data from Backend
   const fetchRegisterData = async (divisionName, dateStr) => {
@@ -142,6 +139,16 @@ export default function DivisionAttendance() {
     } finally {
       setRegisterLoading(false);
     }
+  };
+
+  // Open Class Attendance Register Modal
+  const handleOpenRegister = async (div) => {
+    setSelectedDivision(div);
+    setIsRegisterOpen(true);
+    setRegisterFeedback({ type: "", message: "" });
+    setRegisterSearch("");
+    setRegisterFilter("All");
+    await fetchRegisterData(div.standardDivision, registerDate);
   };
 
   // Change Date inside Register Modal
@@ -188,8 +195,7 @@ export default function DivisionAttendance() {
       const updated = prev.map((s) => ({ ...s, status }));
       const present = status === "Present" ? updated.length : 0;
       const absent = status === "Absent" ? updated.length : 0;
-      const rate =
-        status === "Present" ? "100.0%" : "0.0%";
+      const rate = status === "Present" ? "100.0%" : "0.0%";
 
       setRegisterStats({
         totalEnrolled: updated.length,
@@ -323,104 +329,11 @@ export default function DivisionAttendance() {
   return (
     <div className="admin-layout">
       {/* ---------------- SIDEBAR ---------------- */}
-      <aside className="admin-sidebar">
-        <div>
-          <div className="sidebar-header">
-            <div className="school-code-label">School Code: 06042</div>
-            <div className="sampoorna-live-pill">
-              <span className="dot"></span> SAMPOORNA 2.0 LIVE
-            </div>
-          </div>
-
-          <div className="sidebar-section-title">CONSOLE NAVIGATION</div>
-          <nav className="console-nav-list">
-            <button
-              className="console-nav-item"
-              onClick={() => navigate("/admin/dashboard")}
-            >
-              <span>▦</span> Overview and Dashboard
-            </button>
-            <button className="console-nav-item active">
-              <span>👥</span> Division wise Attendance
-            </button>
-            <button
-              className="console-nav-item"
-              onClick={() => navigate("/admin/teachers")}
-            >
-              <span>🗂</span> Teachers Records
-            </button>
-            <button
-              className="console-nav-item"
-              onClick={() => navigate("/admin/students")}
-            >
-              <span>🎓</span> Students Records
-            </button>
-            <button
-              className="console-nav-item"
-              onClick={() => navigate("/admin/exams")}
-            >
-              <span>📅</span> Exam Timetables
-            </button>
-            <button
-              className="console-nav-item"
-              onClick={() => navigate("/admin/payments")}
-            >
-              <span>💳</span> Fee & Payments Console
-            </button>
-          </nav>
-        </div>
-
-        {/* Bottom Profile Card */}
-        <div className="sidebar-bottom-profile">
-          <div className="profile-avatar-circle">
-            <span>🛡</span>
-          </div>
-          <div className="profile-details-column">
-            <div className="profile-name-row">
-              <span>Sri. K. R. Madhavan</span>
-              <span className="verified-badge-icon">✓</span>
-            </div>
-            <p className="profile-role-subtext">Headmaster / Chief Admin</p>
-            <p className="profile-id-code">ADM-GHSS-01</p>
-          </div>
-          <button
-            className="logout-icon-btn"
-            onClick={handleLogout}
-            title="Sign Out"
-            aria-label="Sign Out"
-          >
-            ⇥
-          </button>
-        </div>
-      </aside>
+      <AdminSidebar activeNav="attendance" />
 
       {/* ---------------- MAIN CONTENT WRAPPER ---------------- */}
       <div className="admin-main-wrapper">
-        <header className="admin-top-header">
-          <span>
-            Kerala General Education Dept. •{" "}
-            <strong>Sampoorna Admin Console</strong> • Division Muster
-          </span>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <span className="badge-sync">🟢 AY 2025–2026</span>
-            <button
-              style={{
-                width: "32px",
-                height: "32px",
-                borderRadius: "50%",
-                background: "#135bec",
-                color: "#ffffff",
-                border: "none",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-              }}
-            >
-              👤
-            </button>
-          </div>
-        </header>
+        <AdminHeader />
 
         <main className="admin-content-area">
           <div className="hero-banner">
@@ -549,418 +462,29 @@ export default function DivisionAttendance() {
         </main>
       </div>
 
-      {/* =========================================================================
-          CLASS ATTENDANCE REGISTER MODAL
-          ========================================================================= */}
-      {isRegisterOpen && selectedDivision && (
-        <div
-          className="modal-overlay"
-          onClick={() => setIsRegisterOpen(false)}
-        >
-          <div
-            className="modal-content-card modal-lg"
-            style={{ maxWidth: "980px", maxHeight: "92vh" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="modal-header-row">
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <span
-                    style={{
-                      background: "#1d4ed8",
-                      color: "#ffffff",
-                      fontSize: "11px",
-                      fontWeight: "800",
-                      padding: "3px 8px",
-                      borderRadius: "6px",
-                      letterSpacing: "0.5px",
-                    }}
-                  >
-                    LIVE REGISTER
-                  </span>
-                  <h3 style={{ margin: 0 }}>
-                    {selectedDivision.standardDivision} Attendance Register
-                  </h3>
-                </div>
-                <p
-                  style={{
-                    fontSize: "12.5px",
-                    color: "#64748b",
-                    margin: "4px 0 0 0",
-                  }}
-                >
-                  Class Mentor:{" "}
-                  <strong>{registerMentor || selectedDivision.mentor}</strong> •
-                  School Code: 06042
-                </p>
-              </div>
-
-              {/* Date Picker & Close Button */}
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <div className="attendance-date-picker-box">
-                  <span style={{ fontSize: "14px" }}>📅</span>
-                  <input
-                    type="date"
-                    className="attendance-date-input"
-                    value={registerDate}
-                    onChange={(e) => handleDateChange(e.target.value)}
-                  />
-                </div>
-                <button
-                  className="modal-close-btn"
-                  onClick={() => setIsRegisterOpen(false)}
-                  title="Close Register"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            {/* Modal Body */}
-            <div className="allotment-modal-body" style={{ maxHeight: "74vh", overflowY: "auto" }}>
-              {/* Feedback Alerts */}
-              {registerFeedback.message && (
-                <div
-                  style={{
-                    padding: "10px 16px",
-                    borderRadius: "8px",
-                    marginBottom: "16px",
-                    fontSize: "13px",
-                    fontWeight: "600",
-                    background:
-                      registerFeedback.type === "error"
-                        ? "#fee2e2"
-                        : "#dcfce7",
-                    color:
-                      registerFeedback.type === "error"
-                        ? "#b91c1c"
-                        : "#15803d",
-                  }}
-                >
-                  {registerFeedback.message}
-                </div>
-              )}
-
-              {/* Top 4 Summary Cards Grid */}
-              <div className="attendance-summary-pills-row">
-                <div className="attendance-summary-mini-card">
-                  <span className="attendance-mini-label">Total Enrolled</span>
-                  <span className="attendance-mini-value">
-                    {registerStats.totalEnrolled} Students
-                  </span>
-                </div>
-                <div className="attendance-summary-mini-card">
-                  <span className="attendance-mini-label">Present Today</span>
-                  <span className="attendance-mini-value" style={{ color: "#16a34a" }}>
-                    {registerStats.presentCount} Students
-                  </span>
-                </div>
-                <div className="attendance-summary-mini-card">
-                  <span className="attendance-mini-label">Absent Today</span>
-                  <span className="attendance-mini-value" style={{ color: "#dc2626" }}>
-                    {registerStats.absentCount} Students
-                  </span>
-                </div>
-                <div className="attendance-summary-mini-card">
-                  <span className="attendance-mini-label">Turnout Rate</span>
-                  <span className="attendance-mini-value" style={{ color: "#2563eb" }}>
-                    {registerStats.turnoutRate}
-                  </span>
-                </div>
-              </div>
-
-              {/* Toolbar: Search, Filters & Bulk Actions */}
-              <div className="attendance-register-toolbar">
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: "240px" }}>
-                  <input
-                    type="text"
-                    placeholder="Search by Roll No, Student Name, Adm No..."
-                    value={registerSearch}
-                    onChange={(e) => setRegisterSearch(e.target.value)}
-                    className="search-box"
-                    style={{ margin: 0, width: "100%", maxWidth: "340px", padding: "8px 14px" }}
-                  />
-
-                  {/* Filter Pills */}
-                  <div className="attendance-filter-tabs">
-                    <button
-                      type="button"
-                      className={`att-tab-btn ${
-                        registerFilter === "All" ? "active" : ""
-                      }`}
-                      onClick={() => setRegisterFilter("All")}
-                    >
-                      All ({registerStudents.length})
-                    </button>
-                    <button
-                      type="button"
-                      className={`att-tab-btn ${
-                        registerFilter === "Present" ? "active" : ""
-                      }`}
-                      onClick={() => setRegisterFilter("Present")}
-                    >
-                      Present ({registerStats.presentCount})
-                    </button>
-                    <button
-                      type="button"
-                      className={`att-tab-btn ${
-                        registerFilter === "Absent" ? "active" : ""
-                      }`}
-                      onClick={() => setRegisterFilter("Absent")}
-                    >
-                      Absent ({registerStats.absentCount})
-                    </button>
-                  </div>
-                </div>
-
-                {/* Bulk Actions */}
-                <div className="attendance-bulk-actions">
-                  <button
-                    type="button"
-                    className="btn-bulk-present"
-                    onClick={() => handleMarkAll("Present")}
-                    title="Mark all enrolled students as Present"
-                  >
-                    ✓ Mark All Present
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-bulk-absent"
-                    onClick={() => handleMarkAll("Absent")}
-                    title="Mark all enrolled students as Absent"
-                  >
-                    ✕ Mark All Absent
-                  </button>
-                </div>
-              </div>
-
-              {/* Students Register Table */}
-              {registerLoading ? (
-                <div
-                  style={{
-                    textAlign: "center",
-                    padding: "40px",
-                    color: "#64748b",
-                    fontWeight: "600",
-                  }}
-                >
-                  Loading student roster &amp; attendance marks...
-                </div>
-              ) : filteredRegisterStudents.length === 0 ? (
-                <div
-                  style={{
-                    textAlign: "center",
-                    padding: "40px",
-                    color: "#64748b",
-                  }}
-                >
-                  No matching students found in this division.
-                </div>
-              ) : (
-                <div className="allotment-table-wrapper">
-                  <table className="allotment-schedule-table">
-                    <thead>
-                      <tr>
-                        <th style={{ width: "65px" }}>Roll #</th>
-                        <th style={{ width: "120px" }}>Adm No</th>
-                        <th>Student Name</th>
-                        <th style={{ width: "90px" }}>Gender</th>
-                        <th style={{ width: "210px", textAlign: "center" }}>
-                          Attendance Status
-                        </th>
-                        <th style={{ width: "130px", textAlign: "center" }}>
-                          Monthly Leaves
-                        </th>
-                        <th style={{ width: "110px", textAlign: "right" }}>
-                          Turnout
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredRegisterStudents.map((s) => {
-                        const isPresent = s.status === "Present";
-                        const isAbsent = s.status === "Absent";
-                        const isLeave =
-                          s.status === "Leave" ||
-                          s.status === "On Leave" ||
-                          s.status === "Half Day";
-
-                        return (
-                          <tr
-                            key={s._id}
-                            style={{
-                              background: isAbsent ? "#fff7f7" : "#ffffff",
-                            }}
-                          >
-                            <td>
-                              <strong style={{ color: isAbsent ? "#b91c1c" : "#0f172a" }}>
-                                #{String(s.rollNumber).padStart(2, "0")}
-                              </strong>
-                            </td>
-                            <td>
-                              <span style={{ fontSize: "12px", color: "#475569", fontFamily: "monospace" }}>
-                                {s.admissionNumber}
-                              </span>
-                            </td>
-                            <td>
-                              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                                <div
-                                  style={{
-                                    width: "28px",
-                                    height: "28px",
-                                    borderRadius: "50%",
-                                    background: isAbsent ? "#fee2e2" : "#e0e7ff",
-                                    color: isAbsent ? "#b91c1c" : "#3730a3",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    fontSize: "11px",
-                                    fontWeight: "800",
-                                  }}
-                                >
-                                  {s.name
-                                    .split(" ")
-                                    .map((n) => n[0])
-                                    .join("")
-                                    .slice(0, 2)
-                                    .toUpperCase()}
-                                </div>
-                                <span style={{ fontWeight: "700", color: "#0f172a" }}>
-                                  {s.name}
-                                </span>
-                              </div>
-                            </td>
-                            <td>
-                              <span style={{ fontSize: "12px", color: "#64748b" }}>
-                                {s.gender}
-                              </span>
-                            </td>
-
-                            {/* Segmented Status Toggle */}
-                            <td style={{ textAlign: "center" }}>
-                              <div className="reg-segmented-toggle">
-                                <button
-                                  type="button"
-                                  className={`reg-segment-btn ${
-                                    isPresent ? "active-present" : ""
-                                  }`}
-                                  onClick={() =>
-                                    handleToggleStatus(s._id, "Present")
-                                  }
-                                >
-                                  Present
-                                </button>
-                                <button
-                                  type="button"
-                                  className={`reg-segment-btn ${
-                                    isAbsent ? "active-absent" : ""
-                                  }`}
-                                  onClick={() =>
-                                    handleToggleStatus(s._id, "Absent")
-                                  }
-                                >
-                                  Absent
-                                </button>
-                                <button
-                                  type="button"
-                                  className={`reg-segment-btn ${
-                                    isLeave ? "active-leave" : ""
-                                  }`}
-                                  onClick={() =>
-                                    handleToggleStatus(s._id, "On Leave")
-                                  }
-                                >
-                                  Leave
-                                </button>
-                              </div>
-                            </td>
-
-                            <td style={{ textAlign: "center" }}>
-                              <span
-                                style={{
-                                  fontSize: "11px",
-                                  fontWeight: "700",
-                                  padding: "3px 8px",
-                                  borderRadius: "12px",
-                                  background:
-                                    s.monthlyLeavesTaken > 0
-                                      ? "#fef3c7"
-                                      : "#f1f5f9",
-                                  color:
-                                    s.monthlyLeavesTaken > 0
-                                      ? "#b45309"
-                                      : "#475569",
-                                }}
-                              >
-                                {s.monthlyLeavesTaken || 0} Days Taken
-                              </span>
-                            </td>
-
-                            <td style={{ textAlign: "right" }}>
-                              <strong style={{ color: "#059669" }}>
-                                {s.overallAttendance}
-                              </strong>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* Statutory Note Box */}
-              <div
-                style={{
-                  marginTop: "16px",
-                  background: "#f8fafc",
-                  border: "1px dashed #cbd5e1",
-                  borderRadius: "8px",
-                  padding: "10px 16px",
-                  fontSize: "12px",
-                  color: "#475569",
-                  lineHeight: "1.5",
-                }}
-              >
-                <strong>Kerala Education Rules (K.E.R) Ch. XIV-A:</strong>{" "}
-                Attendance muster must be recorded for each session. Saving this
-                register synchronizes records directly to the Sampoorna 2.0
-                state academic database.
-              </div>
-            </div>
-
-            {/* Modal Footer Actions */}
-            <div className="modal-footer-row">
-              <button
-                type="button"
-                className="btn-modal-cancel"
-                onClick={() => setIsRegisterOpen(false)}
-              >
-                Close Register
-              </button>
-              <button
-                type="button"
-                className="btn-seating-action"
-                onClick={handleExportCSV}
-                title="Export this division register to CSV"
-              >
-                Export Register (CSV) ⤓
-              </button>
-              <button
-                type="button"
-                className="btn-modal-save"
-                onClick={handleSaveRegister}
-                disabled={registerSaving}
-              >
-                {registerSaving
-                  ? "Saving & Locking..."
-                  : "Save & Lock Register ✓"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ---------------- CLASS ATTENDANCE REGISTER MODAL ---------------- */}
+      <AttendanceRegisterModal
+        isOpen={isRegisterOpen}
+        onClose={() => setIsRegisterOpen(false)}
+        selectedDivision={selectedDivision}
+        registerDate={registerDate}
+        onDateChange={handleDateChange}
+        registerMentor={registerMentor}
+        registerFeedback={registerFeedback}
+        registerStats={registerStats}
+        registerSearch={registerSearch}
+        setRegisterSearch={setRegisterSearch}
+        registerFilter={registerFilter}
+        setRegisterFilter={setRegisterFilter}
+        registerStudents={registerStudents}
+        filteredRegisterStudents={filteredRegisterStudents}
+        registerLoading={registerLoading}
+        registerSaving={registerSaving}
+        onToggleStatus={handleToggleStatus}
+        onMarkAll={handleMarkAll}
+        onSaveRegister={handleSaveRegister}
+        onExportCSV={handleExportCSV}
+      />
     </div>
   );
 }

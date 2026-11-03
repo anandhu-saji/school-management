@@ -1,13 +1,15 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosclient";
-import { clearAuthSession } from "../../utils/auth";
 import "../../Styles/AdminDash.css";
-import { ACADEMIC_WINGS, ALL_CLASSES } from "../../utils/classData";
+import { ACADEMIC_WINGS } from "../../utils/classData";
+
+import AdminSidebar from "../../components/admin/AdminSidebar";
+import AdminHeader from "../../components/admin/AdminHeader";
+import PaymentStatsCards from "../../components/admin/payments/PaymentStatsCards";
+import PaymentFormModal from "../../components/admin/payments/PaymentFormModal";
+import PaymentReceiptModal from "../../components/admin/payments/PaymentReceiptModal";
 
 export default function PaymentConsole() {
-  const navigate = useNavigate();
-
   // Data states
   const [payments, setPayments] = useState([]);
   const [studentsList, setStudentsList] = useState([]);
@@ -69,12 +71,6 @@ export default function PaymentConsole() {
   };
 
   const [paymentForm, setPaymentForm] = useState(initialForm);
-
-  // Logout handler
-  const handleLogout = () => {
-    clearAuthSession();
-    navigate("/login");
-  };
 
   // Debounced search effect
   useEffect(() => {
@@ -309,7 +305,8 @@ export default function PaymentConsole() {
       `"${p.status}"`,
     ]);
 
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const csvContent =
+      "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -331,89 +328,44 @@ export default function PaymentConsole() {
   return (
     <div className="admin-layout">
       {/* ---------------- SIDEBAR NAVIGATION ---------------- */}
-      <aside className="admin-sidebar">
-        <div>
-          <div className="sidebar-header">
-            <div className="school-code-label">School Code: 06042</div>
-            <div className="sampoorna-live-pill">
-              <span className="dot"></span> SAMPOORNA 2.0 LIVE
-            </div>
-          </div>
-
-          <div className="sidebar-section-title">CONSOLE NAVIGATION</div>
-          <nav className="console-nav-list">
-            <button className="console-nav-item" onClick={() => navigate("/admin/dashboard")}>
-              <span>▦</span> Overview and Dashboard
-            </button>
-            <button className="console-nav-item" onClick={() => navigate("/admin/attendance")}>
-              <span>👥</span> Division wise Attendance
-            </button>
-            <button className="console-nav-item" onClick={() => navigate("/admin/teachers")}>
-              <span>🗂</span> Teachers Records
-            </button>
-            <button className="console-nav-item" onClick={() => navigate("/admin/students")}>
-              <span>🎓</span> Students Records
-            </button>
-            <button className="console-nav-item" onClick={() => navigate("/admin/exams")}>
-              <span>📅</span> Exam Timetables
-            </button>
-            <button className="console-nav-item active">
-              <span>💳</span> Fee & Payments Console
-            </button>
-          </nav>
-        </div>
-
-        {/* Bottom Profile Card */}
-        <div className="sidebar-bottom-profile">
-          <div className="profile-avatar-circle">
-            <span>🛡</span>
-          </div>
-          <div className="profile-details-column">
-            <div className="profile-name-row">
-              <span>Sri. K. R. Madhavan</span>
-              <span className="verified-badge-icon">✓</span>
-            </div>
-            <p className="profile-role-subtext">Headmaster &amp; Chief Admin</p>
-            <p className="profile-id-code">ADM-GHSS-01 • PEN: 849201</p>
-          </div>
-          <button
-            className="logout-icon-btn"
-            onClick={handleLogout}
-            title="Sign Out"
-            aria-label="Sign Out"
-          >
-            🚪
-          </button>
-        </div>
-      </aside>
+      <AdminSidebar activeNav="payments" />
 
       {/* ---------------- MAIN CONTENT WRAPPER ---------------- */}
-      <div className="admin-main">
-        {/* Top Header Bar */}
-        <header className="admin-header">
-          <div className="header-breadcrumbs">
-            <span>Admin Console</span> / <span>Accounts & Finance</span> /{" "}
-            <strong>Fee & Payments Console</strong>
-          </div>
-          <div className="header-actions-group">
-            <button className="btn-secondary-action" onClick={handleExportCSV}>
-              📥 Export Ledger CSV
-            </button>
-            <button className="btn-primary-action" onClick={() => handleOpenRecordModal()}>
-              + Record Student Payment
-            </button>
-          </div>
-        </header>
+      <div className="admin-main-wrapper">
+        <AdminHeader />
 
         {/* Content Area */}
         <main className="admin-content-area">
+          {/* Header Action Bar */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: "18px",
+            }}
+          >
+            <div className="header-breadcrumbs" style={{ fontSize: "13px" }}>
+              <span>Admin Console</span> / <span>Accounts &amp; Finance</span> /{" "}
+              <strong>Fee &amp; Payments Console</strong>
+            </div>
+            <div className="header-actions-group" style={{ display: "flex", gap: "10px" }}>
+              <button className="btn-secondary-action" onClick={handleExportCSV}>
+                📥 Export Ledger CSV
+              </button>
+              <button className="btn-primary-action" onClick={() => handleOpenRecordModal()}>
+                + Record Student Payment
+              </button>
+            </div>
+          </div>
+
           {/* Hero Banner Card */}
           <section className="headmaster-hero-card" style={{ marginBottom: "22px" }}>
             <div className="badge-row">
-              <span className="badge-governance">TREASURY & FEE MANAGEMENT DECK</span>
+              <span className="badge-governance">TREASURY &amp; FEE MANAGEMENT DECK</span>
               <span className="badge-sync">🟢 Kerala Pareeksha Bhavan Integrated</span>
             </div>
-            <h1>Student Fee & Payment Console</h1>
+            <h1>Student Fee &amp; Payment Console</h1>
             <p>
               GHSS Rajakkad • Centralized revenue collection desk for School Bus Fee, Annual Tuition,
               PTA Development Fund, Lab Charges, and Amenities across all 26 Academic Divisions.
@@ -455,80 +407,8 @@ export default function PaymentConsole() {
             </div>
           )}
 
-          {/* ---------------- 5 TOP KPI SUMMARY CARDS ---------------- */}
-          <div className="payment-kpi-grid">
-            {/* Card 1: Total Collections */}
-            <div className="payment-kpi-card total-collection">
-              <div className="kpi-icon-row">
-                <span className="kpi-label">TOTAL COLLECTIONS</span>
-                <span className="kpi-badge rate">{summary.collectionRate} Collected</span>
-              </div>
-              <div className="kpi-amount">{formatINR(summary.totalCollected)}</div>
-              <div className="kpi-subtext">Total Invoiced: {formatINR(summary.totalBilled)}</div>
-            </div>
-
-            {/* Card 2: Pending Dues */}
-            <div className="payment-kpi-card pending-dues">
-              <div className="kpi-icon-row">
-                <span className="kpi-label">PENDING STUDENT DUES</span>
-                <span className="kpi-badge due">Action Required</span>
-              </div>
-              <div className="kpi-amount text-red">{formatINR(summary.totalDue)}</div>
-              <div className="kpi-subtext">Outstanding fees awaiting settlement</div>
-            </div>
-
-            {/* Card 3: Bus Fee Collection */}
-            <div className="payment-kpi-card bus-fee">
-              <div className="kpi-icon-row">
-                <span className="kpi-label">BUS FEE (FLEET 1-5)</span>
-                <span className="kpi-badge bus">Transport</span>
-              </div>
-              <div className="kpi-amount text-blue">{formatINR(summary.busFee?.collected)}</div>
-              <div className="kpi-subtext">Pending: {formatINR(summary.busFee?.due)} • 5 Active Routes</div>
-            </div>
-
-            {/* Card 4: Annual / Tuition Fee */}
-            <div className="payment-kpi-card annual-fee">
-              <div className="kpi-icon-row">
-                <span className="kpi-label">ANNUAL & TUITION</span>
-                <span className="kpi-badge annual">Govt Approved</span>
-              </div>
-              <div className="kpi-amount text-teal">{formatINR(summary.annualFee?.collected)}</div>
-              <div className="kpi-subtext">Pending: {formatINR(summary.annualFee?.due)} • Composite Term</div>
-            </div>
-
-            {/* Card 5: PTA Fund */}
-            <div className="payment-kpi-card pta-fund">
-              <div className="kpi-icon-row">
-                <span className="kpi-label">PTA & WELFARE FUND</span>
-                <span className="kpi-badge pta">PTA Executive</span>
-              </div>
-              <div className="kpi-amount text-purple">{formatINR(summary.ptaFund?.collected)}</div>
-              <div className="kpi-subtext">Development & Student Welfare Reserve</div>
-            </div>
-          </div>
-
-          {/* ---------------- 4 WING PROGRESS OVERVIEW ---------------- */}
-          <div className="wing-collection-strip">
-            {Object.entries(summary.wingStats || {}).map(([wingName, wData]) => {
-              const rate = wData.total > 0 ? Math.round((wData.collected / wData.total) * 100) : 0;
-              return (
-                <div key={wingName} className="wing-progress-pill-card">
-                  <div className="wing-header-line">
-                    <span className="wing-pill-title">{wingName}</span>
-                    <span className="wing-pill-rate">{rate}%</span>
-                  </div>
-                  <div className="wing-bar-wrapper">
-                    <div className="wing-bar-fill" style={{ width: `${rate}%` }}></div>
-                  </div>
-                  <div className="wing-footer-line">
-                    <span>{formatINR(wData.collected)}</span>
-                    <span className="text-muted">Due: {formatINR(wData.due)}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          {/* ---------------- 5 TOP KPI & 4 WING PROGRESS CARDS ---------------- */}
+          <PaymentStatsCards summary={summary} formatINR={formatINR} />
 
           {/* ---------------- CONTROLS & FILTERS BAR ---------------- */}
           <div className="payment-controls-card">
@@ -583,10 +463,10 @@ export default function PaymentConsole() {
                 <option value="All">All Categories</option>
                 <option value="Bus Fee">🚌 Bus Fee (School Transport)</option>
                 <option value="Annual Fee">📚 Annual Composite Tuition</option>
-                <option value="PTA Fund">🤝 PTA Welfare & Development</option>
-                <option value="Lab & Computer Fee">💻 IT Lab & Science Practicals</option>
+                <option value="PTA Fund">🤝 PTA Welfare &amp; Development</option>
+                <option value="Lab &amp; Computer Fee">💻 IT Lab &amp; Science Practicals</option>
                 <option value="Special / Exam Fee">📝 Special / Examination Fee</option>
-                <option value="Sports & Library">⚽ Sports & Library Club</option>
+                <option value="Sports &amp; Library">⚽ Sports &amp; Library Club</option>
               </select>
             </div>
 
@@ -795,409 +675,28 @@ export default function PaymentConsole() {
         </main>
       </div>
 
-      {/* =========================================================
-         MODAL 1: RECORD OR EDIT STUDENT PAYMENT
-         ========================================================= */}
-      {isRecordModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsRecordModalOpen(false)}>
-          <div
-            className="modal-content-card modal-lg"
-            onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: "720px" }}
-          >
-            {/* Modal Header */}
-            <div className="modal-header-row">
-              <div>
-                <h3>{editingPayment ? "Edit Payment Record" : "Record Student Fee Payment"}</h3>
-                <p style={{ fontSize: "12.5px", color: "#64748b", margin: 0 }}>
-                  GHSS Rajakkad • Official Accounts & Revenue Counter
-                </p>
-              </div>
-              <button
-                type="button"
-                className="modal-close-btn"
-                onClick={() => setIsRecordModalOpen(false)}
-              >
-                ✕
-              </button>
-            </div>
+      {/* ---------------- MODALS ---------------- */}
+      <PaymentFormModal
+        isOpen={isRecordModalOpen}
+        onClose={() => setIsRecordModalOpen(false)}
+        editingPayment={editingPayment}
+        paymentForm={paymentForm}
+        setPaymentForm={setPaymentForm}
+        formSubmitting={formSubmitting}
+        onSave={handleSavePayment}
+        studentSearchQuery={studentSearchQuery}
+        setStudentSearchQuery={setStudentSearchQuery}
+        filteredStudentsForLookup={filteredStudentsForLookup}
+        onSelectStudent={handleSelectStudent}
+        formatINR={formatINR}
+      />
 
-            {/* Modal Form */}
-            <form onSubmit={handleSavePayment}>
-              <div className="modal-form-body">
-                {/* Student Search & Quick Autocomplete */}
-                {!editingPayment && (
-                  <div className="form-group" style={{ marginBottom: "16px" }}>
-                    <label>Quick Student Autocomplete (Search by Name or Admission #):</label>
-                    <div style={{ position: "relative" }}>
-                      <input
-                        type="text"
-                        placeholder="Type student name (e.g., Anandhu, Aparna, Alan)..."
-                        value={studentSearchQuery}
-                        onChange={(e) => setStudentSearchQuery(e.target.value)}
-                        style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
-                      />
-                      {filteredStudentsForLookup.length > 0 && (
-                        <div className="autocomplete-dropdown">
-                          {filteredStudentsForLookup.map((st) => (
-                            <div
-                              key={st._id}
-                              className="autocomplete-item"
-                              onClick={() => handleSelectStudent(st)}
-                            >
-                              <strong>{st.name}</strong>
-                              <span style={{ fontSize: "11px", color: "#64748b" }}>
-                                {st.admissionNumber} • {st.classDivision}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                <div className="form-row-2">
-                  <div className="form-group">
-                    <label>Student Full Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={paymentForm.studentName}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, studentName: e.target.value })}
-                      placeholder="e.g. Anandhu Saji"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Admission Number *</label>
-                    <input
-                      type="text"
-                      required
-                      value={paymentForm.admissionNumber}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, admissionNumber: e.target.value })}
-                      placeholder="e.g. ADM-14920"
-                    />
-                  </div>
-                </div>
-
-                <div className="form-row-2">
-                  <div className="form-group">
-                    <label>Class Division *</label>
-                    <select
-                      value={paymentForm.classDivision}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        const derivedWing =
-                          val.includes("11") || val.includes("12") || val.includes("+1") || val.includes("+2")
-                            ? "Higher Secondary"
-                            : val.includes("8") || val.includes("9") || val.includes("10")
-                            ? "High School"
-                            : val.includes("5") || val.includes("6") || val.includes("7")
-                            ? "UP School"
-                            : "LP School";
-                        setPaymentForm({ ...paymentForm, classDivision: val, wing: derivedWing });
-                      }}
-                    >
-                      {ALL_CLASSES.map((cls) => (
-                        <option key={cls.id} value={cls.name}>
-                          {cls.name} ({cls.stream})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Fee Category *</label>
-                    <select
-                      value={paymentForm.feeCategory}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, feeCategory: e.target.value })}
-                    >
-                      <option value="Bus Fee">🚌 Bus Fee (School Transport)</option>
-                      <option value="Annual Fee">📚 Annual Composite Tuition</option>
-                      <option value="PTA Fund">🤝 PTA Welfare & Development</option>
-                      <option value="Lab & Computer Fee">💻 IT Lab & Science Practicals</option>
-                      <option value="Special / Exam Fee">📝 Special / Examination Fee</option>
-                      <option value="Sports & Library">⚽ Sports & Library Club</option>
-                      <option value="Uniform & Books">🎒 Uniform & Textbooks</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="form-row-3">
-                  <div className="form-group">
-                    <label>Total Fee Amount (₹) *</label>
-                    <input
-                      type="number"
-                      required
-                      min="0"
-                      value={paymentForm.totalAmount}
-                      onChange={(e) => {
-                        const tot = Number(e.target.value);
-                        setPaymentForm({ ...paymentForm, totalAmount: tot });
-                      }}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label>Amount Paid Now (₹) *</label>
-                    <input
-                      type="number"
-                      required
-                      min="0"
-                      value={paymentForm.amountPaid}
-                      onChange={(e) => {
-                        const paid = Number(e.target.value);
-                        setPaymentForm({ ...paymentForm, amountPaid: paid });
-                      }}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label>Balance Due (₹)</label>
-                    <input
-                      type="text"
-                      readOnly
-                      disabled
-                      value={formatINR(Math.max(0, (paymentForm.totalAmount || 0) - (paymentForm.amountPaid || 0)))}
-                      style={{
-                        backgroundColor: "#f8fafc",
-                        fontWeight: "700",
-                        color:
-                          (paymentForm.totalAmount || 0) - (paymentForm.amountPaid || 0) > 0 ? "#b91c1c" : "#15803d",
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-row-2">
-                  <div className="form-group">
-                    <label>Payment Mode *</label>
-                    <select
-                      value={paymentForm.paymentMode}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, paymentMode: e.target.value })}
-                    >
-                      <option value="UPI / Online (Google Pay / PhonePe)">
-                        📱 UPI / Online (Google Pay / PhonePe)
-                      </option>
-                      <option value="Net Banking">🌐 Net Banking / IMPS</option>
-                      <option value="Cash at School Counter">💵 Cash at School Counter</option>
-                      <option value="Bank Challan (SBT/SBI)">🏛 Bank Challan (SBI/SBT)</option>
-                      <option value="Demand Draft">📜 Demand Draft (DD)</option>
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Transaction / Challan Reference #</label>
-                    <input
-                      type="text"
-                      value={paymentForm.transactionReference}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, transactionReference: e.target.value })}
-                      placeholder="e.g. UPI/6294029402 or CHL-9402"
-                    />
-                  </div>
-                </div>
-
-                <div className="form-row-2">
-                  <div className="form-group">
-                    <label>Payment Date *</label>
-                    <input
-                      type="date"
-                      required
-                      value={paymentForm.paymentDate}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, paymentDate: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label>Term / Period</label>
-                    <select
-                      value={paymentForm.term}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, term: e.target.value })}
-                    >
-                      <option value="Term 1">Term 1</option>
-                      <option value="Term 2">Term 2</option>
-                      <option value="Term 3">Term 3</option>
-                      <option value="Annual">Annual Composite</option>
-                      <option value="Monthly Bus Pass">Monthly Bus Pass</option>
-                      <option value="One-Time">One-Time Special</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label>Remarks / Notes (Route, Concessions, or Details)</label>
-                  <input
-                    type="text"
-                    value={paymentForm.remarks}
-                    onChange={(e) => setPaymentForm({ ...paymentForm, remarks: e.target.value })}
-                    placeholder="e.g. School Bus Route 03 - Rajakkad to Kallar • Month of October"
-                  />
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="modal-footer-row">
-                <button
-                  type="button"
-                  className="btn-modal-cancel"
-                  onClick={() => setIsRecordModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn-modal-save" disabled={formSubmitting}>
-                  {formSubmitting ? "Saving to DB..." : editingPayment ? "💾 Update Payment" : "💾 Record Payment"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* =========================================================
-         MODAL 2: OFFICIAL PRINTABLE KERALA GOVT RECEIPT
-         ========================================================= */}
-      {isReceiptModalOpen && viewingReceipt && (
-        <div className="modal-overlay" onClick={() => setIsReceiptModalOpen(false)}>
-          <div
-            className="modal-content-card"
-            onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: "680px", background: "#ffffff" }}
-          >
-            <div className="modal-header-row" style={{ borderBottom: "none", paddingBottom: "0" }}>
-              <button
-                type="button"
-                className="btn-secondary-action"
-                onClick={() => window.print()}
-                style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
-              >
-                🖨 Print Official Receipt
-              </button>
-              <button
-                type="button"
-                className="modal-close-btn"
-                onClick={() => setIsReceiptModalOpen(false)}
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Official Kerala State Education Department Letterhead Format */}
-            <div className="printable-receipt-container" id="printable-receipt">
-              <div className="receipt-letterhead">
-                <div className="receipt-govt-title">GOVERNMENT OF KERALA</div>
-                <div className="receipt-dept-title">DEPARTMENT OF GENERAL EDUCATION</div>
-                <div className="receipt-school-title">GOVERNMENT HIGHER SECONDARY SCHOOL, RAJAKKAD</div>
-                <div className="receipt-sub-code">
-                  School Code: 06042 • Idukki District, Kerala • Pin: 685566
-                </div>
-                <div className="receipt-type-banner">FEE PAYMENT ACKNOWLEDGEMENT RECEIPT</div>
-              </div>
-
-              <div className="receipt-meta-grid">
-                <div>
-                  <strong>Receipt No:</strong> {viewingReceipt.receiptNumber}
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <strong>Date:</strong> {viewingReceipt.paymentDate}
-                </div>
-                <div>
-                  <strong>Student Name:</strong> {viewingReceipt.studentName}
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <strong>Adm No:</strong> {viewingReceipt.admissionNumber}
-                </div>
-                <div>
-                  <strong>Class & Division:</strong> {viewingReceipt.classDivision} ({viewingReceipt.wing})
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <strong>Roll No:</strong> {viewingReceipt.rollNumber || "-"}
-                </div>
-              </div>
-
-              <table className="receipt-breakdown-table">
-                <thead>
-                  <tr>
-                    <th>Fee Category & Particulars</th>
-                    <th>Term</th>
-                    <th style={{ textAlign: "right" }}>Total Fee</th>
-                    <th style={{ textAlign: "right" }}>Paid Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>
-                      <strong>{viewingReceipt.feeCategory}</strong>
-                      <div style={{ fontSize: "11px", color: "#64748b" }}>
-                        {viewingReceipt.remarks || "Standard approved fee schedule 2026-2027"}
-                      </div>
-                    </td>
-                    <td>{viewingReceipt.term}</td>
-                    <td style={{ textAlign: "right" }}>{formatINR(viewingReceipt.totalAmount)}</td>
-                    <td style={{ textAlign: "right", fontWeight: "700" }}>{formatINR(viewingReceipt.amountPaid)}</td>
-                  </tr>
-                </tbody>
-                <tfoot>
-                  <tr>
-                    <td colSpan="3" style={{ textAlign: "right", fontWeight: "700" }}>
-                      Total Received:
-                    </td>
-                    <td style={{ textAlign: "right", fontWeight: "800", color: "#15803d", fontSize: "15px" }}>
-                      {formatINR(viewingReceipt.amountPaid)}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colSpan="3" style={{ textAlign: "right", color: "#64748b" }}>
-                      Balance Outstanding:
-                    </td>
-                    <td
-                      style={{
-                        textAlign: "right",
-                        fontWeight: "700",
-                        color: viewingReceipt.dueAmount > 0 ? "#b91c1c" : "#64748b",
-                      }}
-                    >
-                      {formatINR(viewingReceipt.dueAmount)}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-
-              <div className="receipt-payment-info-box">
-                <div>
-                  <strong>Payment Mode:</strong> {viewingReceipt.paymentMode}
-                </div>
-                {viewingReceipt.transactionReference && (
-                  <div>
-                    <strong>Ref / Txn ID:</strong> {viewingReceipt.transactionReference}
-                  </div>
-                )}
-                <div>
-                  <strong>Status:</strong>{" "}
-                  <span style={{ color: viewingReceipt.status === "Paid" ? "#15803d" : "#b91c1c", fontWeight: "700" }}>
-                    {viewingReceipt.status.toUpperCase()}
-                  </span>
-                </div>
-              </div>
-
-              <div className="receipt-footer-row">
-                <div className="receipt-stamp-box">
-                  <div className="official-stamp-circle">
-                    <span>SAMPOORNA</span>
-                    <strong>06042</strong>
-                    <span>VERIFIED</span>
-                  </div>
-                </div>
-                <div className="receipt-signature-box">
-                  <div className="sig-line"></div>
-                  <div className="sig-title">Sri. K. R. Madhavan</div>
-                  <div className="sig-role">Headmaster & Accounts Officer</div>
-                  <div className="sig-date">GHSS Rajakkad</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <PaymentReceiptModal
+        isOpen={isReceiptModalOpen}
+        onClose={() => setIsReceiptModalOpen(false)}
+        viewingReceipt={viewingReceipt}
+        formatINR={formatINR}
+      />
     </div>
   );
 }

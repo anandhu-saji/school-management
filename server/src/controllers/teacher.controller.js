@@ -1,213 +1,28 @@
-import mongoose from "mongoose";
-import Student from "../models/Student.js";
-import Teacher from "../models/Teacher.js";
-import Attendance from "../models/Attendance.js";
+import { TeacherService } from "../services/teacher.service.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
 /**
- * 1. Fetch Teacher Profile, Students & Register for selected Date & Division
- * GET /api/teacher/students?division=Class 10-A&date=YYYY-MM-DD
+ * Controller: Fetch teacher profile, student roster, and attendance status for a division and date
+ * Route: GET /api/teacher/students?division=Class 10-A&date=YYYY-MM-DD
  */
-export const getStudentsByDivision = async (req, res) => {
-  try {
-    const rawDivision = req.query.division || "Class 10-A";
-    const dateQuery = req.query.date || new Date().toISOString().split("T")[0];
+export const getStudentsByDivision = asyncHandler(async (req, res) => {
+  const { division, date } = req.query;
+  const result = await TeacherService.getStudentsForTeacherRegister({ division, date });
 
-    // Normalize regex: matches "Class 10-A", "Class 10A", "10-A", or "10A"
-    const cleanDivision = rawDivision.replace(/[\s-]/g, "");
-    const pattern = cleanDivision.split("").join("[\\s-]*");
-    const divisionRegex = new RegExp(`^${pattern}$|${pattern}`, "i");
-
-    // Fetch assigned class teacher from MongoDB (Indu B Nair)
-    const classTeacher = await Teacher.findOne({
-      $or: [
-        { assignedClass: { $regex: divisionRegex } },
-        { email: "kathalanx@gmail.com" },
-      ],
-    }).lean();
-
-    // Fetch all students in division
-    const students = await Student.find({
-      $or: [
-        { classDivision: { $regex: divisionRegex } },
-        { division: { $regex: divisionRegex } },
-        { className: { $regex: divisionRegex } },
-      ],
-    }).sort({ rollNumber: 1 });
-
-    if (!students || students.length === 0) {
-      return res.status(200).json({
-        success: true,
-        count: 0,
-        teacher: classTeacher || {
-          name: "Indu B Nair",
-          email: "kathalanx@gmail.com",
-          assignedClass: "Class 10-A",
-          department: "Mathematics",
-        },
-        students: [],
-        message: "No students found for this division.",
-      });
-    }
-
-    // Look up attendance document for this date & division
-    const existingAttendance = await Attendance.findOne({
-      date: dateQuery,
-      $or: [
-        { classDivision: { $regex: divisionRegex } },
-        { division: { $regex: divisionRegex } },
-      ],
-    });
-
-    const roster = studentList.map((std) => {
-      let status = "Present";
-      if (existingAttendance && existingAttendance.records) {
-        const found = existingAttendance.records.find(
-          (r) => String(r.studentId) === String(std._id)
-        );
-        if (found) {
-          status = found.status;
-        }
-      }
-
-      return {
-        _id: std._id,
-        rollNumber: std.rollNumber,
-        name: std.name,
-        admissionNumber: std.admissionNumber || `ADM-${std.rollNumber}`,
-        gender: std.gender,
-        monthlyLeavesTaken: std.monthlyLeavesTaken || 0,
-        status,
-      };
-    });
-
-    const presentCount = roster.filter((s) => s.status === "Present").length;
-    const absentCount = roster.filter((s) => s.status === "Absent").length;
-
-    return res.status(200).json({
-      success: true,
-      count: roster.length,
-      presentCount,
-      absentCount,
-      registerStatus: existingAttendance ? "Submitted" : "Draft",
-      teacher: classTeacher || {
-        name: "Indu B Nair",
-        email: "kathalanx@gmail.com",
-        assignedClass: "Class 10-A",
-        department: "Mathematics",
-      },
-      students: roster,
-    });
-  } catch (error) {
-    console.error("Error in getStudentsByDivision:", error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Failed to retrieve student register.",
-    });
-  }
-};
+  return ApiResponse.ok(res, result);
+});
 
 /**
- * 2. Save Attendance with ACID Transaction (rs0 replica set) & Sunday Rule
- * POST /api/teacher/attendance
+ * Controller: Record and lock class attendance (enforcing KER Sunday Rule and student stat sync)
+ * Route: POST /api/teacher/attendance
  */
-export const saveAttendance = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+export const saveAttendance = asyncHandler(async (req, res) => {
+  const { date, classDivision, records } = req.body;
+  const result = await TeacherService.saveTeacherAttendance({ date, classDivision, records });
 
-  try {
-    const { date, classDivision, records } = req.body;
-
-    if (!date || !records || !Array.isArray(records) || records.length === 0) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(400).json({
-        success: false,
-        message: "Date and student records array are required.",
-      });
-    }
-
-    // Weekly Holiday rule: block saving on Sundays
-    const [yearStr, monthStr, dayStr] = date.split("-");
-    const parsedDate = new Date(
-      Date.UTC(Number(yearStr), Number(monthStr) - 1, Number(dayStr))
-    );
-
-    if (parsedDate.getUTCDay() === 0) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(400).json({
-        success: false,
-        message: "Cannot mark attendance on Sunday (Weekly Holiday).",
-      });
-    }
-
-    const division = classDivision || "Class 10-A";
-    const totalPresent = records.filter((r) => r.status === "Present").length;
-    const totalAbsent = records.filter((r) => r.status === "Absent").length;
-
-    await Attendance.findOneAndUpdate(
-      { date, classDivision: division },
-      {
-        $set: {
-          date,
-          classDivision: division,
-          records,
-          totalPresent,
-          totalAbsent,
-          markedBy: req.user?.email || "kathalanx@gmail.com",
-        },
-      },
-      { upsert: true, new: true, session }
-    );
-
-    // Dynamic 3-day quota calculation for current month
-    const currentMonthPrefix = `${yearStr}-${monthStr}`;
-    const monthlyAttendanceLogs = await Attendance.find({
-      date: { $regex: new RegExp(`^${currentMonthPrefix}`) },
-      classDivision: division,
-    }).session(session);
-
-    const monthlyAbsentCounts = {};
-    for (const doc of monthlyAttendanceLogs) {
-      for (const rec of doc.records) {
-        if (rec.status === "Absent") {
-          const sId = String(rec.studentId);
-          monthlyAbsentCounts[sId] = (monthlyAbsentCounts[sId] || 0) + 1;
-        }
-      }
-    }
-
-    const studentUpdatePromises = records.map((rec) => {
-      const sId = String(rec.studentId);
-      const absentDays = monthlyAbsentCounts[sId] || 0;
-      return Student.findByIdAndUpdate(
-        rec.studentId,
-        { $set: { monthlyLeavesTaken: absentDays } },
-        { session }
-      );
-    });
-
-    await Promise.all(studentUpdatePromises);
-
-    await session.commitTransaction();
-    session.endSession();
-
-    return res.status(200).json({
-      success: true,
-      message: `Attendance for ${date} successfully committed to MongoDB.`,
-      summary: {
-        totalPresent,
-        totalAbsent,
-        enrolled: records.length,
-      },
-    });
-  } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    console.error("Save Attendance Transaction Error:", error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Failed to commit attendance transaction.",
-    });
-  }
-};
+  return ApiResponse.ok(res, {
+    message: `Attendance for ${classDivision || "Class"} on ${date} saved and locked successfully!`,
+    ...result,
+  });
+});

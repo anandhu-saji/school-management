@@ -1,22 +1,28 @@
 import { Router } from "express";
-import { login, googleLogin } from "../controllers/auth/login.js";
 import {
+  login,
+  googleLogin,
   sendOtp,
   verifyOtp,
   resetPassword,
-} from "../controllers/auth/forgotPassword.js";
+} from "../controllers/auth.controller.js";
+import { validate } from "../middleware/validate.middleware.js";
+import {
+  loginSchema,
+  forgotPasswordSchema,
+  verifyOtpSchema,
+  resetPasswordSchema,
+} from "../validators/auth.validator.js";
 
 const router = Router();
 
-// Login & OAuth
-router.post("/login", login);
-if (googleLogin) {
-  router.post("/google", googleLogin);
-}
+// Authentication
+router.post("/login", validate(loginSchema), login);
+router.post("/google", googleLogin);
 
 // Password Recovery Flow
-router.post("/forgot-password", sendOtp);
-router.post("/verify-otp", verifyOtp);
-router.post("/reset-password", resetPassword);
+router.post("/forgot-password", validate(forgotPasswordSchema), sendOtp);
+router.post("/verify-otp", validate(verifyOtpSchema), verifyOtp);
+router.post("/reset-password", validate(resetPasswordSchema), resetPassword);
 
 export default router;

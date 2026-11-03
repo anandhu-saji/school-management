@@ -10,8 +10,9 @@ import studentRoutes from "./routes/student.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 
-// Error Middleware
+// Middleware imports
 import { errorHandler } from "./middleware/error.middleware.js";
+import { ApiError } from "./utils/ApiError.js";
 
 const app = express();
 
@@ -37,16 +38,19 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 // Serve static uploaded documents and assets
 app.use("/uploads", express.static(path.resolve("uploads")));
 
-// Admin Routes
-app.use("/api/admin", adminRoutes);
-
 // API Routes
+app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/teacher", teacherRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/upload", uploadRoutes);
 
-// Global Error Handler
+// 404 Not Found Handler
+app.use((req, res, next) => {
+  next(ApiError.notFound(`Cannot ${req.method} ${req.originalUrl}`));
+});
+
+// Global Centralized Error Handler
 app.use(errorHandler);
 
 export default app;

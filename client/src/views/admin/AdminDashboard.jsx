@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosclient";
-import { clearAuthSession } from "../../utils/auth";
 import "../../Styles/AdminDash.css";
 import { ALL_CLASSES } from "../../utils/classData";
+import AdminSidebar from "../../components/admin/AdminSidebar";
+import AdminHeader from "../../components/admin/AdminHeader";
 
 export default function AdminOverview() {
   const navigate = useNavigate();
@@ -117,11 +118,6 @@ export default function AdminOverview() {
     return () => { isMounted = false; };
   }, []);
 
-  const handleLogout = () => {
-    clearAuthSession();
-    navigate("/login");
-  };
-
   const handleOpenMuster = (sectionId) => {
     navigate("/admin/attendance", { state: { section: sectionId } });
   };
@@ -129,104 +125,11 @@ export default function AdminOverview() {
   return (
     <div className="admin-layout">
       {/* ---------------- SIDEBAR NAVIGATION ---------------- */}
-      <aside className="admin-sidebar">
-        <div>
-          <div className="sidebar-header">
-            <div className="school-code-label">School Code: 06042</div>
-            <div className="sampoorna-live-pill">
-              <span className="dot"></span> SAMPOORNA 2.0 LIVE
-            </div>
-          </div>
-
-          <div className="sidebar-section-title">CONSOLE NAVIGATION</div>
-          <nav className="console-nav-list">
-            <button className="console-nav-item active">
-              <span>▦</span> Overview and Dashboard
-            </button>
-            <button
-              className="console-nav-item"
-              onClick={() => navigate("/admin/attendance")}
-            >
-              <span>👥</span> Division wise Attendance
-            </button>
-            <button
-              className="console-nav-item"
-              onClick={() => navigate("/admin/teachers")}
-            >
-              <span>🗂</span> Teachers Records
-            </button>
-            <button
-              className="console-nav-item"
-              onClick={() => navigate("/admin/students")}
-            >
-              <span>🎓</span> Students Records
-            </button>
-            <button
-              className="console-nav-item"
-              onClick={() => navigate("/admin/exams")}
-            >
-              <span>📅</span> Exam Timetables
-            </button>
-            <button
-              className="console-nav-item"
-              onClick={() => navigate("/admin/payments")}
-            >
-              <span>💳</span> Fee & Payments Console
-            </button>
-          </nav>
-        </div>
-
-        {/* Bottom Profile Card */}
-        <div className="sidebar-bottom-profile">
-          <div className="profile-avatar-circle">
-            <span>🛡</span>
-          </div>
-          <div className="profile-details-column">
-            <div className="profile-name-row">
-              <span>Sri. K. R. Madhavan</span>
-              <span className="verified-badge-icon">✓</span>
-            </div>
-            <p className="profile-role-subtext">Headmaster / Chief Admin</p>
-            <p className="profile-id-code">ADM-GHSS-01</p>
-          </div>
-          <button
-            className="logout-icon-btn"
-            onClick={handleLogout}
-            title="Sign Out"
-            aria-label="Sign Out"
-          >
-            ⇥
-          </button>
-        </div>
-      </aside>
+      <AdminSidebar activeNav="overview" />
 
       {/* ---------------- MAIN CONTENT WRAPPER ---------------- */}
       <div className="admin-main-wrapper">
-        <header className="admin-top-header">
-          <span>
-            Kerala General Education Dept. •{" "}
-            <strong>Sampoorna Admin Console</strong> • School Code: 06042
-          </span>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <span className="badge-sync">🟢 AY 2025–2026</span>
-            <button
-              style={{
-                width: "32px",
-                height: "32px",
-                borderRadius: "50%",
-                background: "#135bec",
-                color: "#ffffff",
-                border: "none",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-              }}
-            >
-              👤
-            </button>
-          </div>
-        </header>
+        <AdminHeader />
 
         <main className="admin-content-area">
           <section className="headmaster-hero-card">

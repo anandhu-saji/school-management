@@ -4,11 +4,12 @@ import Attendance from "../models/Attendance.js";
 import Teacher from "../models/Teacher.js";
 import Exam from "../models/Exam.js";
 import FeePayment from "../models/FeePayment.js";
-import { AttendanceStatus } from "../constants/enums.js";
+import { ALL_CLASSES } from "../utils/classData.js";
+import { ApiError } from "../utils/ApiError.js";
 
 export class StudentService {
   /**
-   * Fetches full student profile, documents dossier, and calculates attendance metrics
+   * Fetches full student profile, documents dossier, and calculates attendance metrics (Student Portal)
    */
   static async getStudentMetrics({ userId, email }) {
     let student = null;
@@ -31,7 +32,6 @@ export class StudentService {
           name: { $regex: new RegExp(`^${user.name.trim()}$`, "i") },
         });
 
-        // Link student profile to this user for all subsequent logins
         if (student) {
           student.userId = userId;
           if (email) student.email = email.toLowerCase();
@@ -40,7 +40,7 @@ export class StudentService {
       }
     }
 
-    // 4. If no student document exists yet, auto-generate a profile linked to this account
+    // 4. Auto-generate profile if none exists
     if (!student) {
       const user = userId ? await User.findById(userId) : null;
       const count = await Student.countDocuments();
@@ -58,13 +58,9 @@ export class StudentService {
         classDivision: "Class 10-A",
         className: "Class 10-A",
         gender: "Male",
-        dob: "2010-05-14",
+        dob: "14 May 2010",
         bloodGroup: "O+",
         category: "General",
-        religion: "Hindu",
-        caste: "Nair",
-        aadhaarNumber: "9482-1049-2810",
-        birthCertificateNumber: "BC/IDK/2010/8812",
         fatherName: "Mr. S. K. Pillai",
         motherName: "Mrs. Lakshmi Pillai",
         guardian: "Mr. S. K. Pillai",
@@ -80,173 +76,128 @@ export class StudentService {
           state: "Kerala",
           pincode: "685566",
         },
-        fullAddress: "Thiruvonam Nilayam, Munnar Road, Rajakkad P.O, Idukki, Kerala - 685566",
-        identificationMarks: "Mole on left collarbone",
+        fullAddress: "Thiruvonam Nilayam, Munnar Road, Rajakkad P.O, Idukki District, Kerala - 685566",
         previousSchool: "Govt. U.P. School Rajakkad",
         tcNumber: "TC/2024/0912",
-        overallAttendance: "98.4",
+        identificationMarks: "Mole on left collarbone",
+        overallAttendance: "98.4%",
+        monthlyLeavesTaken: 1,
+        status: "Present",
       });
     }
 
-    const division = (student.className || student.classDivision || "10-A")
-      .replace(/^Class\s+/i, "")
-      .trim();
+    const division = (student.classDivision || student.className || "10-A").replace(/^Class\s+/i, "");
 
-    // Query all saved attendance registers for this division
-    const attendanceSheets = await Attendance.find({
+    const classTeacher = await Teacher.findOne({
       $or: [
-        { classDivision: division },
-        { classDivision: `Class ${division}` },
+        { assignedClass: { $regex: new RegExp(`(${division}|Class ${division})`, "i") } },
+        { department: { $regex: /malayalam|mathematics/i } },
       ],
-    }).sort({ date: -1 });
+    }).lean();
 
-    let totalWorkingDays = 0;
+    const attendances = await Attendance.find({
+      "records.studentId": student._id,
+    })
+      .sort({ date: -1 })
+      .lean();
+
     let presentDays = 0;
     let absentDays = 0;
+    let totalWorkingDays = 0;
     const recentLogs = [];
     const absentDates = [];
     const monthlyMap = {};
 
-    attendanceSheets.forEach((sheet) => {
-      if (Array.isArray(sheet.records)) {
-        const record = sheet.records.find((rec) => {
-          const recId = rec.studentId?.toString();
-          const sId = student._id?.toString();
-          const customId = student.studentId || student.admissionNumber;
-          return (
-            recId === sId ||
-            recId === customId ||
-            rec.name?.toLowerCase() === student.name?.toLowerCase()
-          );
-        });
+    attendances.forEach((att) => {
+      const rec = att.records.find((r) => String(r.studentId) === String(student._id));
+      if (!rec) return;
 
-        if (record) {
-          totalWorkingDays += 1;
-          const isPresent = record.status === AttendanceStatus.PRESENT || record.status === "Present";
-          const isAbsent = record.status === AttendanceStatus.ABSENT || record.status === "Absent";
-
-          if (isPresent) {
-            presentDays += 1;
-          } else if (isAbsent) {
-            absentDays += 1;
-            absentDates.push(sheet.date);
-          }
-
-          if (recentLogs.length < 15) {
-            recentLogs.push({
-              date: sheet.date,
-              status: isPresent ? "Present" : "Absent",
-              markedBy: sheet.markedBy || "Faculty Mentor",
-            });
-          }
-
-          // Extract month & year from date string (e.g. "2026-10-31" or "31-10-2026")
-          let monthKey = "Current Term";
-          try {
-            const parsed = new Date(sheet.date);
-            if (!isNaN(parsed.getTime())) {
-              monthKey = parsed.toLocaleString("default", { month: "long", year: "numeric" });
-            }
-          } catch {
-            // fallback
-          }
-
-          if (!monthlyMap[monthKey]) {
-            monthlyMap[monthKey] = { month: monthKey, total: 0, present: 0, absent: 0 };
-          }
-          monthlyMap[monthKey].total += 1;
-          if (isPresent) monthlyMap[monthKey].present += 1;
-          if (isAbsent) monthlyMap[monthKey].absent += 1;
-        }
+      totalWorkingDays++;
+      if (rec.status === "Present") {
+        presentDays++;
+      } else {
+        absentDays++;
+        absentDates.push(`${att.date} (${rec.remarks || "Absence Recorded"})`);
       }
+
+      if (recentLogs.length < 8) {
+        recentLogs.push({
+          date: att.date,
+          status: rec.status,
+          markedBy: classTeacher?.name || "Mrs. Priya Nair",
+        });
+      }
+
+      const monthKey = att.date.slice(0, 7);
+      if (!monthlyMap[monthKey]) {
+        monthlyMap[monthKey] = { total: 0, present: 0, absent: 0 };
+      }
+      monthlyMap[monthKey].total++;
+      if (rec.status === "Present") monthlyMap[monthKey].present++;
+      else monthlyMap[monthKey].absent++;
     });
 
-    const monthlyBreakdown = Object.values(monthlyMap).map((m) => ({
-      ...m,
-      rate: m.total > 0 ? ((m.present / m.total) * 100).toFixed(1) + "%" : "100%",
-    }));
+    const monthlyBreakdown = Object.entries(monthlyMap).map(([mKey, counts]) => {
+      const d = new Date(`${mKey}-01`);
+      const monthLabel = d.toLocaleString("en-US", { month: "long", year: "numeric" });
+      const rate = counts.total > 0 ? ((counts.present / counts.total) * 100).toFixed(1) + "%" : "100%";
+      return {
+        month: monthLabel,
+        total: counts.total,
+        present: counts.present,
+        absent: counts.absent,
+        rate,
+      };
+    });
 
     const attendanceRate =
-      totalWorkingDays > 0
-        ? ((presentDays / totalWorkingDays) * 100).toFixed(1)
-        : (parseFloat(student.overallAttendance) || 98.4).toFixed(1);
-
-    // Find class mentor teacher from MongoDB
-    const mentor = await Teacher.findOne({
-      $or: [
-        { mentorClass: division },
-        { mentorClass: `Class ${division}` },
-        { assignedClass: new RegExp(division, "i") },
-      ],
-    }).lean();
+      totalWorkingDays > 0 ? ((presentDays / totalWorkingDays) * 100).toFixed(1) : 98.4;
 
     return {
       student: {
         _id: student._id,
         name: student.name,
-        email: student.email || email,
-        studentId: student.studentId || student.admissionNumber || `ADM-${student.rollNumber}`,
-        admissionNumber: student.admissionNumber || student.studentId || `ADM-${student.rollNumber}`,
+        email: student.email,
         rollNumber: student.rollNumber,
-        sampoornaId: student.sampoornaId || `SMP-06042-${880 + Number(student.rollNumber || 1)}`,
-        className: student.className || student.classDivision || "Class 10-A",
-        classDivision: student.classDivision || student.className || "Class 10-A",
-        gender: student.gender || "Male",
-        dob: student.dob || "2010-05-14",
-        bloodGroup: student.bloodGroup || "O+",
-        category: student.category || "General",
-        religion: student.religion || "Hindu",
-        caste: student.caste || "",
-        // Statutory Identity Proofs & Uploaded Files
-        aadhaarNumber: student.aadhaarNumber || "",
-        birthCertificateNumber: student.birthCertificateNumber || "",
-        idProofUrl: student.idProofUrl || null,
-        idProofType: student.idProofType || "Aadhaar Card",
-        idProofFileName: student.idProofFileName || null,
-        idProofFileType: student.idProofFileType || null,
-        birthCertificateUrl: student.birthCertificateUrl || null,
-        birthCertificateFileName: student.birthCertificateFileName || null,
-        identificationMarks: student.identificationMarks || "Mole on left collarbone",
-        // Parent & Guardian details
-        fatherName: student.fatherName || "",
-        motherName: student.motherName || "",
-        guardian: student.guardian || student.fatherName || "Father",
-        guardianRelation: student.guardianRelation || "Father",
-        parentContact: student.parentContact || "+91 94471 22334",
-        altContact: student.altContact || "",
-        // Residential Address
-        address: student.address || {},
-        fullAddress:
-          student.fullAddress ||
-          (student.address
-            ? [
-                student.address.houseName,
-                student.address.street,
-                student.address.postOffice,
-                student.address.district,
-                student.address.pincode ? `PIN: ${student.address.pincode}` : "",
-              ]
-                .filter(Boolean)
-                .join(", ")
-            : "Rajakkad P.O, Idukki, Kerala - 685566"),
-        // Academic History
-        previousSchool: student.previousSchool || "Govt. U.P. School Rajakkad",
-        tcNumber: student.tcNumber || "TC/2024/0912",
-        avatarUrl: student.avatarUrl || null,
-        avatarBg: student.avatarBg || "blue",
+        admissionNumber: student.admissionNumber,
+        sampoornaId: student.sampoornaId,
+        classDivision: student.classDivision || `Class ${division}`,
+        className: student.className || `Class ${division}`,
+        gender: student.gender,
+        dob: student.dob,
+        bloodGroup: student.bloodGroup,
+        category: student.category,
+        religion: student.religion,
+        caste: student.caste,
+        aadhaarNumber: student.aadhaarNumber,
+        birthCertificateNumber: student.birthCertificateNumber,
+        idProofUrl: student.idProofUrl,
+        idProofType: student.idProofType,
+        idProofFileName: student.idProofFileName,
+        birthCertificateUrl: student.birthCertificateUrl,
+        birthCertificateFileName: student.birthCertificateFileName,
+        fatherName: student.fatherName,
+        motherName: student.motherName,
+        guardian: student.guardian,
+        guardianRelation: student.guardianRelation,
+        parentContact: student.parentContact,
+        altContact: student.altContact,
+        address: student.address,
+        fullAddress: student.fullAddress,
+        previousSchool: student.previousSchool,
+        tcNumber: student.tcNumber,
+        identificationMarks: student.identificationMarks,
       },
-      mentor: mentor
+      mentor: classTeacher
         ? {
-            name: mentor.name,
-            email: mentor.email || "mentor@ghssrajakkad.org",
-            phone: mentor.phone || "+91 94471 00000",
-            designation: mentor.designation || "HSST",
-            department: mentor.department || "General Education",
-            assignedClass: mentor.assignedClass || `Class ${division} Mentor`,
+            name: classTeacher.name,
+            phone: classTeacher.phone || "+91 94471 22334",
+            designation: classTeacher.designation || "HSST",
+            department: classTeacher.department || "General Education",
+            assignedClass: classTeacher.assignedClass,
           }
         : {
             name: "Mrs. Priya Nair",
-            email: "priya.nair@ghssrajakkad.org",
             phone: "+91 94471 22334",
             designation: "HSST",
             department: "HSST Malayalam",
@@ -322,16 +273,8 @@ export class StudentService {
           maxMarks: 40,
           passMarks: 12,
           status: "Approved & Published",
-          instructions: "15 minutes cool-off time provided before writing starts. Candidates must be seated by 09:15 AM with valid photo hall tickets.",
-          seatingPlan: [
-            {
-              hallNumber: "Hall 02",
-              roomName: "Room 102 - Science Block",
-              rollRange: "ADM-14920 to ADM-14960",
-              candidateCount: 40,
-              invigilatorName: "Mrs. Priya Nair",
-            },
-          ],
+          instructions:
+            "15 minutes cool-off time provided before writing starts. Candidates must be seated by 09:15 AM with valid photo hall tickets.",
         },
         {
           _id: "exam-sslc-02",
@@ -349,16 +292,8 @@ export class StudentService {
           maxMarks: 80,
           passMarks: 24,
           status: "Approved & Published",
-          instructions: "Bring black or blue ballpoint pens only. Hall ticket verification mandatory at entry gate.",
-          seatingPlan: [
-            {
-              hallNumber: "Hall 02",
-              roomName: "Room 102 - Science Block",
-              rollRange: "ADM-14920 to ADM-14960",
-              candidateCount: 40,
-              invigilatorName: "Mrs. Priya Nair",
-            },
-          ],
+          instructions:
+            "15 minutes cool-off period. Verify question paper code before writing answers.",
         },
         {
           _id: "exam-sslc-03",
@@ -372,20 +307,12 @@ export class StudentService {
           qpCode: "MAT-103",
           hall: "Halls 01, 02, 03, 04",
           totalCandidates: 242,
-          invigilator: "Mr. George Varghese, Sri. Rajesh P.",
+          invigilator: "Mr. George Varghese, Mrs. Indu B Nair",
           maxMarks: 80,
           passMarks: 24,
           status: "Approved & Published",
-          instructions: "Mathematical geometry instruments permitted after inspection. Calculators strictly prohibited.",
-          seatingPlan: [
-            {
-              hallNumber: "Hall 02",
-              roomName: "Room 102 - Science Block",
-              rollRange: "ADM-14920 to ADM-14960",
-              candidateCount: 40,
-              invigilatorName: "Mrs. Priya Nair",
-            },
-          ],
+          instructions:
+            "Geometric instruments allowed. Calculators strictly forbidden.",
         },
         {
           _id: "exam-sslc-04",
@@ -399,20 +326,12 @@ export class StudentService {
           qpCode: "PHY-104",
           hall: "Halls 01, 02, 03, 04",
           totalCandidates: 242,
-          invigilator: "Mrs. Lakshmi S., Smt. Rema Devi",
+          invigilator: "Mrs. Lakshmi S., Sri. George K.",
           maxMarks: 40,
           passMarks: 12,
           status: "Approved & Published",
-          instructions: "Cool-off time from 09:30 AM to 09:45 AM. Ensure hall tickets are kept on desk throughout.",
-          seatingPlan: [
-            {
-              hallNumber: "Hall 02",
-              roomName: "Room 102 - Science Block",
-              rollRange: "ADM-14920 to ADM-14960",
-              candidateCount: 40,
-              invigilatorName: "Mrs. Priya Nair",
-            },
-          ],
+          instructions:
+            "Log tables provided upon request by Chief Invigilator.",
         },
       ];
     }
@@ -421,130 +340,460 @@ export class StudentService {
   }
 
   /**
-   * Fetches fee ledger, receipts, and dues for the student
+   * Fetches fee payments ledger and summary for the student
    */
   static async getStudentFees({ studentId, admissionNumber, studentName, studentMongoId }) {
-    const queryConditions = [];
+    const query = { $or: [] };
 
-    if (studentMongoId) queryConditions.push({ studentId: studentMongoId });
-    if (admissionNumber) queryConditions.push({ admissionNumber });
-    if (studentId) queryConditions.push({ admissionNumber: studentId });
-    if (studentName) {
-      queryConditions.push({
-        studentName: { $regex: new RegExp(studentName.trim(), "i") },
-      });
-    }
+    if (studentMongoId) query.$or.push({ studentId: studentMongoId });
+    if (studentId) query.$or.push({ studentId });
+    if (admissionNumber) query.$or.push({ admissionNumber });
+    if (studentName) query.$or.push({ studentName: { $regex: new RegExp(`^${studentName.trim()}$`, "i") } });
 
     let payments = [];
-    if (queryConditions.length > 0) {
-      payments = await FeePayment.find({ $or: queryConditions })
-        .sort({ createdAt: -1 })
-        .lean();
+    if (query.$or.length > 0) {
+      payments = await FeePayment.find(query).sort({ paymentDate: -1, createdAt: -1 }).lean();
     }
 
     if (!payments || payments.length === 0) {
-      // Provide realistic Kerala Govt school fee ledger records
       payments = [
         {
-          _id: "fee-rec-01",
-          receiptNumber: "REC-2026-0814",
-          studentName: studentName || "Scholar Candidate",
+          _id: "pay-seed-01",
+          receiptNumber: "REC-2026-1043",
+          studentName: studentName || "Anandhu Saji",
           admissionNumber: admissionNumber || "ADM-14920",
           classDivision: "Class 10-A",
-          wing: "High School",
-          feeCategory: "Annual Fee",
-          academicYear: "2026-2027",
-          term: "Annual",
-          totalAmount: 1250,
-          amountPaid: 1250,
-          dueAmount: 0,
-          paymentDate: "15 Jun 2026",
-          paymentMode: "UPI / Online (Google Pay / PhonePe)",
-          transactionReference: "UPI-TXN-90281489",
-          status: "Paid",
-          dueDate: "30 Jun 2026",
-          collectedBy: "Accounts Desk / Sri. R. Krishnan",
-          remarks: "Special curriculum & Govt. text books contribution cleared in full.",
-        },
-        {
-          _id: "fee-rec-02",
-          receiptNumber: "REC-2026-1029",
-          studentName: studentName || "Scholar Candidate",
-          admissionNumber: admissionNumber || "ADM-14920",
-          classDivision: "Class 10-A",
-          wing: "High School",
-          feeCategory: "PTA Fund",
-          academicYear: "2026-2027",
-          term: "Term 1",
-          totalAmount: 600,
-          amountPaid: 600,
-          dueAmount: 0,
-          paymentDate: "10 Aug 2026",
-          paymentMode: "Cash at School Counter",
-          transactionReference: "COUNTER-SLIP-4412",
-          status: "Paid",
-          dueDate: "15 Aug 2026",
-          collectedBy: "PTA Treasurer / Sri. K. V. Joseph",
-          remarks: "Annual General Body PTA membership contribution.",
-        },
-        {
-          _id: "fee-rec-03",
-          receiptNumber: "REC-2026-1490",
-          studentName: studentName || "Scholar Candidate",
-          admissionNumber: admissionNumber || "ADM-14920",
-          classDivision: "Class 10-A",
-          wing: "High School",
-          feeCategory: "Lab & Computer Fee",
-          academicYear: "2026-2027",
-          term: "Term 2",
-          totalAmount: 450,
-          amountPaid: 450,
-          dueAmount: 0,
-          paymentDate: "18 Oct 2026",
-          paymentMode: "UPI / Online (Google Pay / PhonePe)",
-          transactionReference: "UPI-TXN-77382109",
-          status: "Paid",
-          dueDate: "31 Oct 2026",
-          collectedBy: "Computer Centre Desk",
-          remarks: "IT Lab & Broadband Internet connectivity fund.",
-        },
-        {
-          _id: "fee-rec-04",
-          receiptNumber: "REC-2026-1892",
-          studentName: studentName || "Scholar Candidate",
-          admissionNumber: admissionNumber || "ADM-14920",
-          classDivision: "Class 10-A",
-          wing: "High School",
           feeCategory: "Bus Fee",
-          academicYear: "2026-2027",
           term: "Monthly Bus Pass",
-          totalAmount: 500,
-          amountPaid: 0,
-          dueAmount: 500,
-          paymentDate: "Pending",
+          totalAmount: 1800,
+          amountPaid: 1800,
+          dueAmount: 0,
+          paymentDate: "2026-10-15",
           paymentMode: "UPI / Online (Google Pay / PhonePe)",
-          transactionReference: "DUE",
-          status: "Pending",
-          dueDate: "15 Nov 2026",
-          collectedBy: "Transport Office",
-          remarks: "Route #4: Adimali - Rajakkad school bus pass for November.",
+          transactionReference: "UPI/629041043",
+          status: "Paid",
+          collectedBy: "Accounts Desk / Sri. R. Krishnan",
+          remarks: "School Bus Route 03 - Rajakkad to Kallar • Month of October",
+        },
+        {
+          _id: "pay-seed-02",
+          receiptNumber: "REC-2026-1044",
+          studentName: studentName || "Anandhu Saji",
+          admissionNumber: admissionNumber || "ADM-14920",
+          classDivision: "Class 10-A",
+          feeCategory: "Special / Exam Fee",
+          term: "Term 1",
+          totalAmount: 1000,
+          amountPaid: 500,
+          dueAmount: 500,
+          paymentDate: "2026-10-18",
+          paymentMode: "Cash at School Counter",
+          transactionReference: "COUNTER-CASH",
+          status: "Partial",
+          collectedBy: "Accounts Desk / Sri. R. Krishnan",
+          remarks: "First installment for Model Exam fee clearance",
         },
       ];
     }
 
-    const totalBilled = payments.reduce((sum, p) => sum + (Number(p.totalAmount) || 0), 0);
-    const totalPaid = payments.reduce((sum, p) => sum + (Number(p.amountPaid) || 0), 0);
-    const totalDue = payments.reduce((sum, p) => sum + (Number(p.dueAmount) || 0), 0);
+    let totalBilled = 0;
+    let totalPaid = 0;
+    let totalDue = 0;
+
+    payments.forEach((p) => {
+      totalBilled += p.totalAmount || 0;
+      totalPaid += p.amountPaid || 0;
+      totalDue += p.dueAmount || 0;
+    });
 
     return {
+      payments,
       summary: {
         totalBilled,
         totalPaid,
         totalDue,
-        collectionRate: totalBilled > 0 ? ((totalPaid / totalBilled) * 100).toFixed(1) + "%" : "100%",
-        status: totalDue === 0 ? "All Dues Cleared" : `₹${totalDue} Pending Due`,
+        status: totalDue === 0 ? "All Dues Cleared ✓" : `₹${totalDue} Pending Due`,
       },
-      payments,
     };
   }
+
+  /**
+   * Fetch all student admission records for admin census table
+   */
+  static async getStudentsRecords({ limit } = {}) {
+    let query = Student.find().sort({ rollNumber: 1 });
+    if (limit) query = query.limit(Number(limit));
+
+    const studentsRaw = await query.lean();
+
+    const totalCount = await Student.countDocuments();
+    const boysCount = await Student.countDocuments({ gender: { $in: ["Male", "Boy"] } });
+    const girlsCount = await Student.countDocuments({ gender: { $in: ["Female", "Girl"] } });
+    const class10Count = await Student.countDocuments({
+      $or: [{ classDivision: { $regex: /10/i } }, { className: { $regex: /10/i } }],
+    });
+
+    const verifiedAadhaarCount = await Student.countDocuments({
+      aadhaarNumber: { $exists: true, $ne: "" },
+    });
+    const verifiedPercent =
+      totalCount > 0
+        ? Math.round(((verifiedAadhaarCount > 0 ? verifiedAadhaarCount : totalCount) / totalCount) * 100)
+        : 100;
+
+    const stats = {
+      totalEnrolled: totalCount > 0 ? totalCount : 1248,
+      boysCount: boysCount > 0 ? boysCount : 612,
+      girlsCount: girlsCount > 0 ? girlsCount : 636,
+      class10Candidates: class10Count > 0 ? class10Count : 242,
+      plusTwoCount: 468,
+      sampoornaVerified: `${verifiedPercent}%`,
+    };
+
+    let students = studentsRaw.map((s, idx) => {
+      const roll = s.rollNumber || idx + 1;
+      const isFemale = s.gender === "Female" || s.gender === "Girl";
+      const rawCategory = s.category || (isFemale ? "OBC" : "General");
+      const categoryTag = rawCategory.includes("/")
+        ? rawCategory
+        : `${rawCategory} / ${isFemale ? "F" : "M"}`;
+
+      const rawDiv = (s.classDivision || s.className || "10-A").replace(/^Class\s+/i, "").trim();
+      const rawAadhaar = s.aadhaarNumber || "";
+      const maskedAadhaar = rawAadhaar
+        ? `${rawAadhaar.slice(0, 4)} XXXX ${rawAadhaar.slice(-4)}`
+        : "";
+
+      return {
+        _id: s._id,
+        rollNumber: roll,
+        rollNoFormatted: `#${String(roll).padStart(2, "0")}`,
+        admissionNumber: s.admissionNumber || `ADM-${14920 + roll}`,
+        sampoornaId: s.sampoornaId || `SMP-06042-${880 + roll}`,
+        name: s.name,
+        dob: s.dob || (roll % 2 === 0 ? "22/08/2010" : "14/05/2010"),
+        division: rawDiv,
+        guardian: s.guardian || s.fatherName || `Guardian ${s.name.split(" ")[0]}`,
+        parentContact: s.parentContact || `+91 94473 ${11800 + roll}`,
+        category: categoryTag,
+        gender: s.gender || (isFemale ? "Female" : "Male"),
+        email: s.email || "",
+        attendance: s.overallAttendance
+          ? s.overallAttendance.includes("%")
+            ? s.overallAttendance
+            : `${s.overallAttendance}%`
+          : "98.4%",
+        aadhaarNumber: rawAadhaar,
+        maskedAadhaar,
+        birthCertificateNumber: s.birthCertificateNumber || "",
+        idProofUrl: s.idProofUrl || "",
+        idProofType: s.idProofType || "Aadhaar Card",
+        idProofFileName: s.idProofFileName || "",
+        idProofFileType: s.idProofFileType || "",
+        birthCertificateUrl: s.birthCertificateUrl || "",
+        birthCertificateFileName: s.birthCertificateFileName || "",
+        hasIdProof: Boolean(s.idProofUrl || s.birthCertificateUrl),
+        bloodGroup: s.bloodGroup || "O+",
+        religion: s.religion || "Hindu",
+        caste: s.caste || "",
+        fatherName: s.fatherName || "",
+        motherName: s.motherName || "",
+        guardianRelation: s.guardianRelation || "Father",
+        altContact: s.altContact || "",
+        address: s.address || {
+          houseName: "",
+          street: "",
+          postOffice: "",
+          city: "",
+          district: "Idukki",
+          state: "Kerala",
+          pincode: "",
+        },
+        fullAddress:
+          s.fullAddress ||
+          (s.address
+            ? [
+                s.address.houseName,
+                s.address.street,
+                s.address.postOffice,
+                s.address.district,
+                s.address.pincode ? `PIN: ${s.address.pincode}` : "",
+              ]
+                .filter(Boolean)
+                .join(", ")
+            : "Rajakkad P.O, Idukki, Kerala"),
+        previousSchool: s.previousSchool || "",
+        tcNumber: s.tcNumber || "",
+        identificationMarks: s.identificationMarks || "",
+      };
+    });
+
+    // Ensure all 26 academic divisions have represented students if querying full records
+    if (!limit) {
+      const sampleNamesPool = [
+        { name: "Aaditya S. Kumar", g: "Male", cat: "General", dob: "14/05/2010", p: "Santhosh Kumar K." },
+        { name: "Ananya Manoj", g: "Female", cat: "OBC", dob: "22/08/2010", p: "Manoj Varghese" },
+        { name: "Devanand P. B.", g: "Male", cat: "SC", dob: "11/01/2010", p: "Balakrishnan P." },
+        { name: "Fathima Nizar", g: "Female", cat: "OEC", dob: "03/12/2009", p: "Nizar Rawther" },
+        { name: "Gopika Krishna", g: "Female", cat: "General", dob: "18/07/2010", p: "Radhakrishnan P." },
+        { name: "Harikrishnan M.", g: "Male", cat: "OBC", dob: "09/03/2010", p: "Muraleedharan V." },
+        { name: "Irfan Habeeb", g: "Male", cat: "General", dob: "25/11/2010", p: "Habeeb Rahman" },
+        { name: "Kavya Rajesh", g: "Female", cat: "OBC", dob: "14/06/2010", p: "Rajesh Kumar" },
+        { name: "Muhammed Bilal", g: "Male", cat: "OEC", dob: "29/09/2010", p: "Shajahan E." },
+        { name: "Nandana Suresh", g: "Female", cat: "General", dob: "05/02/2010", p: "Suresh Babu" },
+      ];
+
+      let seedCounter = 200;
+      ALL_CLASSES.forEach((cls) => {
+        const clsDiv = cls.id;
+        const hasStudents = students.some(
+          (s) => s.division.toLowerCase() === clsDiv.toLowerCase() || s.division.toLowerCase() === cls.name.toLowerCase()
+        );
+
+        if (!hasStudents) {
+          [0, 1].forEach((k) => {
+            const sample = sampleNamesPool[(seedCounter + k) % sampleNamesPool.length];
+            const roll = k + 1;
+            const isFemale = sample.g === "Female";
+            const admNo = `ADM-${clsDiv.replace(/[^a-zA-Z0-9]/g, "")}-${100 + roll}`;
+            students.push({
+              _id: `seeded_${clsDiv}_${roll}`,
+              rollNumber: roll,
+              rollNoFormatted: `#${String(roll).padStart(2, "0")}`,
+              admissionNumber: admNo,
+              sampoornaId: `SMP-06042-${clsDiv.replace(/[^a-zA-Z0-9]/g, "")}-${200 + roll}`,
+              name: sample.name,
+              dob: sample.dob,
+              division: clsDiv,
+              guardian: sample.p,
+              parentContact: `+91 9447${(seedCounter * 3) % 90000 + 10000}`,
+              category: `${sample.cat} / ${isFemale ? "F" : "M"}`,
+              gender: sample.g,
+              attendance: `${96 + (k % 3)}.5%`,
+              aadhaarNumber: `7894 ${1000 + seedCounter} 4567`,
+              maskedAadhaar: "7894 XXXX 4567",
+              birthCertificateNumber: `KL-IDK-2024-${5000 + seedCounter}`,
+              idProofUrl: "",
+              idProofType: "Aadhaar Card",
+              idProofFileName: "",
+              idProofFileType: "",
+              birthCertificateUrl: "",
+              birthCertificateFileName: "",
+              hasIdProof: true,
+              bloodGroup: "O+",
+              religion: "Hindu",
+              caste: "General",
+              fatherName: sample.p,
+              motherName: `Smt. ${sample.p.split(" ")[0]}a`,
+              guardianRelation: "Father",
+              altContact: "",
+              fullAddress: "Rajakkad P.O, Idukki District, Kerala - 685566",
+              previousSchool: "Government Lower/Upper Primary School",
+              tcNumber: `TC-${8000 + seedCounter}`,
+              identificationMarks: "A mole on the right cheek",
+            });
+            seedCounter++;
+          });
+        }
+      });
+    }
+
+    return {
+      stats,
+      count: students.length,
+      students,
+    };
+  }
+
+  /**
+   * Fetch student by ID
+   */
+  static async getStudentById(id) {
+    const student = await Student.findById(id).lean();
+    if (!student) {
+      throw ApiError.notFound("Student record not found.");
+    }
+    return student;
+  }
+
+  /**
+   * Create new student admission
+   */
+  static async createStudent(data) {
+    if (!data.name || !data.name.trim()) {
+      throw ApiError.badRequest("Student full name is required for admission.");
+    }
+
+    const count = await Student.countDocuments();
+    const nextRoll = data.rollNumber ? Number(data.rollNumber) : count + 1;
+    const targetDivision = data.classDivision || data.division || "Class 10-A";
+    const formattedDiv = targetDivision.startsWith("Class ") ? targetDivision : `Class ${targetDivision}`;
+
+    const admNo = data.admissionNumber?.trim() || `ADM-${14920 + nextRoll}`;
+    const smpId = data.sampoornaId?.trim() || `SMP-06042-${880 + nextRoll}`;
+
+    const addrObj = {
+      houseName: data.houseName?.trim() || data.address?.houseName?.trim() || "",
+      street: data.street?.trim() || data.address?.street?.trim() || "",
+      postOffice: data.postOffice?.trim() || data.address?.postOffice?.trim() || "",
+      city: data.city?.trim() || data.address?.city?.trim() || "",
+      district: data.district?.trim() || data.address?.district?.trim() || "Idukki",
+      state: data.state?.trim() || data.address?.state?.trim() || "Kerala",
+      pincode: data.pincode?.trim() || data.address?.pincode?.trim() || "",
+    };
+
+    let computedFullAddress = data.fullAddress?.trim() || "";
+    if (!computedFullAddress) {
+      const parts = [
+        addrObj.houseName,
+        addrObj.street,
+        addrObj.postOffice,
+        addrObj.district,
+        addrObj.pincode ? `PIN: ${addrObj.pincode}` : "",
+      ].filter(Boolean);
+      computedFullAddress = parts.join(", ");
+    }
+
+    const primaryGuardian =
+      data.guardian?.trim() || data.fatherName?.trim() || data.motherName?.trim() || "Parent/Guardian";
+
+    let cleanEmail = undefined;
+    if (data.email && data.email.trim()) {
+      cleanEmail = data.email.trim().toLowerCase();
+      const existing = await Student.findOne({ email: cleanEmail });
+      if (existing) {
+        throw ApiError.conflict(`A student with email ID "${cleanEmail}" is already registered (${existing.name}).`);
+      }
+    }
+
+    const studentToCreate = {
+      name: data.name.trim(),
+      rollNumber: nextRoll,
+      admissionNumber: admNo,
+      studentId: admNo,
+      sampoornaId: smpId,
+      classDivision: formattedDiv,
+      className: formattedDiv,
+      gender: data.gender || "Male",
+      dob: data.dob || "14/05/2010",
+      category: data.category || "General",
+      religion: data.religion?.trim() || "Hindu",
+      caste: data.caste?.trim() || "",
+      bloodGroup: data.bloodGroup || "Unknown",
+      aadhaarNumber: data.aadhaarNumber?.trim() || "",
+      birthCertificateNumber: data.birthCertificateNumber?.trim() || "",
+      idProofUrl: data.idProofUrl?.trim() || "",
+      idProofType: data.idProofType?.trim() || "Aadhaar Card",
+      idProofFileName: data.idProofFileName?.trim() || "",
+      idProofFileType: data.idProofFileType?.trim() || "",
+      birthCertificateUrl: data.birthCertificateUrl?.trim() || "",
+      birthCertificateFileName: data.birthCertificateFileName?.trim() || "",
+      fatherName: data.fatherName?.trim() || "",
+      motherName: data.motherName?.trim() || "",
+      guardian: primaryGuardian,
+      guardianRelation: data.guardianRelation?.trim() || "Father",
+      parentContact: data.parentContact?.trim() || "+91 94470 00000",
+      altContact: data.altContact?.trim() || "",
+      address: addrObj,
+      fullAddress: computedFullAddress,
+      previousSchool: data.previousSchool?.trim() || "",
+      tcNumber: data.tcNumber?.trim() || "",
+      identificationMarks: data.identificationMarks?.trim() || "",
+      overallAttendance: "100.0",
+      status: "Present",
+    };
+
+    if (cleanEmail) {
+      studentToCreate.email = cleanEmail;
+    }
+
+    const newStudent = await Student.create(studentToCreate);
+    return newStudent;
+  }
+
+  /**
+   * Update student admission record
+   */
+  static async updateStudent(id, data) {
+    const updateData = { ...data };
+    const updateOps = { $set: updateData };
+
+    if (updateData.email !== undefined) {
+      if (updateData.email && updateData.email.trim()) {
+        const cleanEmail = updateData.email.trim().toLowerCase();
+        const existing = await Student.findOne({
+          _id: { $ne: id },
+          email: cleanEmail,
+        });
+        if (existing) {
+          throw ApiError.conflict(`A student with email ID "${cleanEmail}" is already registered (${existing.name}).`);
+        }
+        updateData.email = cleanEmail;
+      } else {
+        delete updateData.email;
+        updateOps.$unset = { email: 1 };
+      }
+    }
+
+    if (updateData.division) {
+      const div = updateData.division.trim();
+      updateData.classDivision = div.startsWith("Class ") ? div : `Class ${div}`;
+      updateData.className = updateData.classDivision;
+    }
+
+    if (
+      updateData.houseName !== undefined ||
+      updateData.street !== undefined ||
+      updateData.district !== undefined ||
+      updateData.pincode !== undefined
+    ) {
+      updateData.address = {
+        houseName: updateData.houseName?.trim() || "",
+        street: updateData.street?.trim() || "",
+        postOffice: updateData.postOffice?.trim() || "",
+        city: updateData.city?.trim() || "",
+        district: updateData.district?.trim() || "Idukki",
+        state: updateData.state?.trim() || "Kerala",
+        pincode: updateData.pincode?.trim() || "",
+      };
+
+      const parts = [
+        updateData.address.houseName,
+        updateData.address.street,
+        updateData.address.postOffice,
+        updateData.address.district,
+        updateData.address.pincode ? `PIN: ${updateData.address.pincode}` : "",
+      ].filter(Boolean);
+      updateData.fullAddress = parts.join(", ");
+    }
+
+    const updated = await Student.findByIdAndUpdate(
+      id,
+      updateOps,
+      { new: true, runValidators: true }
+    );
+
+    if (!updated) {
+      throw ApiError.notFound("Student record not found.");
+    }
+
+    if (updated.userId && updateData.email) {
+      await User.findByIdAndUpdate(updated.userId, { email: updateData.email });
+    }
+
+    return updated;
+  }
+
+  /**
+   * Delete student record
+   */
+  static async deleteStudent(id) {
+    const deleted = await Student.findByIdAndDelete(id);
+    if (!deleted) {
+      throw ApiError.notFound("Student record not found.");
+    }
+    return deleted;
+  }
 }
+
+export default StudentService;

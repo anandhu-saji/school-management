@@ -1,12 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosclient";
-import { clearAuthSession } from "../../utils/auth";
 import "../../Styles/AdminDash.css";
 
-export default function ExamTimetables() {
-  const navigate = useNavigate();
+import AdminSidebar from "../../components/admin/AdminSidebar";
+import AdminHeader from "../../components/admin/AdminHeader";
+import ExamStatsCards from "../../components/admin/exams/ExamStatsCards";
+import ExamScheduleModal from "../../components/admin/exams/ExamScheduleModal";
+import ExamSeatingModal from "../../components/admin/exams/ExamSeatingModal";
 
+export default function ExamTimetables() {
   // State
   const [exams, setExams] = useState([]);
   const [stats, setStats] = useState({
@@ -90,13 +92,10 @@ export default function ExamTimetables() {
       }
     };
     loadExams();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, []);
-
-  const handleLogout = () => {
-    clearAuthSession();
-    navigate("/login");
-  };
 
   // Filter & Search Logic
   const filteredExams = useMemo(() => {
@@ -304,158 +303,16 @@ export default function ExamTimetables() {
   return (
     <div className="admin-layout">
       {/* ---------------- SIDEBAR ---------------- */}
-      <aside className="admin-sidebar">
-        <div>
-          <div className="sidebar-header">
-            <div className="school-code-label">School Code: 06042</div>
-            <div className="sampoorna-live-pill">
-              <span className="dot"></span> SAMPOORNA 2.0 LIVE
-            </div>
-          </div>
-
-          <div className="sidebar-section-title">CONSOLE NAVIGATION</div>
-          <nav className="console-nav-list">
-            <button
-              className="console-nav-item"
-              onClick={() => navigate("/admin/dashboard")}
-            >
-              <span>▦</span> Overview and Dashboard
-            </button>
-            <button
-              className="console-nav-item"
-              onClick={() => navigate("/admin/attendance")}
-            >
-              <span>👥</span> Division wise Attendance
-            </button>
-            <button
-              className="console-nav-item"
-              onClick={() => navigate("/admin/teachers")}
-            >
-              <span>🗂</span> Teachers Records
-            </button>
-            <button
-              className="console-nav-item"
-              onClick={() => navigate("/admin/students")}
-            >
-              <span>🎓</span> Students Records
-            </button>
-            <button className="console-nav-item active">
-              <span>📅</span> Exam Timetables
-            </button>
-            <button
-              className="console-nav-item"
-              onClick={() => navigate("/admin/payments")}
-            >
-              <span>💳</span> Fee & Payments Console
-            </button>
-          </nav>
-        </div>
-
-                {/* Bottom Profile Card */}
-        <div className="sidebar-bottom-profile">
-          <div className="profile-avatar-circle">
-            <span>🛡</span>
-          </div>
-          <div className="profile-details-column">
-            <div className="profile-name-row">
-              <span>Sri. K. R. Madhavan</span>
-              <span className="verified-badge-icon">✓</span>
-            </div>
-            <p className="profile-role-subtext">Headmaster &amp; Chief Admin</p>
-            <p className="profile-id-code">ADM-GHSS-01 • PEN: 849201</p>
-          </div>
-          <button
-            className="logout-icon-btn"
-            onClick={handleLogout}
-            title="Sign Out"
-            aria-label="Sign Out"
-          >
-            🚪
-          </button>
-        </div>
-      </aside>
+      <AdminSidebar activeNav="exams" />
 
       {/* ---------------- MAIN CONTENT WRAPPER ---------------- */}
       <div className="admin-main-wrapper">
-        {/* Top Header */}
-        <header className="admin-top-header">
-          <span>
-            Kerala General Education Dept. •{" "}
-            <strong>Sampoorna Admin Console</strong> • School Code: 06042
-          </span>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <span className="badge-sync">🟢 AY 2025–2026</span>
-            <button
-              style={{
-                width: "32px",
-                height: "32px",
-                borderRadius: "50%",
-                background: "#135bec",
-                color: "#ffffff",
-                border: "none",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-              }}
-            >
-              👤
-            </button>
-          </div>
-        </header>
+        <AdminHeader />
 
         {/* Main Content Area */}
         <main className="admin-content-area">
           {/* Top 4 Summary Cards Grid */}
-          <div className="overview-stats-grid">
-            {/* Card 1 */}
-            <div className="overview-stat-card">
-              <div className="stat-card-header">
-                <span className="card-label">TOTAL SCHEDULES</span>
-                <div className="stat-icon-circle blue">📅</div>
-              </div>
-              <div className="overview-number">
-                {stats.totalSchedules} Sessions
-              </div>
-              <div className="sub-text">SSLC &amp; Higher Secondary</div>
-            </div>
-
-            {/* Card 2 */}
-            <div className="overview-stat-card">
-              <div className="stat-card-header">
-                <span className="card-label">PUBLISHED PAPERS</span>
-                <div className="stat-icon-circle emerald">✓</div>
-              </div>
-              <div className="overview-number stat-number-emerald">
-                {stats.upcomingCount} Approved
-              </div>
-              <div className="sub-text">First Paper: 12 March 2026</div>
-            </div>
-
-            {/* Card 3 */}
-            <div className="overview-stat-card">
-              <div className="stat-card-header">
-                <span className="card-label">EXAMINATION HALLS</span>
-                <div className="stat-icon-circle purple">🏛️</div>
-              </div>
-              <div className="overview-number">
-                {stats.hallsAllocated} Halls
-              </div>
-              <div className="sub-text">Auditorium &amp; Main Block</div>
-            </div>
-
-            {/* Card 4 */}
-            <div className="overview-stat-card">
-              <div className="stat-card-header">
-                <span className="card-label">INVIGILATION CADRE</span>
-                <div className="stat-icon-circle blue">👥</div>
-              </div>
-              <div className="overview-number stat-number-blue">
-                {stats.invigilatorCadre} Staff
-              </div>
-              <div className="sub-text">Assigned Chief &amp; Observers</div>
-            </div>
-          </div>
+          <ExamStatsCards stats={stats} />
 
           {/* Action Header Banner */}
           <section className="student-header-banner">
@@ -682,7 +539,7 @@ export default function ExamTimetables() {
                               type="button"
                               className="btn-seating-action"
                               onClick={() => openSeatingModal(exam)}
-                              title="View Hall Seating Plan & Candidate Range"
+                              title="View Hall Seating Plan &amp; Candidate Range"
                             >
                               Seating Plan
                             </button>
@@ -770,498 +627,23 @@ export default function ExamTimetables() {
         </main>
       </div>
 
-      {/* =========================================================================
-          MODAL 1: SCHEDULE EXAM (ADD / EDIT)
-          ========================================================================= */}
-      {isScheduleModalOpen && (
-        <div className="modal-backdrop">
-          <div
-            className="modal-container"
-            style={{ maxWidth: "720px", maxHeight: "90vh", overflowY: "auto" }}
-          >
-            <div className="modal-header">
-              <h2 className="modal-title">
-                {editingExam
-                  ? "Edit Examination Session"
-                  : "Schedule New Examination Session"}
-              </h2>
-              <button className="modal-close-btn" onClick={closeScheduleModal}>
-                ✕
-              </button>
-            </div>
+      {/* ---------------- MODALS ---------------- */}
+      <ExamScheduleModal
+        isOpen={isScheduleModalOpen}
+        onClose={closeScheduleModal}
+        editingExam={editingExam}
+        formData={formData}
+        setFormData={setFormData}
+        formSubmitting={formSubmitting}
+        onSave={handleSaveExam}
+        feedback={feedback}
+      />
 
-            {feedback.message && (
-              <div
-                style={{
-                  margin: "12px 24px 0 24px",
-                  padding: "10px 14px",
-                  borderRadius: "8px",
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  background:
-                    feedback.type === "success" ? "#dcfce7" : "#fee2e2",
-                  color: feedback.type === "success" ? "#166534" : "#991b1b",
-                }}
-              >
-                {feedback.message}
-              </div>
-            )}
-
-            <form onSubmit={handleSaveExam} className="modal-form-body">
-              {/* Row 1: Exam Term & Standard */}
-              <div className="form-row-grid">
-                <div className="form-group">
-                  <label className="form-label">Examination Term / Board</label>
-                  <select
-                    className="form-input"
-                    value={formData.term}
-                    onChange={(e) =>
-                      setFormData({ ...formData, term: e.target.value })
-                    }
-                    required
-                  >
-                    <option value="SSLC Board Examination March 2026">
-                      SSLC Board Examination March 2026
-                    </option>
-                    <option value="Plus Two Higher Secondary Board Examination 2026">
-                      Plus Two Higher Secondary Board Examination 2026
-                    </option>
-                    <option value="High School Annual Evaluation (Class 8 & 9)">
-                      High School Annual Evaluation (Class 8 &amp; 9)
-                    </option>
-                    <option value="First Terminal Model Evaluation">
-                      First Terminal Model Evaluation
-                    </option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Academic Standard</label>
-                  <select
-                    className="form-input"
-                    value={formData.standard}
-                    onChange={(e) =>
-                      setFormData({ ...formData, standard: e.target.value })
-                    }
-                    required
-                  >
-                    <option value="Standard 10 (SSLC)">
-                      Standard 10 (SSLC Cadre)
-                    </option>
-                    <option value="Standard 12 (Plus Two Science)">
-                      Standard 12 (Plus Two Science)
-                    </option>
-                    <option value="Standard 12 (Plus Two Commerce)">
-                      Standard 12 (Plus Two Commerce)
-                    </option>
-                    <option value="Standard 9">Standard 9</option>
-                    <option value="Standard 8">Standard 8</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Row 2: Subject & QP Code */}
-              <div className="form-row-grid">
-                <div className="form-group">
-                  <label className="form-label">Subject Name *</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="e.g. Mathematics / Physics"
-                    value={formData.subject}
-                    onChange={(e) =>
-                      setFormData({ ...formData, subject: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">
-                    Question Paper Code (QP) *
-                  </label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="e.g. MAT-104 or PHY-105"
-                    value={formData.qpCode}
-                    onChange={(e) =>
-                      setFormData({ ...formData, qpCode: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Row 3: Exam Date, Start Time & End Time */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1.4fr 1fr 1fr",
-                  gap: "12px",
-                }}
-              >
-                <div className="form-group">
-                  <label className="form-label">Date of Exam *</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="e.g. 19 March 2026, Thu"
-                    value={formData.date}
-                    onChange={(e) =>
-                      setFormData({ ...formData, date: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Start Time</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="09:30 AM"
-                    value={formData.startTime}
-                    onChange={(e) =>
-                      setFormData({ ...formData, startTime: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">End Time</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="12:15 PM"
-                    value={formData.endTime}
-                    onChange={(e) =>
-                      setFormData({ ...formData, endTime: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-
-              {/* Row 4: Allocated Halls & Total Candidates */}
-              <div className="form-row-grid">
-                <div className="form-group">
-                  <label className="form-label">Allocated Exam Halls</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="e.g. Halls 01, 02, 03, 04"
-                    value={formData.hall}
-                    onChange={(e) =>
-                      setFormData({ ...formData, hall: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Total Candidates</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    placeholder="242"
-                    value={formData.totalCandidates}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        totalCandidates: Number(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-              </div>
-
-              {/* Row 5: Invigilators & Status */}
-              <div className="form-row-grid">
-                <div className="form-group">
-                  <label className="form-label">
-                    Chief Invigilators / Observers
-                  </label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="e.g. Mrs. Indu B Nair, Sri. George K."
-                    value={formData.invigilator}
-                    onChange={(e) =>
-                      setFormData({ ...formData, invigilator: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Approval Status</label>
-                  <select
-                    className="form-input"
-                    value={formData.status}
-                    onChange={(e) =>
-                      setFormData({ ...formData, status: e.target.value })
-                    }
-                  >
-                    <option value="Approved & Published">
-                      Approved &amp; Published
-                    </option>
-                    <option value="Draft / Scheduled">
-                      Draft / Scheduled
-                    </option>
-                    <option value="Completed">Completed</option>
-                    <option value="Postponed">Postponed</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Row 6: Marks Breakdown */}
-              <div className="form-row-grid">
-                <div className="form-group">
-                  <label className="form-label">Maximum Marks</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    placeholder="80"
-                    value={formData.maxMarks}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        maxMarks: Number(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Minimum Pass Marks</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    placeholder="24"
-                    value={formData.passMarks}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        passMarks: Number(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-              </div>
-
-              {/* Instructions */}
-              <div className="form-group">
-                <label className="form-label">Special Exam Instructions</label>
-                <textarea
-                  className="form-input"
-                  rows="2"
-                  placeholder="e.g. 15 minutes cool-off time provided before writing starts..."
-                  value={formData.instructions}
-                  onChange={(e) =>
-                    setFormData({ ...formData, instructions: e.target.value })
-                  }
-                ></textarea>
-              </div>
-
-              {/* Modal Footer Actions */}
-              <div className="modal-actions-row">
-                <button
-                  type="button"
-                  className="btn-cancel"
-                  onClick={closeScheduleModal}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn-submit"
-                  disabled={formSubmitting}
-                >
-                  {formSubmitting
-                    ? "Saving Schedule..."
-                    : editingExam
-                    ? "Update Schedule"
-                    : "Save & Publish Exam"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* =========================================================================
-          MODAL 2: SEATING PLAN & HALL ALLOTMENT
-          ========================================================================= */}
-      {isSeatingModalOpen && activeSeatingExam && (
-        <div className="modal-backdrop">
-          <div
-            className="modal-container"
-            style={{ maxWidth: "780px", maxHeight: "90vh", overflowY: "auto" }}
-          >
-            <div className="modal-header">
-              <div>
-                <h2 className="modal-title">
-                  Hall Seating &amp; Invigilation Plan
-                </h2>
-                <p style={{ fontSize: "12.5px", color: "#64748b", marginTop: "2px" }}>
-                  {activeSeatingExam.subject} ({activeSeatingExam.qpCode}) •{" "}
-                  {activeSeatingExam.date} ({activeSeatingExam.startTime} –{" "}
-                  {activeSeatingExam.endTime})
-                </p>
-              </div>
-              <button
-                className="modal-close-btn"
-                onClick={() => setIsSeatingModalOpen(false)}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={{ padding: "20px 24px" }}>
-              {/* Top Banner with Quick Summary */}
-              <div
-                style={{
-                  background: "#eff6ff",
-                  border: "1px solid #bfdbfe",
-                  borderRadius: "12px",
-                  padding: "14px 18px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <div>
-                  <div
-                    style={{
-                      fontSize: "13px",
-                      fontWeight: "700",
-                      color: "#1e3a8a",
-                    }}
-                  >
-                    Standard / Cadre: {activeSeatingExam.standard}
-                  </div>
-                  <div style={{ fontSize: "12px", color: "#3b82f6" }}>
-                    Total Registered Candidates:{" "}
-                    <strong>{activeSeatingExam.totalCandidates} Students</strong>
-                  </div>
-                </div>
-
-                <div style={{ textAlign: "right" }}>
-                  <span
-                    style={{
-                      background: "#1d4ed8",
-                      color: "#ffffff",
-                      fontSize: "11px",
-                      fontWeight: "800",
-                      padding: "4px 10px",
-                      borderRadius: "6px",
-                    }}
-                  >
-                    15 Min Cool-off Active
-                  </span>
-                </div>
-              </div>
-
-              {/* Seating Cards Grid */}
-              <div className="seating-plan-grid">
-                {(activeSeatingExam.seatingPlan &&
-                activeSeatingExam.seatingPlan.length > 0
-                  ? activeSeatingExam.seatingPlan
-                  : [
-                      {
-                        hallNumber: "Hall 01",
-                        roomName: "Room 101 - Main Academic Block",
-                        rollRange: "ADM-14920 to ADM-14960",
-                        candidateCount: 40,
-                        invigilatorName: "Mrs. Indu B Nair",
-                        invigilatorPen: "849201",
-                      },
-                      {
-                        hallNumber: "Hall 02",
-                        roomName: "Room 102 - Main Academic Block",
-                        rollRange: "ADM-14961 to ADM-15000",
-                        candidateCount: 40,
-                        invigilatorName: "Sri. George K.",
-                        invigilatorPen: "849202",
-                      },
-                    ]
-                ).map((hall, idx) => (
-                  <div className="seating-hall-card" key={idx}>
-                    <div className="seating-hall-header">
-                      <span className="seating-hall-badge">
-                        {hall.hallNumber}
-                      </span>
-                      <span className="seating-candidate-count">
-                        👥 {hall.candidateCount} Candidates
-                      </span>
-                    </div>
-
-                    <div className="seating-room-name">{hall.roomName}</div>
-
-                    <div className="seating-roll-range">
-                      <strong>Seated Roll Range:</strong> {hall.rollRange}
-                    </div>
-
-                    <div className="seating-invigilator-box">
-                      <span className="seating-invigilator-label">
-                        Invigilator:
-                      </span>
-                      <span className="seating-invigilator-value">
-                        {hall.invigilatorName}{" "}
-                        <span style={{ color: "#64748b" }}>
-                          (PEN: {hall.invigilatorPen})
-                        </span>
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* State Board Compliance Box */}
-              <div
-                style={{
-                  marginTop: "20px",
-                  background: "#f8fafc",
-                  border: "1px dashed #cbd5e1",
-                  borderRadius: "10px",
-                  padding: "12px 16px",
-                  fontSize: "12px",
-                  color: "#475569",
-                  lineHeight: "1.5",
-                }}
-              >
-                <strong>Government Examination Instructions:</strong> Question
-                booklet seal verification must take place in the presence of 2
-                student candidates at 09:25 AM. Answer booklets must be signed &amp;
-                numbered by the invigilator before 10:00 AM.
-              </div>
-
-              {/* Modal Actions */}
-              <div
-                style={{
-                  marginTop: "24px",
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  gap: "12px",
-                }}
-              >
-                <button
-                  type="button"
-                  className="btn-cancel"
-                  onClick={() => setIsSeatingModalOpen(false)}
-                >
-                  Close Plan
-                </button>
-                <button
-                  type="button"
-                  className="btn-submit"
-                  onClick={() => window.print()}
-                >
-                  🖨️ Print Seating Chart
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ExamSeatingModal
+        isOpen={isSeatingModalOpen}
+        onClose={() => setIsSeatingModalOpen(false)}
+        activeSeatingExam={activeSeatingExam}
+      />
     </div>
   );
 }

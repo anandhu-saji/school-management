@@ -1,4 +1,4 @@
-import express from "express";
+import { Router } from "express";
 import {
   uploadProfileAvatar,
   uploadDocumentFile,
@@ -9,7 +9,7 @@ import {
   uploadDocument,
 } from "../middleware/upload.middleware.js";
 
-const router = express.Router();
+const router = Router();
 
 // POST /api/upload/avatar (multipart/form-data with key 'avatar')
 router.post(
