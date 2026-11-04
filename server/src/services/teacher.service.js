@@ -3,6 +3,10 @@ import Teacher from "../models/Teacher.js";
 import Student from "../models/Student.js";
 import Attendance from "../models/Attendance.js";
 import { ApiError } from "../utils/ApiError.js";
+import {
+  calculateTeacherAge,
+  validateTeacherAge,
+} from "../validators/teacher.validator.js";
 
 export class TeacherService {
   /**
@@ -73,6 +77,17 @@ export class TeacherService {
       throw ApiError.badRequest("Teacher name and email are mandatory.");
     }
 
+    if (data.dob) {
+      const ageCheck = validateTeacherAge(data.dob);
+      if (ageCheck !== true) {
+        throw ApiError.badRequest(ageCheck);
+      }
+      const parsed = calculateTeacherAge(data.dob);
+      if (parsed) {
+        data.age = parsed.age;
+      }
+    }
+
     const cleanEmail = data.email.trim().toLowerCase();
     const existing = await Teacher.findOne({ email: cleanEmail });
     if (existing) {
@@ -97,6 +112,17 @@ export class TeacherService {
    * Update teacher by ID
    */
   static async updateTeacher(id, data) {
+    if (data.dob) {
+      const ageCheck = validateTeacherAge(data.dob);
+      if (ageCheck !== true) {
+        throw ApiError.badRequest(ageCheck);
+      }
+      const parsed = calculateTeacherAge(data.dob);
+      if (parsed) {
+        data.age = parsed.age;
+      }
+    }
+
     if (data.email) {
       data.email = data.email.trim().toLowerCase();
       const existing = await Teacher.findOne({

@@ -49,6 +49,14 @@ export default function TeacherDossierModal({ teacher, onClose }) {
                 ✓ K.E.R Verified Cadre
               </strong>
             </div>
+            {teacher.dob && (
+              <div>
+                <span className="allotment-label">Date of Birth:</span>
+                <strong>
+                  {teacher.dob} {teacher.age ? `(${teacher.age} yrs)` : ""}
+                </strong>
+              </div>
+            )}
           </div>
 
           <div style={{ marginTop: "10px", padding: "8px 14px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>

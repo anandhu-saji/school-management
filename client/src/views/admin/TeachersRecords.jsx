@@ -7,6 +7,7 @@ import TeacherStatsCards from "../../components/admin/teachers/TeacherStatsCards
 import TeacherAllotmentModal from "../../components/admin/teachers/TeacherAllotmentModal";
 import TeacherDossierModal from "../../components/admin/teachers/TeacherDossierModal";
 import TeacherFormModal from "../../components/admin/teachers/TeacherFormModal";
+import { checkTeacherAgeEligibility } from "../../utils/ageValidator";
 
 export default function TeachersRecords() {
   // State
@@ -48,6 +49,7 @@ export default function TeachersRecords() {
     periods: "24 hrs / Week",
     status: "Active",
     qualification: "M.A, B.Ed, SET",
+    dob: "15/05/1988",
     appointmentDate: "01/06/2018",
     // Essential Statutory ID Proofs
     aadharNumber: "",
@@ -183,6 +185,7 @@ export default function TeachersRecords() {
       periods: teacher.periods || "",
       status: teacher.status || "Active",
       qualification: teacher.qualification || "",
+      dob: teacher.dob || "15/05/1988",
       appointmentDate: teacher.appointmentDate || "",
       aadharNumber: teacher.aadharNumber || "",
       aadharDocUrl: teacher.aadharDocUrl || null,
@@ -284,6 +287,26 @@ export default function TeachersRecords() {
       setFeedback({
         type: "error",
         message: "Faculty full name and Government PEN number are required.",
+      });
+      return;
+    }
+
+    // Age validation for teaching faculty
+    if (!formData.dob || !formData.dob.trim()) {
+      setActiveModalTab("general");
+      setFeedback({
+        type: "error",
+        message: "Teacher Date of Birth (DOB) is required.",
+      });
+      return;
+    }
+
+    const ageCheck = checkTeacherAgeEligibility(formData.dob);
+    if (!ageCheck.valid) {
+      setActiveModalTab("general");
+      setFeedback({
+        type: "error",
+        message: ageCheck.message,
       });
       return;
     }
@@ -577,6 +600,14 @@ export default function TeachersRecords() {
                         <span className="teacher-meta-label">PEN Number</span>
                         <span className="teacher-meta-value">{t.pen}</span>
                       </div>
+                      {t.dob && (
+                        <div className="teacher-meta-row">
+                          <span className="teacher-meta-label">Date of Birth</span>
+                          <span className="teacher-meta-value">
+                            {t.dob} {t.age ? `(${t.age} yrs)` : ""}
+                          </span>
+                        </div>
+                      )}
                       <div className="teacher-meta-row">
                         <span className="teacher-meta-label">Official Contact</span>
                         <span className="teacher-meta-value">{t.phone}</span>

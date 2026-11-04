@@ -68,6 +68,13 @@ const teacherSchema = new mongoose.Schema(
       default: "M.A, B.Ed, SET",
       trim: true,
     },
+    dob: {
+      type: String,
+      trim: true,
+    },
+    age: {
+      type: Number,
+    },
     appointmentDate: {
       type: String,
       default: "01/06/2016",
@@ -221,6 +228,25 @@ teacherSchema.pre("save", function () {
   }
   if (!this.periods) {
     this.periods = "24 hrs / Week";
+  }
+  if (this.dob) {
+    let birthDate;
+    const trimmed = String(this.dob).trim();
+    if (/^\d{1,2}[/-]\d{1,2}[/-]\d{4}$/.test(trimmed)) {
+      const [d, m, y] = trimmed.split(/[/-]/).map(Number);
+      birthDate = new Date(y, m - 1, d);
+    } else {
+      birthDate = new Date(trimmed);
+    }
+    if (!isNaN(birthDate.getTime())) {
+      const today = new Date();
+      let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        calculatedAge--;
+      }
+      this.age = calculatedAge;
+    }
   }
 });
 

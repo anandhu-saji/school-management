@@ -1,4 +1,5 @@
 import { getDocumentUrl } from "../../../utils/documentUrl";
+import { checkTeacherAgeEligibility } from "../../../utils/ageValidator";
 
 export default function TeacherFormModal({
   isOpen,
@@ -278,6 +279,54 @@ export default function TeacherFormModal({
 
                 <div className="form-row-grid-2">
                   <div className="form-field-group">
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <label style={{ margin: 0 }}>Date of Birth (DOB) *</label>
+                      {formData.dob && (
+                        (() => {
+                          const check = checkTeacherAgeEligibility(formData.dob);
+                          return (
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                fontWeight: "600",
+                                color: check.valid ? "#16a34a" : "#dc2626",
+                                background: check.valid ? "#f0fdf4" : "#fef2f2",
+                                padding: "2px 6px",
+                                borderRadius: "4px",
+                              }}
+                            >
+                              {check.valid ? `✓ ${check.message}` : `⚠ ${check.message}`}
+                            </span>
+                          );
+                        })()
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      name="dob"
+                      required
+                      placeholder="DD/MM/YYYY (e.g. 15/05/1988)"
+                      value={formData.dob}
+                      onChange={handleFormChange}
+                    />
+                    <span className="helper-text">
+                      Statutory entry age under K.E.R: 21 – 60 years.
+                    </span>
+                  </div>
+                  <div className="form-field-group">
+                    <label>Date of Appointment</label>
+                    <input
+                      type="text"
+                      name="appointmentDate"
+                      placeholder="DD/MM/YYYY"
+                      value={formData.appointmentDate}
+                      onChange={handleFormChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row-grid-2">
+                  <div className="form-field-group">
                     <label>Current Duty Status</label>
                     <select
                       name="status"
@@ -291,12 +340,12 @@ export default function TeacherFormModal({
                     </select>
                   </div>
                   <div className="form-field-group">
-                    <label>Date of Appointment</label>
+                    <label>Teaching Qualification Summary</label>
                     <input
                       type="text"
-                      name="appointmentDate"
-                      placeholder="DD/MM/YYYY"
-                      value={formData.appointmentDate}
+                      name="qualification"
+                      placeholder="e.g. M.A, B.Ed, SET"
+                      value={formData.qualification}
                       onChange={handleFormChange}
                     />
                   </div>

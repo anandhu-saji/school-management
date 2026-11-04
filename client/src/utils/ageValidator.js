@@ -13,8 +13,11 @@ export const CLASS_MIN_AGES = {
   12: { min: 17, max: 20, name: "Class 12 (+2)" },
 };
 
-export const checkStudentAgeEligibility = (dobString, divisionString) => {
-  if (!dobString) return { valid: false, message: "Date of Birth is required." };
+/**
+ * Calculates completed age from Date of Birth string (DD/MM/YYYY, DD-MM-YYYY, or YYYY-MM-DD)
+ */
+export const calculateAgeFromDob = (dobString) => {
+  if (!dobString || typeof dobString !== "string") return null;
 
   let birthDate;
   const trimmed = dobString.trim();
@@ -27,20 +30,36 @@ export const checkStudentAgeEligibility = (dobString, divisionString) => {
   }
 
   if (isNaN(birthDate.getTime())) {
-    return { valid: false, message: "Invalid date format. Use DD/MM/YYYY." };
+    return null;
   }
 
   const today = new Date();
-  if (birthDate > today) {
-    return { valid: false, isFuture: true, message: "Date of birth cannot be in the future." };
-  }
-
   let age = today.getFullYear() - birthDate.getFullYear();
   const m = today.getMonth() - birthDate.getMonth();
   if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
     age--;
   }
 
+  return {
+    age,
+    birthDate,
+    isFuture: birthDate > today,
+  };
+};
+
+export const checkStudentAgeEligibility = (dobString, divisionString) => {
+  if (!dobString) return { valid: false, message: "Date of Birth is required." };
+
+  const parsed = calculateAgeFromDob(dobString);
+  if (!parsed) {
+    return { valid: false, message: "Invalid date format. Use DD/MM/YYYY." };
+  }
+
+  if (parsed.isFuture) {
+    return { valid: false, isFuture: true, message: "Date of birth cannot be in the future." };
+  }
+
+  const { age } = parsed;
   const match = String(divisionString || "").match(/(?:class\s*)?(\d{1,2})/i);
   const stdNum = match ? parseInt(match[1], 10) : null;
 
@@ -64,4 +83,55 @@ export const checkStudentAgeEligibility = (dobString, divisionString) => {
   }
 
   return { valid: true, age, message: `Age: ${age} yrs` };
+};
+
+export const TEACHER_AGE_RULES = {
+  min: 21,
+  max: 60,
+  minLabel: "21 years (Statutory service entry)",
+  maxLabel: "60 years (Superannuation retirement)",
+};
+
+/**
+ * Validates faculty/teacher age eligibility
+ * Minimum age: 21 years (K.E.R statutory requirement)
+ * Maximum age: 60 years (Superannuation limit)
+ */
+export const checkTeacherAgeEligibility = (dobString) => {
+  if (!dobString || !dobString.trim()) {
+    return { valid: false, message: "Date of Birth is required." };
+  }
+
+  const parsed = calculateAgeFromDob(dobString);
+  if (!parsed) {
+    return { valid: false, message: "Invalid date format. Use DD/MM/YYYY (e.g. 15/05/1988)." };
+  }
+
+  if (parsed.isFuture) {
+    return { valid: false, isFuture: true, message: "Date of birth cannot be in the future." };
+  }
+
+  const { age } = parsed;
+
+  if (age < TEACHER_AGE_RULES.min) {
+    return {
+      valid: false,
+      age,
+      message: `Faculty is ${age} yrs old. Minimum age for teaching appointment is ${TEACHER_AGE_RULES.min} years.`,
+    };
+  }
+
+  if (age > TEACHER_AGE_RULES.max) {
+    return {
+      valid: false,
+      age,
+      message: `Faculty is ${age} yrs old. Exceeds statutory retirement age of ${TEACHER_AGE_RULES.max} years.`,
+    };
+  }
+
+  return {
+    valid: true,
+    age,
+    message: `Age: ${age} yrs • Eligible Teaching Faculty`,
+  };
 };
