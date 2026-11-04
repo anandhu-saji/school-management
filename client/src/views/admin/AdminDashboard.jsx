@@ -503,7 +503,7 @@ export default function AdminOverview() {
                 <div className="section-att-metric-pill">
                   <span className="section-att-pill-label">BUS TRANSPORT</span>
                   <div className="section-att-pill-value" style={{ color: "#1d4ed8" }}>
-                    {paymentSummary ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(paymentSummary.busFee) : "₹4,20,000"}
+                    {paymentSummary ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(paymentSummary.busFee?.collected ?? 0) : "₹4,20,000"}
                   </div>
                   <div className="section-att-pill-subtext">
                     5 School Bus Fleets Synced
@@ -513,7 +513,7 @@ export default function AdminOverview() {
                 <div className="section-att-metric-pill">
                   <span className="section-att-pill-label">ANNUAL TUITION</span>
                   <div className="section-att-pill-value" style={{ color: "#0f766e" }}>
-                    {paymentSummary ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(paymentSummary.annualFee) : "₹7,80,000"}
+                    {paymentSummary ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(paymentSummary.annualFee?.collected ?? 0) : "₹7,80,000"}
                   </div>
                   <div className="section-att-pill-subtext">
                     Composite Amenities Fund
@@ -523,10 +523,10 @@ export default function AdminOverview() {
                 <div className="section-att-metric-pill">
                   <span className="section-att-pill-label">PTA & SPECIAL DUES</span>
                   <div className="section-att-pill-value" style={{ color: "#7e22ce" }}>
-                    {paymentSummary ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(paymentSummary.ptaFund) : "₹2,82,500"}
+                    {paymentSummary ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(paymentSummary.ptaFund?.collected ?? 0) : "₹2,82,500"}
                   </div>
                   <div className="section-att-pill-subtext" style={{ color: "#b91c1c" }}>
-                    Pending: {paymentSummary ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(paymentSummary.totalDue) : "₹2,15,400"}
+                    Pending: {paymentSummary ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(paymentSummary.totalDue ?? 0) : "₹2,15,400"}
                   </div>
                 </div>
               </div>

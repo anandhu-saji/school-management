@@ -19,6 +19,10 @@ export const authenticate = asyncHandler(async (req, res, next) => {
   else if (req.cookies && req.cookies.token) {
     token = req.cookies.token;
   }
+  // 3. Fallback to token query param (e.g. for direct document downloads/previews)
+  else if (req.query && req.query.token) {
+    token = req.query.token;
+  }
 
   if (!token) {
     throw ApiError.unauthorized("Access denied. Authentication token missing.");

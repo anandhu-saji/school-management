@@ -28,7 +28,7 @@ export default function StudentFeesTab({
             TOTAL BILLED FEES
           </span>
           <h3 style={{ fontSize: "24px", margin: "6px 0 0", color: "#0f172a" }}>
-            ₹{feesData?.summary?.totalBilled ?? 2800}
+            ₹{feesData?.summary?.totalBilled ?? 0}
           </h3>
         </div>
 
@@ -37,7 +37,7 @@ export default function StudentFeesTab({
             TOTAL AMOUNT PAID
           </span>
           <h3 style={{ fontSize: "24px", margin: "6px 0 0", color: "#15803d" }}>
-            ₹{feesData?.summary?.totalPaid ?? 2300}
+            ₹{feesData?.summary?.totalPaid ?? 0}
           </h3>
         </div>
 
@@ -46,7 +46,7 @@ export default function StudentFeesTab({
             OUTSTANDING DUE
           </span>
           <h3 style={{ fontSize: "24px", margin: "6px 0 0", color: "#dc2626" }}>
-            ₹{feesData?.summary?.totalDue ?? 500}
+            ₹{feesData?.summary?.totalDue ?? totalFeeDue ?? 0}
           </h3>
         </div>
 
@@ -61,7 +61,7 @@ export default function StudentFeesTab({
               color: totalFeeDue === 0 ? "#15803d" : "#b45309",
             }}
           >
-            {feesData?.summary?.status || (totalFeeDue === 0 ? "All Dues Cleared ✓" : "₹500 Pending Due")}
+            {feesData?.summary?.status || (totalFeeDue === 0 ? "All Dues Cleared ✓" : `₹${totalFeeDue} Pending Due`)}
           </h3>
         </div>
       </div>

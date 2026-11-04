@@ -15,28 +15,16 @@ export class StudentMetricsService {
       student = await Student.findOne({ userId });
     }
 
-    // 2. Fallback to matching by email
+    // 2. Fallback to matching by verified institutional email
     if (!student && email) {
       student = await Student.findOne({ email: email.toLowerCase() });
-    }
-
-    // 3. Fallback: match by student's registered full name
-    if (!student && userId) {
-      const user = await User.findById(userId);
-      if (user?.name) {
-        student = await Student.findOne({
-          name: { $regex: new RegExp(`^${user.name.trim()}$`, "i") },
-        });
-
-        if (student) {
-          student.userId = userId;
-          if (email) student.email = email.toLowerCase();
-          await student.save();
-        }
+      if (student && userId && !student.userId) {
+        student.userId = userId;
+        await student.save();
       }
     }
 
-    // 4. Auto-generate profile if none exists
+    // 3. Auto-generate profile if none exists for this registered user
     if (!student) {
       const user = userId ? await User.findById(userId) : null;
       const count = await Student.countDocuments();
@@ -45,7 +33,7 @@ export class StudentMetricsService {
 
       student = await Student.create({
         userId,
-        name: user?.name || (email ? email.split("@")[0] : "Student"),
+        name: user?.name || (email ? email.split("@")[0] : "Student Scholar"),
         email: email ? email.toLowerCase() : undefined,
         rollNumber,
         admissionNumber: admNum,
@@ -54,30 +42,30 @@ export class StudentMetricsService {
         classDivision: "Class 10-A",
         className: "Class 10-A",
         gender: "Male",
-        dob: "14 May 2010",
+        dob: "14/05/2010",
         bloodGroup: "O+",
         category: "General",
-        fatherName: "Mr. S. K. Pillai",
-        motherName: "Mrs. Lakshmi Pillai",
-        guardian: "Mr. S. K. Pillai",
+        fatherName: "",
+        motherName: "",
+        guardian: "Parent / Guardian",
         guardianRelation: "Father",
-        parentContact: "+91 94471 22334",
-        altContact: "+91 94471 55667",
+        parentContact: "",
+        altContact: "",
         address: {
-          houseName: "Thiruvonam Nilayam",
-          street: "Munnar Road",
+          houseName: "",
+          street: "",
           postOffice: "Rajakkad P.O",
           city: "Rajakkad",
           district: "Idukki",
           state: "Kerala",
           pincode: "685566",
         },
-        fullAddress: "Thiruvonam Nilayam, Munnar Road, Rajakkad P.O, Idukki District, Kerala - 685566",
-        previousSchool: "Govt. U.P. School Rajakkad",
-        tcNumber: "TC/2024/0912",
-        identificationMarks: "Mole on left collarbone",
-        overallAttendance: "98.4%",
-        monthlyLeavesTaken: 1,
+        fullAddress: "Rajakkad P.O, Idukki District, Kerala - 685566",
+        previousSchool: "",
+        tcNumber: "",
+        identificationMarks: "",
+        overallAttendance: "100.0%",
+        monthlyLeavesTaken: 0,
         status: "Present",
       });
     }
@@ -113,14 +101,14 @@ export class StudentMetricsService {
         presentDays++;
       } else {
         absentDays++;
-        absentDates.push(`${att.date} (${rec.remarks || "Absence Recorded"})`);
+        absentDates.push(`${att.date} (${rec.remarks || rec.status || "Absence Recorded"})`);
       }
 
       if (recentLogs.length < 8) {
         recentLogs.push({
           date: att.date,
           status: rec.status,
-          markedBy: classTeacher?.name || "Mrs. Priya Nair",
+          markedBy: classTeacher?.name || att.markedBy || "Class Mentor",
         });
       }
 
@@ -147,7 +135,7 @@ export class StudentMetricsService {
     });
 
     const attendanceRate =
-      totalWorkingDays > 0 ? ((presentDays / totalWorkingDays) * 100).toFixed(1) : 98.4;
+      totalWorkingDays > 0 ? ((presentDays / totalWorkingDays) * 100).toFixed(1) : "100.0";
 
     return {
       student: {
@@ -187,46 +175,29 @@ export class StudentMetricsService {
       mentor: classTeacher
         ? {
             name: classTeacher.name,
-            phone: classTeacher.phone || "+91 94471 22334",
+            phone: classTeacher.phone || "",
             designation: classTeacher.designation || "HSST",
             department: classTeacher.department || "General Education",
             assignedClass: classTeacher.assignedClass,
           }
         : {
-            name: "Mrs. Priya Nair",
-            phone: "+91 94471 22334",
+            name: "Class Mentor (To be Assigned)",
+            phone: "",
             designation: "HSST",
-            department: "HSST Malayalam",
+            department: "General Education",
             assignedClass: `Class ${division} Mentor`,
           },
       attendance: {
         rate: `${attendanceRate}%`,
-        presentDays: totalWorkingDays > 0 ? presentDays : 98,
-        absentDays: totalWorkingDays > 0 ? absentDays : 2,
-        totalWorkingDays: totalWorkingDays > 0 ? totalWorkingDays : 100,
-        recentLogs:
-          recentLogs.length > 0
-            ? recentLogs
-            : [
-                { date: "02 Nov 2026", status: "Present", markedBy: "Mrs. Priya Nair" },
-                { date: "31 Oct 2026", status: "Present", markedBy: "Mrs. Priya Nair" },
-                { date: "30 Oct 2026", status: "Present", markedBy: "Mrs. Priya Nair" },
-                { date: "29 Oct 2026", status: "Present", markedBy: "Mrs. Priya Nair" },
-                { date: "28 Oct 2026", status: "Absent", markedBy: "Mrs. Priya Nair" },
-                { date: "27 Oct 2026", status: "Present", markedBy: "Mrs. Priya Nair" },
-              ],
-        absentDates: absentDates.length > 0 ? absentDates : ["28 Oct 2026 (Leave Letter Submitted)"],
-        monthlyBreakdown:
-          monthlyBreakdown.length > 0
-            ? monthlyBreakdown
-            : [
-                { month: "October 2026", total: 24, present: 23, absent: 1, rate: "95.8%" },
-                { month: "September 2026", total: 22, present: 22, absent: 0, rate: "100.0%" },
-                { month: "August 2026", total: 21, present: 21, absent: 0, rate: "100.0%" },
-                { month: "July 2026", total: 25, present: 24, absent: 1, rate: "96.0%" },
-                { month: "June 2026", total: 20, present: 20, absent: 0, rate: "100.0%" },
-              ],
+        presentDays,
+        absentDays,
+        totalWorkingDays,
+        recentLogs,
+        absentDates,
+        monthlyBreakdown,
       },
     };
   }
 }
+
+export default StudentMetricsService;

@@ -39,7 +39,7 @@ export class EmailService {
               ${otp}
             </span>
           </div>
-          <p style="color: #64748b; font-size: 12px;">This code expires in 10 minutes. If you did not request this, you can ignore this email.</p>
+          <p style="color: #64748b; font-size: 12px;">This code expires in 5 minutes. If you did not request this, you can ignore this email.</p>
         </div>
       `,
     };

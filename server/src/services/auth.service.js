@@ -183,7 +183,8 @@ export class AuthService {
     const user = await User.findOne({ email: cleanEmail });
 
     if (!user) {
-      throw ApiError.notFound("No account registered with this email address.");
+      // Return success without dispatching email to prevent account enumeration attacks
+      return { email: cleanEmail };
     }
 
     const otp = crypto.randomInt(100000, 999999).toString();

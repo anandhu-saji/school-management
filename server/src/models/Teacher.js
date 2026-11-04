@@ -17,6 +17,25 @@ const teacherSchema = new mongoose.Schema(
       trim: true,
       sparse: true, // Permanent Employee Number, e.g. "849201"
     },
+    penNumber: {
+      type: String,
+      trim: true,
+      sparse: true,
+    },
+    employmentType: {
+      type: String,
+      default: "Permanent / Sanctioned",
+      trim: true,
+    },
+    periodsPerWeek: {
+      type: Number,
+      default: 24,
+    },
+    gender: {
+      type: String,
+      enum: ["Female", "Male", "Other"],
+      default: "Female",
+    },
     email: {
       type: String,
       lowercase: true,
@@ -219,8 +238,16 @@ teacherSchema.pre("save", function () {
   if (!this.email || this.email.trim() === "") {
     this.email = undefined;
   }
-  if (!this.pen) {
-    this.pen = `849${Math.floor(200 + Math.random() * 800)}`;
+  if (!this.pen && this.penNumber) {
+    this.pen = this.penNumber.replace(/^PEN-?/i, "");
+  }
+  if (!this.penNumber && this.pen) {
+    this.penNumber = this.pen.startsWith("PEN-") ? this.pen : `PEN-${this.pen}`;
+  }
+  if (!this.pen && !this.penNumber) {
+    const num = `849${Math.floor(200 + Math.random() * 800)}`;
+    this.pen = num;
+    this.penNumber = `PEN-${num}`;
   }
   if (this.mentorClass && (!this.assignedClass || !this.assignedClass.includes("Mentor"))) {
     const cleanClass = this.mentorClass.replace(/^Class\s*/i, "").trim();

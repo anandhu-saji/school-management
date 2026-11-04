@@ -3,8 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import api from "../../api/axiosclient";
 import "../../Styles/ForgotPassword.css";
 
-const OTP_TOTAL_DURATION = 120; // 5 minutes (in seconds)
-const RESEND_AVAILABLE_AT = 30; // 4.5 minutes elapsed = 30s remaining
+const OTP_TOTAL_DURATION = 300; // 5 minutes (in seconds)
+const RESEND_AVAILABLE_AT = 60; // 4 minutes elapsed = 60s remaining
 
 // Inline SVG Eye & EyeOff Icons
 const EyeIcon = () => (

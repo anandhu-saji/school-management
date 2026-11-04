@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Student from "../../models/Student.js";
 import User from "../../models/user.js";
 import { ALL_CLASSES } from "../../utils/classData.js";
@@ -145,7 +146,7 @@ export class StudentAdminService {
             const isFemale = sample.g === "Female";
             const admNo = `ADM-${clsDiv.replace(/[^a-zA-Z0-9]/g, "")}-${100 + roll}`;
             students.push({
-              _id: `seeded_${clsDiv}_${roll}`,
+              _id: new mongoose.Types.ObjectId().toString(),
               rollNumber: roll,
               rollNoFormatted: `#${String(roll).padStart(2, "0")}`,
               admissionNumber: admNo,
@@ -197,6 +198,9 @@ export class StudentAdminService {
    * Fetch student by ID
    */
   static async getStudentById(id) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw ApiError.badRequest("Invalid Student ID format.");
+    }
     const student = await Student.findById(id).lean();
     if (!student) {
       throw ApiError.notFound("Student record not found.");
@@ -310,8 +314,16 @@ export class StudentAdminService {
    * Update student admission record
    */
   static async updateStudent(id, data) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw ApiError.badRequest("Invalid Student ID format.");
+    }
+
     if (data.dob) {
-      const targetDivision = data.classDivision || data.division;
+      let targetDivision = data.classDivision || data.division;
+      if (!targetDivision) {
+        const existingStudent = await Student.findById(id).lean();
+        targetDivision = existingStudent?.classDivision || existingStudent?.className || "Class 10-A";
+      }
       const ageCheck = validateStudentAgeForClass(data.dob, targetDivision);
       if (ageCheck !== true) {
         throw ApiError.badRequest(ageCheck);
@@ -391,6 +403,9 @@ export class StudentAdminService {
    * Delete student record
    */
   static async deleteStudent(id) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw ApiError.badRequest("Invalid Student ID format.");
+    }
     const deleted = await Student.findByIdAndDelete(id);
     if (!deleted) {
       throw ApiError.notFound("Student record not found.");

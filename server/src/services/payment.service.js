@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import FeePayment from "../models/FeePayment.js";
 import Student from "../models/Student.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -252,6 +253,9 @@ export class PaymentService {
    * Get single fee payment record by ID
    */
   static async getPaymentById(id) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw ApiError.badRequest("Invalid payment ID format.");
+    }
     const payment = await FeePayment.findById(id).lean();
     if (!payment) {
       throw ApiError.notFound("Payment record not found.");
@@ -267,14 +271,25 @@ export class PaymentService {
       throw ApiError.badRequest("Student name, admission number, and class division are mandatory.");
     }
 
+    const totalAmount = Number(data.totalAmount) || 0;
+    const amountPaid = Number(data.amountPaid) || 0;
+
+    if (isNaN(totalAmount) || totalAmount < 0) {
+      throw ApiError.badRequest("Total fee amount must be a non-negative number.");
+    }
+    if (isNaN(amountPaid) || amountPaid < 0) {
+      throw ApiError.badRequest("Amount paid must be a non-negative number.");
+    }
+    if (amountPaid > totalAmount) {
+      throw ApiError.badRequest("Amount paid cannot exceed total billed fee amount.");
+    }
+
     let receiptNumber = data.receiptNumber;
     if (!receiptNumber) {
       const count = await FeePayment.countDocuments();
       receiptNumber = `REC-2026-${1100 + count + 1}`;
     }
 
-    const totalAmount = Number(data.totalAmount) || 0;
-    const amountPaid = Number(data.amountPaid) || 0;
     const dueAmount = Math.max(0, totalAmount - amountPaid);
 
     let status = data.status;
@@ -295,6 +310,7 @@ export class PaymentService {
 
     const payment = await FeePayment.create({
       ...data,
+      studentId: data.studentId && mongoose.Types.ObjectId.isValid(data.studentId) ? data.studentId : null,
       receiptNumber,
       totalAmount,
       amountPaid,
@@ -311,6 +327,10 @@ export class PaymentService {
    * Update fee payment record
    */
   static async updateFeePayment(id, data) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw ApiError.badRequest("Invalid payment ID format.");
+    }
+
     const existing = await FeePayment.findById(id);
     if (!existing) {
       throw ApiError.notFound("Fee payment record not found.");
@@ -318,6 +338,17 @@ export class PaymentService {
 
     const totalAmount = data.totalAmount !== undefined ? Number(data.totalAmount) : existing.totalAmount;
     const amountPaid = data.amountPaid !== undefined ? Number(data.amountPaid) : existing.amountPaid;
+
+    if (isNaN(totalAmount) || totalAmount < 0) {
+      throw ApiError.badRequest("Total fee amount must be a non-negative number.");
+    }
+    if (isNaN(amountPaid) || amountPaid < 0) {
+      throw ApiError.badRequest("Amount paid must be a non-negative number.");
+    }
+    if (amountPaid > totalAmount) {
+      throw ApiError.badRequest("Amount paid cannot exceed total billed fee amount.");
+    }
+
     const dueAmount = Math.max(0, totalAmount - amountPaid);
 
     let status = data.status;
@@ -332,6 +363,7 @@ export class PaymentService {
       {
         $set: {
           ...data,
+          studentId: data.studentId && mongoose.Types.ObjectId.isValid(data.studentId) ? data.studentId : existing.studentId,
           totalAmount,
           amountPaid,
           dueAmount,
@@ -348,6 +380,9 @@ export class PaymentService {
    * Delete fee payment record
    */
   static async deleteFeePayment(id) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw ApiError.badRequest("Invalid payment ID format.");
+    }
     const deleted = await FeePayment.findByIdAndDelete(id);
     if (!deleted) {
       throw ApiError.notFound("Payment record not found.");

@@ -62,6 +62,9 @@ export class TeacherService {
    * Fetch single teacher by ID
    */
   static async getTeacherById(id) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw ApiError.badRequest("Invalid teacher ID format.");
+    }
     const teacher = await Teacher.findById(id).lean();
     if (!teacher) {
       throw ApiError.notFound("Teacher profile not found.");
@@ -96,12 +99,16 @@ export class TeacherService {
 
     const count = await Teacher.countDocuments();
     const penNumber = data.penNumber || `PEN-${849200 + count + 1}`;
+    const pen = penNumber.replace(/^PEN-?/i, "");
 
     const teacher = await Teacher.create({
       ...data,
       email: cleanEmail,
+      pen,
       penNumber,
       periodsPerWeek: Number(data.periodsPerWeek) || 24,
+      employmentType: data.employmentType || "Permanent / Sanctioned",
+      gender: data.gender || "Female",
       isActive: data.isActive !== undefined ? data.isActive : true,
     });
 
@@ -112,6 +119,10 @@ export class TeacherService {
    * Update teacher by ID
    */
   static async updateTeacher(id, data) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw ApiError.badRequest("Invalid teacher ID format.");
+    }
+
     if (data.dob) {
       const ageCheck = validateTeacherAge(data.dob);
       if (ageCheck !== true) {
@@ -121,6 +132,12 @@ export class TeacherService {
       if (parsed) {
         data.age = parsed.age;
       }
+    }
+
+    if (data.penNumber && !data.pen) {
+      data.pen = data.penNumber.replace(/^PEN-?/i, "");
+    } else if (data.pen && !data.penNumber) {
+      data.penNumber = data.pen.startsWith("PEN-") ? data.pen : `PEN-${data.pen}`;
     }
 
     if (data.email) {
@@ -151,6 +168,9 @@ export class TeacherService {
    * Delete teacher by ID
    */
   static async deleteTeacher(id) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw ApiError.badRequest("Invalid teacher ID format.");
+    }
     const deleted = await Teacher.findByIdAndDelete(id);
     if (!deleted) {
       throw ApiError.notFound("Teacher record not found.");
@@ -162,6 +182,9 @@ export class TeacherService {
    * Get teacher's weekly subject & period allotment schedule
    */
   static async getTeacherAllotment(id) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw ApiError.badRequest("Invalid teacher ID format.");
+    }
     const teacher = await Teacher.findById(id).lean();
     if (!teacher) {
       throw ApiError.notFound("Teacher not found.");

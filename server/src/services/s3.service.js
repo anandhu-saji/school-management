@@ -85,15 +85,16 @@ export const uploadImageToS3 = async (file, folder = "avatars") => {
 };
 
 /**
- * Deletes an object from AWS S3 or local storage
+ * Deletes an object from AWS S3 or local storage (with path traversal security check)
  * @param {string} fileUrl 
  */
 export const deleteImageFromS3 = async (fileUrl) => {
   if (!fileUrl) return;
   try {
     if (fileUrl.startsWith("/uploads/")) {
+      const uploadsDir = path.resolve("uploads");
       const localPath = path.resolve(fileUrl.replace(/^\//, ""));
-      if (fs.existsSync(localPath)) {
+      if (localPath.startsWith(uploadsDir) && fs.existsSync(localPath)) {
         fs.unlinkSync(localPath);
       }
       return;

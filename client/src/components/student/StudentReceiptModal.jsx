@@ -16,6 +16,7 @@ export default function StudentReceiptModal({ receipt, onClose }) {
         </div>
 
         <div
+          id="printable-student-receipt"
           style={{
             border: "2px solid #0f172a",
             borderRadius: "8px",

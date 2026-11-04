@@ -299,12 +299,30 @@ export class AttendanceService {
       throw ApiError.badRequest("Invalid payload. Date and records array are required.");
     }
 
+    // Kerala Education Rules (KER) Sunday Rule
+    const dateObj = new Date(date + "T00:00:00");
+    if (dateObj.getDay() === 0) {
+      throw ApiError.badRequest(
+        "Invalid attendance date: Attendance cannot be marked on Sundays per Kerala Education Rules (KER)."
+      );
+    }
+
     const cleanDivision = (classDivision || "Class 10-A").replace(/[\s-]/g, "");
     const pattern = cleanDivision.split("").join("[\\s-]*");
     const divisionRegex = new RegExp(`^${pattern}$|${pattern}`, "i");
 
-    const presentCount = records.filter((r) => r.status === "Present").length;
-    const absentCount = records.filter((r) => r.status === "Absent").length;
+    const validRecords = records
+      .filter((r) => r && (r.studentId || r._id) && mongoose.Types.ObjectId.isValid(r.studentId || r._id))
+      .map((r) => ({
+        studentId: r.studentId || r._id,
+        rollNumber: r.rollNumber,
+        name: r.name,
+        status: r.status || "Present",
+        remarks: r.remarks || "",
+      }));
+
+    const presentCount = validRecords.filter((r) => r.status === "Present").length;
+    const absentCount = validRecords.filter((r) => r.status === "Absent").length;
 
     const doc = await Attendance.findOneAndUpdate(
       {
@@ -319,18 +337,24 @@ export class AttendanceService {
           date,
           classDivision: classDivision || "Class 10-A",
           division: classDivision || "Class 10-A",
-          records: records.map((r) => ({
-            studentId: r.studentId || r._id,
-            rollNumber: r.rollNumber,
-            name: r.name,
-            status: r.status,
-          })),
+          records: validRecords,
           presentCount,
           absentCount,
+          totalPresent: presentCount,
+          totalAbsent: absentCount,
         },
       },
       { upsert: true, new: true, runValidators: true }
     );
+
+    // Sync student records atomically
+    for (const r of validRecords) {
+      if (r.status === "Absent" || r.status === "On Leave" || r.status === "Leave") {
+        await Student.findByIdAndUpdate(r.studentId, {
+          $inc: { monthlyLeavesTaken: 1 },
+        });
+      }
+    }
 
     return doc;
   }

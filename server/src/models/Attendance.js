@@ -17,8 +17,12 @@ const singleRecordSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Present", "Absent"],
+      enum: ["Present", "Absent", "On Leave", "Leave", "Half Day"],
       default: "Present",
+    },
+    remarks: {
+      type: String,
+      default: "",
     },
   },
   { _id: false }
@@ -35,12 +39,23 @@ const attendanceSchema = new mongoose.Schema(
       required: true,
       default: "Class 10-A",
     },
+    division: {
+      type: String,
+    },
     records: [singleRecordSchema],
     totalPresent: {
       type: Number,
       default: 0,
     },
     totalAbsent: {
+      type: Number,
+      default: 0,
+    },
+    presentCount: {
+      type: Number,
+      default: 0,
+    },
+    absentCount: {
       type: Number,
       default: 0,
     },

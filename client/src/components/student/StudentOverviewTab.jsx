@@ -100,14 +100,14 @@ export default function StudentOverviewTab({
         >
           <p className="metric-title">ATTENDANCE RATE</p>
           <div className="metric-value-row">
-            <h2>{attendanceStats?.rate || "98.4%"}</h2>
+            <h2>{attendanceStats?.rate || "100.0%"}</h2>
             <span className="metric-extra attendance">
-              {attendanceStats?.presentDays ?? 98} Present /{" "}
-              {attendanceStats?.absentDays ?? 2} Absent
+              {attendanceStats?.presentDays ?? 0} Present /{" "}
+              {attendanceStats?.absentDays ?? 0} Absent
             </span>
           </div>
           <p className="metric-description">
-            {attendanceStats?.totalWorkingDays ?? 100} Working Days Recorded in Muster
+            {attendanceStats?.totalWorkingDays ?? 0} Working Days Recorded in Muster
           </p>
         </article>
 
@@ -120,11 +120,11 @@ export default function StudentOverviewTab({
           <p className="metric-title">UPCOMING EXAM</p>
           <div className="metric-value-row">
             <h2 style={{ fontSize: "19px" }}>
-              {nextExam ? nextExam.subject.split("-")[0] : "SSLC Board Exam"}
+              {nextExam ? nextExam.subject.split("-")[0] : "Academic Exams"}
             </h2>
           </div>
           <p className="metric-description">
-            {nextExam ? `${nextExam.date} • ${nextExam.startTime}` : "12 March 2026 • 09:30 AM"}
+            {nextExam ? `${nextExam.date} • ${nextExam.startTime}` : "Schedule will be announced"}
           </p>
         </article>
 
@@ -150,7 +150,7 @@ export default function StudentOverviewTab({
             </span>
           </div>
           <p className="metric-description">
-            Billed: ₹{feesData?.summary?.totalBilled ?? 2800} • Paid: ₹{feesData?.summary?.totalPaid ?? 2300}
+            Billed: ₹{feesData?.summary?.totalBilled ?? 0} • Paid: ₹{feesData?.summary?.totalPaid ?? 0}
           </p>
         </article>
 
@@ -159,14 +159,14 @@ export default function StudentOverviewTab({
           <p className="metric-title">CLASS MENTOR</p>
           <div className="metric-value-row">
             <h2 style={{ fontSize: "17px" }}>
-              {mentorProfile?.name || "Mrs. Priya Nair"}
+              {mentorProfile?.name || "Assigned Class Mentor"}
             </h2>
             <span className="metric-extra days">
-              {mentorProfile?.designation || "HSST"}
+              {mentorProfile?.designation || "Faculty"}
             </span>
           </div>
           <p className="metric-description">
-            {mentorProfile?.department || "HSST Malayalam"} • {mentorProfile?.phone || "+91 94471 22334"}
+            {mentorProfile?.department || "General Education"}{mentorProfile?.phone ? ` • ${mentorProfile.phone}` : ""}
           </p>
         </article>
       </section>

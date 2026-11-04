@@ -164,6 +164,7 @@ export default function PaymentConsole() {
 
     setPaymentForm((prev) => ({
       ...prev,
+      studentId: student._id || null,
       studentName: student.name,
       admissionNumber: student.admissionNumber || "",
       rollNumber: student.rollNumber || "",
@@ -178,6 +179,7 @@ export default function PaymentConsole() {
     if (paymentToEdit) {
       setEditingPayment(paymentToEdit);
       setPaymentForm({
+        studentId: paymentToEdit.studentId || null,
         studentName: paymentToEdit.studentName || "",
         admissionNumber: paymentToEdit.admissionNumber || "",
         rollNumber: paymentToEdit.rollNumber || "",

@@ -12,9 +12,22 @@ import adminRoutes from "./routes/admin.routes.js";
 
 // Middleware imports
 import { errorHandler } from "./middleware/error.middleware.js";
+import { authenticate } from "./middleware/auth.middleware.js";
 import { ApiError } from "./utils/ApiError.js";
 
 const app = express();
+
+// Allowed origins
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
+  "http://localhost:3000",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:5174",
+  "http://127.0.0.1:5175",
+].filter(Boolean);
 
 // Global Middlewares
 app.use(
@@ -22,11 +35,16 @@ app.use(
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps, curl, or Postman)
       if (!origin) return callback(null, true);
-      // Allow localhost and 127.0.0.1 on any dev port (5173, 5174, 5175, 3000, etc.)
-      if (/^http:\/\/(localhost|127\.0\.0\.1)(:[0-9]+)?$/.test(origin)) {
+
+      // Check configured or localhost/127.0.0.1 dev ports
+      if (
+        allowedOrigins.includes(origin) ||
+        /^http:\/\/(localhost|127\.0\.0\.1)(:[0-9]+)?$/.test(origin)
+      ) {
         return callback(null, true);
       }
-      return callback(null, true);
+
+      return callback(new ApiError(403, `CORS blocked: Origin ${origin} is not allowed.`));
     },
     credentials: true,
   })
@@ -35,7 +53,13 @@ app.use(cookieParser());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-// Serve static uploaded documents and assets
+// Static uploaded avatars are public
+app.use("/uploads/avatars", express.static(path.resolve("uploads/avatars")));
+
+// Protected statutory student KYC documents require authentication
+app.use("/uploads/documents", authenticate, express.static(path.resolve("uploads/documents")));
+
+// General uploads fallback (if any other files exist)
 app.use("/uploads", express.static(path.resolve("uploads")));
 
 // API Routes

@@ -1386,3 +1386,51 @@ button {
   font-size: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+
+/* ==========================================================================
+   PRINT MEDIA STYLES (Clean Hall Ticket & Student Receipt printing)
+   ========================================================================== */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-hall-ticket,
+  #printable-hall-ticket *,
+  #printable-student-receipt,
+  #printable-student-receipt * {
+    visibility: visible;
+  }
+  #printable-hall-ticket,
+  #printable-student-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 16px;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  .student-modal-overlay {
+    position: static !important;
+    background: none !important;
+    padding: 0 !important;
+  }
+  .student-modal-box {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    background: transparent !important;
+  }
+  .student-modal-header,
+  .btn-close-modal,
+  .secondary-button,
+  .primary-button {
+    display: none !important;
+  }
+}
