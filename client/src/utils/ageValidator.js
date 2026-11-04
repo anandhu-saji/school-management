@@ -86,15 +86,15 @@ export const checkStudentAgeEligibility = (dobString, divisionString) => {
 };
 
 export const TEACHER_AGE_RULES = {
-  min: 21,
+  min: 25,
   max: 60,
-  minLabel: "21 years (Statutory service entry)",
+  minLabel: "25 years (Statutory service entry)",
   maxLabel: "60 years (Superannuation retirement)",
 };
 
 /**
  * Validates faculty/teacher age eligibility
- * Minimum age: 21 years (K.E.R statutory requirement)
+ * Minimum age: 25 years (K.E.R statutory requirement)
  * Maximum age: 60 years (Superannuation limit)
  */
 export const checkTeacherAgeEligibility = (dobString) => {

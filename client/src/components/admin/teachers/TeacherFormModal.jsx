@@ -310,7 +310,7 @@ export default function TeacherFormModal({
                       onChange={handleFormChange}
                     />
                     <span className="helper-text">
-                      Statutory entry age under K.E.R: 21 – 60 years.
+                      Statutory entry age under K.E.R: 25 – 60 years.
                     </span>
                   </div>
                   <div className="form-field-group">

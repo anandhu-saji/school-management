@@ -1,12 +1,12 @@
 /**
  * Minimum and maximum age rules for teaching cadre (Kerala Education Rules / Statutory service entry)
- * - Minimum appointment age: 21 years
+ * - Minimum appointment age: 25 years
  * - Maximum statutory service age limit: 60 years
  */
 export const TEACHER_AGE_RULES = {
-  min: 21,
+  min: 25,
   max: 60,
-  minLabel: "21 years (Statutory service entry)",
+  minLabel: "25 years (Statutory service entry)",
   maxLabel: "60 years (Superannuation retirement)",
 };
 
