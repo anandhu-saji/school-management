@@ -279,8 +279,8 @@ export default function TeacherFormModal({
 
                 <div className="form-row-grid-2">
                   <div className="form-field-group">
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <label style={{ margin: 0 }}>Date of Birth (DOB) *</label>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+                      <label style={{ margin: 0, whiteSpace: "nowrap" }}>Date of Birth *</label>
                       {formData.dob && (
                         (() => {
                           const check = checkTeacherAgeEligibility(formData.dob);
@@ -289,13 +289,16 @@ export default function TeacherFormModal({
                               style={{
                                 fontSize: "11px",
                                 fontWeight: "600",
+                                whiteSpace: "nowrap",
                                 color: check.valid ? "#16a34a" : "#dc2626",
                                 background: check.valid ? "#f0fdf4" : "#fef2f2",
-                                padding: "2px 6px",
+                                padding: "2px 8px",
                                 borderRadius: "4px",
+                                border: `1px solid ${check.valid ? "#bbf7d0" : "#fecaca"}`,
                               }}
+                              title={check.message}
                             >
-                              {check.valid ? `✓ ${check.message}` : `⚠ ${check.message}`}
+                              {check.valid ? `✓ ${check.badge || `Age: ${check.age} yrs`}` : `⚠ ${check.badge || check.message}`}
                             </span>
                           );
                         })()

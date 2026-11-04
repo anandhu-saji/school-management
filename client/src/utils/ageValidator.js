@@ -99,16 +99,25 @@ export const TEACHER_AGE_RULES = {
  */
 export const checkTeacherAgeEligibility = (dobString) => {
   if (!dobString || !dobString.trim()) {
-    return { valid: false, message: "Date of Birth is required." };
+    return { valid: false, message: "Date of Birth is required.", badge: "Required" };
   }
 
   const parsed = calculateAgeFromDob(dobString);
   if (!parsed) {
-    return { valid: false, message: "Invalid date format. Use DD/MM/YYYY (e.g. 15/05/1988)." };
+    return {
+      valid: false,
+      message: "Invalid date format. Use DD/MM/YYYY (e.g. 15/05/1988).",
+      badge: "Format: DD/MM/YYYY",
+    };
   }
 
   if (parsed.isFuture) {
-    return { valid: false, isFuture: true, message: "Date of birth cannot be in the future." };
+    return {
+      valid: false,
+      isFuture: true,
+      message: "Date of birth cannot be in the future.",
+      badge: "Future date invalid",
+    };
   }
 
   const { age } = parsed;
@@ -118,6 +127,7 @@ export const checkTeacherAgeEligibility = (dobString) => {
       valid: false,
       age,
       message: `Faculty is ${age} yrs old. Minimum age for teaching appointment is ${TEACHER_AGE_RULES.min} years.`,
+      badge: `Age: ${age} yrs (Min: ${TEACHER_AGE_RULES.min})`,
     };
   }
 
@@ -126,6 +136,7 @@ export const checkTeacherAgeEligibility = (dobString) => {
       valid: false,
       age,
       message: `Faculty is ${age} yrs old. Exceeds statutory retirement age of ${TEACHER_AGE_RULES.max} years.`,
+      badge: `Age: ${age} yrs (Max: ${TEACHER_AGE_RULES.max})`,
     };
   }
 
@@ -133,5 +144,6 @@ export const checkTeacherAgeEligibility = (dobString) => {
     valid: true,
     age,
     message: `Age: ${age} yrs • Eligible Teaching Faculty`,
+    badge: `Age: ${age} yrs (Eligible)`,
   };
 };
