@@ -27,6 +27,7 @@ export default function TeachersRecords() {
   // Add / Edit Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState(null);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [activeModalTab, setActiveModalTab] = useState("general");
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState({});
@@ -162,6 +163,7 @@ export default function TeachersRecords() {
   // Modal Handlers
   const openAddTeacherModal = () => {
     setEditingTeacher(null);
+    setIsEmailVerified(false);
     setActiveModalTab("general");
     setFormData({
       ...initialForm,
@@ -173,6 +175,7 @@ export default function TeachersRecords() {
 
   const openEditModal = (teacher) => {
     setEditingTeacher(teacher);
+    setIsEmailVerified(true);
     setActiveModalTab("general");
     setFormData({
       name: teacher.name || "",
@@ -219,10 +222,14 @@ export default function TeachersRecords() {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingTeacher(null);
+    setIsEmailVerified(false);
   };
 
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
+    if (name === "email" && value !== formData.email) {
+      setIsEmailVerified(false);
+    }
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
@@ -309,6 +316,25 @@ export default function TeachersRecords() {
         message: ageCheck.message,
       });
       return;
+    }
+
+    if (!editingTeacher) {
+      if (!formData.email || !formData.email.trim()) {
+        setActiveModalTab("general");
+        setFeedback({
+          type: "error",
+          message: "Official institutional email is required for faculty registration.",
+        });
+        return;
+      }
+      if (!isEmailVerified) {
+        setActiveModalTab("general");
+        setFeedback({
+          type: "error",
+          message: "Email verification required: Please verify the teacher's email with the 6-digit OTP code before completing registration.",
+        });
+        return;
+      }
     }
 
     try {
@@ -748,6 +774,8 @@ export default function TeachersRecords() {
         handleFormSubmit={handleFormSubmit}
         handleDeleteTeacher={handleDeleteTeacher}
         feedback={feedback}
+        isEmailVerified={isEmailVerified}
+        setIsEmailVerified={setIsEmailVerified}
       />
 
       {/* =========================================================================

@@ -1,5 +1,6 @@
 import { getDocumentUrl } from "../../../utils/documentUrl";
 import { checkTeacherAgeEligibility } from "../../../utils/ageValidator";
+import EmailOtpVerification from "../../common/EmailOtpVerification";
 
 export default function TeacherFormModal({
   isOpen,
@@ -16,6 +17,8 @@ export default function TeacherFormModal({
   handleFormSubmit,
   handleDeleteTeacher,
   feedback,
+  isEmailVerified,
+  setIsEmailVerified,
 }) {
   if (!isOpen) return null;
 
@@ -273,6 +276,13 @@ export default function TeacherFormModal({
                       placeholder="teacher@ghssrajakkad.kerala.gov.in"
                       value={formData.email}
                       onChange={handleFormChange}
+                    />
+                    <EmailOtpVerification
+                      email={formData.email}
+                      purpose="teacher_registration"
+                      isVerified={isEmailVerified}
+                      setIsVerified={setIsEmailVerified}
+                      disabled={Boolean(editingTeacher)}
                     />
                   </div>
                 </div>

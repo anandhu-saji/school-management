@@ -1,9 +1,11 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 import Student from "../../models/Student.js";
 import User from "../../models/user.js";
 import { ALL_CLASSES } from "../../utils/classData.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { validateStudentAgeForClass } from "../../validators/student.validator.js";
+import { OtpService } from "../otp.service.js";
 
 export class StudentAdminService {
   /**
@@ -263,6 +265,17 @@ export class StudentAdminService {
       if (existing) {
         throw ApiError.conflict(`A student with email ID "${cleanEmail}" is already registered (${existing.name}).`);
       }
+
+      // Enforce OTP verification before admission can be finalized
+      const isVerified = await OtpService.isEmailVerified({
+        email: cleanEmail,
+        purpose: "student_admission",
+      });
+      if (!isVerified) {
+        throw ApiError.badRequest(
+          `Email verification required: Please verify "${cleanEmail}" with the 6-digit OTP code before completing admission.`
+        );
+      }
     }
 
     const studentToCreate = {
@@ -307,6 +320,30 @@ export class StudentAdminService {
     }
 
     const newStudent = await Student.create(studentToCreate);
+
+    if (cleanEmail) {
+      // Consume the used verification record
+      await OtpService.consumeVerification({
+        email: cleanEmail,
+        purpose: "student_admission",
+      });
+
+      // Create linked user login account if one doesn't exist
+      let user = await User.findOne({ email: cleanEmail });
+      if (!user) {
+        const hashedPassword = await bcrypt.hash("Student@123", 10);
+        user = await User.create({
+          name: newStudent.name,
+          username: cleanEmail.split("@")[0],
+          email: cleanEmail,
+          password: hashedPassword,
+          role: "student",
+        });
+      }
+      newStudent.userId = user._id;
+      await newStudent.save();
+    }
+
     return newStudent;
   }
 

@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { ACADEMIC_WINGS } from "../../../utils/classData";
 import { getDocumentUrl } from "../../../utils/documentUrl";
 import { checkStudentAgeEligibility } from "../../../utils/ageValidator";
+import EmailOtpVerification from "../../common/EmailOtpVerification";
 
 export default function StudentFormModal({
   isOpen,
@@ -19,6 +20,8 @@ export default function StudentFormModal({
   handleFormSubmit,
   handleDeleteStudent,
   feedback,
+  isEmailVerified,
+  setIsEmailVerified,
 }) {
   const fileInputRef = useRef(null);
   const bcFileInputRef = useRef(null);
@@ -136,7 +139,13 @@ export default function StudentFormModal({
                       value={formData.email}
                       onChange={handleFormChange}
                     />
-                  </div>
+                    <EmailOtpVerification
+                      email={formData.email}
+                      purpose="student_admission"
+                      isVerified={isEmailVerified}
+                      setIsVerified={setIsEmailVerified}
+                      disabled={Boolean(editingStudent)}
+                    /></div>
                 </div>
 
                 <div className="form-row-grid-2">

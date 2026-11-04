@@ -1,8 +1,11 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 import Teacher from "../models/Teacher.js";
 import Student from "../models/Student.js";
+import User from "../models/user.js";
 import Attendance from "../models/Attendance.js";
 import { ApiError } from "../utils/ApiError.js";
+import { OtpService } from "./otp.service.js";
 import {
   calculateTeacherAge,
   validateTeacherAge,
@@ -97,6 +100,17 @@ export class TeacherService {
       throw ApiError.conflict("A teacher with this institutional email is already registered.");
     }
 
+    // Enforce OTP verification before teacher registration is finalized
+    const isVerified = await OtpService.isEmailVerified({
+      email: cleanEmail,
+      purpose: "teacher_registration",
+    });
+    if (!isVerified) {
+      throw ApiError.badRequest(
+        `Email verification required: Please verify "${cleanEmail}" with the 6-digit OTP code before completing faculty registration.`
+      );
+    }
+
     const count = await Teacher.countDocuments();
     const penNumber = data.penNumber || `PEN-${849200 + count + 1}`;
     const pen = penNumber.replace(/^PEN-?/i, "");
@@ -111,6 +125,27 @@ export class TeacherService {
       gender: data.gender || "Female",
       isActive: data.isActive !== undefined ? data.isActive : true,
     });
+
+    // Consume verification token
+    await OtpService.consumeVerification({
+      email: cleanEmail,
+      purpose: "teacher_registration",
+    });
+
+    // Create linked user login account if one doesn't exist
+    let user = await User.findOne({ email: cleanEmail });
+    if (!user) {
+      const hashedPassword = await bcrypt.hash("Teacher@123", 10);
+      user = await User.create({
+        name: teacher.name,
+        username: cleanEmail.split("@")[0],
+        email: cleanEmail,
+        password: hashedPassword,
+        role: "teacher",
+      });
+    }
+    teacher.userId = user._id;
+    await teacher.save();
 
     return teacher;
   }

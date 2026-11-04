@@ -33,6 +33,7 @@ export default function StudentsRecords() {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [activeModalTab, setActiveModalTab] = useState("personal");
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [uploadingIdProof, setUploadingIdProof] = useState(false);
@@ -157,6 +158,7 @@ export default function StudentsRecords() {
   // Modal Handlers
   const openNewAdmissionModal = () => {
     setEditingStudent(null);
+    setIsEmailVerified(false);
     setActiveModalTab("personal");
     const nextRoll = students.length + 1;
     setFormData({
@@ -173,6 +175,7 @@ export default function StudentsRecords() {
 
   const openEditModal = (student) => {
     setEditingStudent(student);
+    setIsEmailVerified(true);
     setActiveModalTab("personal");
     setFormData({
       name: student.name || "",
@@ -219,10 +222,14 @@ export default function StudentsRecords() {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingStudent(null);
+    setIsEmailVerified(false);
   };
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
+    if (name === "email" && value !== formData.email) {
+      setIsEmailVerified(false);
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -311,7 +318,14 @@ export default function StudentsRecords() {
       return;
     }
 
-    // Comprehensive Age & Eligibility Verification
+    if (!editingStudent && formData.email && formData.email.trim() && !isEmailVerified) {
+      setActiveModalTab("personal");
+      setFeedback({
+        type: "error",
+        message: "Email verification required: Please verify the student's email with the 6-digit OTP code before completing admission.",
+      });
+      return;
+    }
     if (formData.dob) {
       const ageCheck = checkStudentAgeEligibility(formData.dob, formData.division);
       if (!ageCheck.valid) {
@@ -789,6 +803,8 @@ export default function StudentsRecords() {
         uploadingIdProof={uploadingIdProof}
         uploadingBcProof={uploadingBcProof}
         formSubmitting={formSubmitting}
+        isEmailVerified={isEmailVerified}
+        setIsEmailVerified={setIsEmailVerified}
         handleFormSubmit={handleFormSubmit}
         handleDeleteStudent={handleDeleteStudent}
         feedback={feedback}

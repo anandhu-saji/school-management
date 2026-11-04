@@ -5,6 +5,8 @@ import {
   sendOtp,
   verifyOtp,
   resetPassword,
+  sendRegistrationOtp,
+  verifyRegistrationOtp,
 } from "../controllers/auth.controller.js";
 import { validate } from "../middleware/validate.middleware.js";
 import {
@@ -24,5 +26,9 @@ router.post("/google", googleLogin);
 router.post("/forgot-password", validate(forgotPasswordSchema), sendOtp);
 router.post("/verify-otp", validate(verifyOtpSchema), verifyOtp);
 router.post("/reset-password", validate(resetPasswordSchema), resetPassword);
+
+// New User Onboarding Verification (Student & Teacher)
+router.post("/send-registration-otp", sendRegistrationOtp);
+router.post("/verify-registration-otp", verifyRegistrationOtp);
 
 export default router;

@@ -1,4 +1,5 @@
 import { AuthService } from "../services/auth.service.js";
+import { OtpService } from "../services/otp.service.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
@@ -67,4 +68,29 @@ export const resetPassword = asyncHandler(async (req, res) => {
   return ApiResponse.ok(res, {
     message: "Password has been reset successfully. Please sign in.",
   });
+});
+
+/**
+ * Controller: Send 6-digit OTP for new user onboarding (Student admission or Teacher registration)
+ * POST /api/auth/send-registration-otp
+ */
+export const sendRegistrationOtp = asyncHandler(async (req, res) => {
+  const { email, purpose } = req.body;
+  const result = await OtpService.sendRegistrationOtp({ email, purpose });
+
+  return ApiResponse.ok(res, {
+    message: `Verification code dispatched to ${result.email}. Valid for 5 minutes.`,
+    ...result,
+  });
+});
+
+/**
+ * Controller: Verify 6-digit OTP for new user onboarding
+ * POST /api/auth/verify-registration-otp
+ */
+export const verifyRegistrationOtp = asyncHandler(async (req, res) => {
+  const { email, otp, purpose } = req.body;
+  const result = await OtpService.verifyRegistrationOtp({ email, otp, purpose });
+
+  return ApiResponse.ok(res, result);
 });
