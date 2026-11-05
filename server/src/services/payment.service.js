@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import FeePayment from "../models/FeePayment.js";
 import Student from "../models/Student.js";
 import { ApiError } from "../utils/ApiError.js";
+import { validateHumanName } from "../utils/nameValidator.js";
 
 export class PaymentService {
   /**
@@ -271,6 +272,11 @@ export class PaymentService {
       throw ApiError.badRequest("Student name, admission number, and class division are mandatory.");
     }
 
+    const nameCheck = validateHumanName(data.studentName, "Student name");
+    if (nameCheck !== true) {
+      throw ApiError.badRequest(nameCheck);
+    }
+
     const totalAmount = Number(data.totalAmount) || 0;
     const amountPaid = Number(data.amountPaid) || 0;
 
@@ -329,6 +335,13 @@ export class PaymentService {
   static async updateFeePayment(id, data) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw ApiError.badRequest("Invalid payment ID format.");
+    }
+
+    if (data.studentName !== undefined) {
+      const nameCheck = validateHumanName(data.studentName, "Student name");
+      if (nameCheck !== true) {
+        throw ApiError.badRequest(nameCheck);
+      }
     }
 
     const existing = await FeePayment.findById(id);

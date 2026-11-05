@@ -1,3 +1,5 @@
+import { validateHumanName } from "../utils/nameValidator.js";
+
 /**
  * Minimum and maximum age rules for teaching cadre (Kerala Education Rules / Statutory service entry)
  * - Minimum appointment age: 25 years
@@ -75,8 +77,7 @@ export const createTeacherSchema = {
   body: {
     name: {
       required: true,
-      minLength: 2,
-      message: "Teacher name is required (min 2 characters).",
+      custom: (val) => validateHumanName(val, "Teacher name"),
     },
     email: {
       required: true,
@@ -98,6 +99,9 @@ export const updateTeacherSchema = {
     },
   },
   body: {
+    name: {
+      custom: (val) => (!val ? true : validateHumanName(val, "Teacher name")),
+    },
     dob: {
       custom: (val) => {
         if (!val) return true; // optional during update if not modified

@@ -1,3 +1,5 @@
+import { validateHumanName } from "../utils/nameValidator.js";
+
 /**
  * Minimum and maximum age rules for all classes (Classes 1 to 12)
  * Baseline standard: Standard 1 = minimum 6 years old
@@ -90,12 +92,20 @@ export const createStudentSchema = {
   body: {
     name: {
       required: true,
-      minLength: 2,
-      message: "Student full name is required (min 2 characters).",
+      custom: (val) => validateHumanName(val, "Student full name"),
     },
     dob: {
       required: true,
       custom: (val, body) => validateStudentAgeForClass(val, body.division || body.classDivision),
+    },
+    fatherName: {
+      custom: (val) => (!val ? true : validateHumanName(val, "Father's name")),
+    },
+    motherName: {
+      custom: (val) => (!val ? true : validateHumanName(val, "Mother's name")),
+    },
+    guardian: {
+      custom: (val) => (!val ? true : validateHumanName(val, "Guardian's name")),
     },
   },
 };
@@ -108,11 +118,23 @@ export const updateStudentSchema = {
     },
   },
   body: {
+    name: {
+      custom: (val) => (!val ? true : validateHumanName(val, "Student full name")),
+    },
     dob: {
       custom: (val, body) => {
         if (!val) return true; // optional during update if not changed
         return validateStudentAgeForClass(val, body.division || body.classDivision);
       },
+    },
+    fatherName: {
+      custom: (val) => (!val ? true : validateHumanName(val, "Father's name")),
+    },
+    motherName: {
+      custom: (val) => (!val ? true : validateHumanName(val, "Mother's name")),
+    },
+    guardian: {
+      custom: (val) => (!val ? true : validateHumanName(val, "Guardian's name")),
     },
   },
 };

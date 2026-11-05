@@ -8,6 +8,7 @@ import TeacherAllotmentModal from "../../components/admin/teachers/TeacherAllotm
 import TeacherDossierModal from "../../components/admin/teachers/TeacherDossierModal";
 import TeacherFormModal from "../../components/admin/teachers/TeacherFormModal";
 import { checkTeacherAgeEligibility } from "../../utils/ageValidator";
+import { validateHumanName } from "../../utils/nameValidator";
 
 export default function TeachersRecords() {
   // State
@@ -289,11 +290,18 @@ export default function TeachersRecords() {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name.trim() || !formData.pen.trim()) {
+    const nameCheck = validateHumanName(formData.name, "Faculty full name");
+    if (nameCheck !== true) {
+      setActiveModalTab("general");
+      setFeedback({ type: "error", message: nameCheck });
+      return;
+    }
+
+    if (!formData.pen || !formData.pen.trim()) {
       setActiveModalTab("general");
       setFeedback({
         type: "error",
-        message: "Faculty full name and Government PEN number are required.",
+        message: "Government PEN number is required.",
       });
       return;
     }

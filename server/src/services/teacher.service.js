@@ -6,6 +6,7 @@ import User from "../models/user.js";
 import Attendance from "../models/Attendance.js";
 import { ApiError } from "../utils/ApiError.js";
 import { OtpService } from "./otp.service.js";
+import { validateHumanName } from "../utils/nameValidator.js";
 import {
   calculateTeacherAge,
   validateTeacherAge,
@@ -83,6 +84,11 @@ export class TeacherService {
       throw ApiError.badRequest("Teacher name and email are mandatory.");
     }
 
+    const nameCheck = validateHumanName(data.name, "Teacher name");
+    if (nameCheck !== true) {
+      throw ApiError.badRequest(nameCheck);
+    }
+
     if (data.dob) {
       const ageCheck = validateTeacherAge(data.dob);
       if (ageCheck !== true) {
@@ -156,6 +162,13 @@ export class TeacherService {
   static async updateTeacher(id, data) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw ApiError.badRequest("Invalid teacher ID format.");
+    }
+
+    if (data.name !== undefined) {
+      const nameCheck = validateHumanName(data.name, "Teacher name");
+      if (nameCheck !== true) {
+        throw ApiError.badRequest(nameCheck);
+      }
     }
 
     if (data.dob) {

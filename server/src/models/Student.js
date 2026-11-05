@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { validateHumanName } from "../utils/nameValidator.js";
 
 const studentSchema = new mongoose.Schema(
   {
@@ -16,6 +17,10 @@ const studentSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      validate: {
+        validator: (v) => validateHumanName(v, "Student name") === true,
+        message: (props) => validateHumanName(props.value, "Student name"),
+      },
     },
     email: {
       type: String,
@@ -60,6 +65,10 @@ const studentSchema = new mongoose.Schema(
     guardian: {
       type: String,
       trim: true,
+      validate: {
+        validator: (v) => !v || validateHumanName(v, "Guardian's name") === true,
+        message: (props) => validateHumanName(props.value, "Guardian's name"),
+      },
     },
     parentContact: {
       type: String,
@@ -124,10 +133,18 @@ const studentSchema = new mongoose.Schema(
     fatherName: {
       type: String,
       trim: true,
+      validate: {
+        validator: (v) => !v || validateHumanName(v, "Father's name") === true,
+        message: (props) => validateHumanName(props.value, "Father's name"),
+      },
     },
     motherName: {
       type: String,
       trim: true,
+      validate: {
+        validator: (v) => !v || validateHumanName(v, "Mother's name") === true,
+        message: (props) => validateHumanName(props.value, "Mother's name"),
+      },
     },
     guardianRelation: {
       type: String,

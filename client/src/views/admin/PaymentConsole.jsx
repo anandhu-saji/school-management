@@ -8,6 +8,7 @@ import AdminHeader from "../../components/admin/AdminHeader";
 import PaymentStatsCards from "../../components/admin/payments/PaymentStatsCards";
 import PaymentFormModal from "../../components/admin/payments/PaymentFormModal";
 import PaymentReceiptModal from "../../components/admin/payments/PaymentReceiptModal";
+import { validateHumanName } from "../../utils/nameValidator";
 
 export default function PaymentConsole() {
   // Data states
@@ -216,6 +217,12 @@ export default function PaymentConsole() {
     e.preventDefault();
     if (!paymentForm.studentName || !paymentForm.admissionNumber || !paymentForm.classDivision) {
       setFeedback({ type: "error", message: "Please fill in all mandatory student details." });
+      return;
+    }
+
+    const nameCheck = validateHumanName(paymentForm.studentName, "Student name");
+    if (nameCheck !== true) {
+      setFeedback({ type: "error", message: nameCheck });
       return;
     }
 

@@ -9,6 +9,7 @@ import StudentStatsCards from "../../components/admin/students/StudentStatsCards
 import StudentFormModal from "../../components/admin/students/StudentFormModal";
 import StudentDossierModal from "../../components/admin/students/StudentDossierModal";
 import { checkStudentAgeEligibility } from "../../utils/ageValidator";
+import { validateHumanName } from "../../utils/nameValidator";
 
 export default function StudentsRecords() {
   const fileInputRef = useRef(null);
@@ -312,10 +313,38 @@ export default function StudentsRecords() {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name.trim()) {
+    const nameCheck = validateHumanName(formData.name, "Student full name");
+    if (nameCheck !== true) {
       setActiveModalTab("personal");
-      setFeedback({ type: "error", message: "Student Name is required." });
+      setFeedback({ type: "error", message: nameCheck });
       return;
+    }
+
+    if (formData.fatherName && formData.fatherName.trim()) {
+      const fCheck = validateHumanName(formData.fatherName, "Father's name");
+      if (fCheck !== true) {
+        setActiveModalTab("family");
+        setFeedback({ type: "error", message: fCheck });
+        return;
+      }
+    }
+
+    if (formData.motherName && formData.motherName.trim()) {
+      const mCheck = validateHumanName(formData.motherName, "Mother's name");
+      if (mCheck !== true) {
+        setActiveModalTab("family");
+        setFeedback({ type: "error", message: mCheck });
+        return;
+      }
+    }
+
+    if (formData.guardian && formData.guardian.trim()) {
+      const gCheck = validateHumanName(formData.guardian, "Guardian's name");
+      if (gCheck !== true) {
+        setActiveModalTab("family");
+        setFeedback({ type: "error", message: gCheck });
+        return;
+      }
     }
 
     if (!editingStudent && formData.email && formData.email.trim() && !isEmailVerified) {

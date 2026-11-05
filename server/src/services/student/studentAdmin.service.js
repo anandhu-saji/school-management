@@ -5,6 +5,7 @@ import User from "../../models/user.js";
 import { ALL_CLASSES } from "../../utils/classData.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { validateStudentAgeForClass } from "../../validators/student.validator.js";
+import { validateHumanName } from "../../utils/nameValidator.js";
 import { OtpService } from "../otp.service.js";
 
 export class StudentAdminService {
@@ -214,8 +215,22 @@ export class StudentAdminService {
    * Create new student admission
    */
   static async createStudent(data) {
-    if (!data.name || !data.name.trim()) {
-      throw ApiError.badRequest("Student full name is required for admission.");
+    const nameCheck = validateHumanName(data.name, "Student full name");
+    if (nameCheck !== true) {
+      throw ApiError.badRequest(nameCheck);
+    }
+
+    if (data.fatherName) {
+      const fCheck = validateHumanName(data.fatherName, "Father's name");
+      if (fCheck !== true) throw ApiError.badRequest(fCheck);
+    }
+    if (data.motherName) {
+      const mCheck = validateHumanName(data.motherName, "Mother's name");
+      if (mCheck !== true) throw ApiError.badRequest(mCheck);
+    }
+    if (data.guardian) {
+      const gCheck = validateHumanName(data.guardian, "Guardian's name");
+      if (gCheck !== true) throw ApiError.badRequest(gCheck);
     }
 
     const targetDivision = data.classDivision || data.division || "Class 10-A";
@@ -353,6 +368,25 @@ export class StudentAdminService {
   static async updateStudent(id, data) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw ApiError.badRequest("Invalid Student ID format.");
+    }
+
+    if (data.name !== undefined) {
+      const nameCheck = validateHumanName(data.name, "Student full name");
+      if (nameCheck !== true) {
+        throw ApiError.badRequest(nameCheck);
+      }
+    }
+    if (data.fatherName) {
+      const fCheck = validateHumanName(data.fatherName, "Father's name");
+      if (fCheck !== true) throw ApiError.badRequest(fCheck);
+    }
+    if (data.motherName) {
+      const mCheck = validateHumanName(data.motherName, "Mother's name");
+      if (mCheck !== true) throw ApiError.badRequest(mCheck);
+    }
+    if (data.guardian) {
+      const gCheck = validateHumanName(data.guardian, "Guardian's name");
+      if (gCheck !== true) throw ApiError.badRequest(gCheck);
     }
 
     if (data.dob) {

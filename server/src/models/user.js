@@ -1,12 +1,17 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import { UserRole } from "../constants/enums.js";
+import { validateHumanName } from "../utils/nameValidator.js";
 
 const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       trim: true,
+      validate: {
+        validator: (v) => !v || validateHumanName(v, "Full name") === true,
+        message: (props) => validateHumanName(props.value, "Full name"),
+      },
     },
     username: {
       type: String,

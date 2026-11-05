@@ -1,8 +1,10 @@
+import { validateHumanName } from "../utils/nameValidator.js";
+
 export const createPaymentSchema = {
   body: {
     studentName: {
       required: true,
-      message: "Student name is required.",
+      custom: (val) => validateHumanName(val, "Student name"),
     },
     admissionNumber: {
       required: true,
@@ -53,6 +55,9 @@ export const updatePaymentSchema = {
     },
   },
   body: {
+    studentName: {
+      custom: (val) => (!val ? true : validateHumanName(val, "Student name")),
+    },
     totalAmount: {
       custom: (val) => {
         if (val !== undefined && val !== null) {

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { validateHumanName } from "../utils/nameValidator.js";
 
 const teacherSchema = new mongoose.Schema(
   {
@@ -11,6 +12,10 @@ const teacherSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true, // e.g. "Mrs. Priya Nair"
+      validate: {
+        validator: (v) => validateHumanName(v, "Teacher name") === true,
+        message: (props) => validateHumanName(props.value, "Teacher name"),
+      },
     },
     pen: {
       type: String,

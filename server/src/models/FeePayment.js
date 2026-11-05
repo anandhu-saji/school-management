@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { validateHumanName } from "../utils/nameValidator.js";
 
 const feePaymentSchema = new mongoose.Schema(
   {
@@ -17,6 +18,10 @@ const feePaymentSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      validate: {
+        validator: (v) => validateHumanName(v, "Student name") === true,
+        message: (props) => validateHumanName(props.value, "Student name"),
+      },
     },
     admissionNumber: {
       type: String,
