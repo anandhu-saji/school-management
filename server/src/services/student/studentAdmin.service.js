@@ -22,7 +22,18 @@ export class StudentAdminService {
     const boysCount = await Student.countDocuments({ gender: { $in: ["Male", "Boy"] } });
     const girlsCount = await Student.countDocuments({ gender: { $in: ["Female", "Girl"] } });
     const class10Count = await Student.countDocuments({
-      $or: [{ classDivision: { $regex: /10/i } }, { className: { $regex: /10/i } }],
+      $or: [
+        { classDivision: { $regex: /10/i } },
+        { className: { $regex: /10/i } },
+        { division: { $regex: /10/i } },
+      ],
+    });
+    const plusTwoCount = await Student.countDocuments({
+      $or: [
+        { classDivision: { $regex: /(?:11|12|Plus)/i } },
+        { className: { $regex: /(?:11|12|Plus)/i } },
+        { division: { $regex: /(?:11|12|Plus)/i } },
+      ],
     });
 
     const verifiedAadhaarCount = await Student.countDocuments({
@@ -34,11 +45,11 @@ export class StudentAdminService {
         : 100;
 
     const stats = {
-      totalEnrolled: totalCount > 0 ? totalCount : 1248,
-      boysCount: boysCount > 0 ? boysCount : 612,
-      girlsCount: girlsCount > 0 ? girlsCount : 636,
-      class10Candidates: class10Count > 0 ? class10Count : 242,
-      plusTwoCount: 468,
+      totalEnrolled: totalCount,
+      boysCount,
+      girlsCount,
+      class10Candidates: class10Count,
+      plusTwoCount,
       sampoornaVerified: `${verifiedPercent}%`,
     };
 

@@ -9,14 +9,21 @@ import AdminHeader from "../../components/admin/AdminHeader";
 export default function AdminOverview() {
   const navigate = useNavigate();
   const [stats, setStats] = useState({
-    totalPupils: 1248,
-    totalStaff: 64,
-    turnout: "96.4%",
-    totalPresent: 1203,
-    totalAbsent: 45,
+    totalPupils: 0,
+    totalStudents: 0,
+    totalStaff: 0,
+    totalTeachers: 0,
+    activeTeachers: 0,
+    onDutyTeachers: 0,
+    turnout: "100%",
+    todayTurnout: "100%",
+    totalPresent: 0,
+    totalAbsent: 0,
+    class10ACount: 0,
+    totalDivisions: 26,
   });
 
-  // 4 Academic Wing Attendance Blocks Requested by User
+  // 4 Academic Wing Attendance Blocks - Loaded live from MongoDB
   const [sections, setSections] = useState([
     {
       id: "high_school",
@@ -25,13 +32,13 @@ export default function AdminOverview() {
       divisionsText: "Classes 8–10 (6 Divisions)",
       description:
         "Classes 8–10 consolidated roll-call sync from teacher terminals with Kerala Pareeksha Bhavan portal.",
-      turnout: "96.4%",
+      turnout: "100%",
       turnoutDiff: "+1.2% vs yesterday",
-      totalEnrolled: 364,
-      totalPresent: 351,
-      totalAbsent: 13,
-      divisionsLocked: "6 / 6",
-      syncStatus: "100% High School Synced",
+      totalEnrolled: 0,
+      totalPresent: 0,
+      totalAbsent: 0,
+      divisionsLocked: "0 / 6",
+      syncStatus: "Syncing with MongoDB...",
       presentStatus: "Marked in class",
       absentStatus: "Auto-SMS dispatched",
     },
@@ -42,13 +49,13 @@ export default function AdminOverview() {
       divisionsText: "Classes 5–7 (6 Divisions)",
       description:
         "Classes 5–7 consolidated roll-call sync from teacher terminals with Kerala Pareeksha Bhavan portal.",
-      turnout: "96.7%",
+      turnout: "100%",
       turnoutDiff: "+0.8% vs yesterday",
-      totalEnrolled: 276,
-      totalPresent: 267,
-      totalAbsent: 9,
-      divisionsLocked: "6 / 6",
-      syncStatus: "100% UP School Synced",
+      totalEnrolled: 0,
+      totalPresent: 0,
+      totalAbsent: 0,
+      divisionsLocked: "0 / 6",
+      syncStatus: "Syncing with MongoDB...",
       presentStatus: "Marked in class",
       absentStatus: "Auto-SMS dispatched",
     },
@@ -59,13 +66,13 @@ export default function AdminOverview() {
       divisionsText: "Classes 1–4 (8 Divisions)",
       description:
         "Classes 1–4 consolidated roll-call sync from teacher terminals with General Education Department portal.",
-      turnout: "96.5%",
+      turnout: "100%",
       turnoutDiff: "+1.5% vs yesterday",
-      totalEnrolled: 312,
-      totalPresent: 301,
-      totalAbsent: 11,
-      divisionsLocked: "8 / 8",
-      syncStatus: "100% LP School Synced",
+      totalEnrolled: 0,
+      totalPresent: 0,
+      totalAbsent: 0,
+      divisionsLocked: "0 / 8",
+      syncStatus: "Syncing with MongoDB...",
       presentStatus: "Marked in class",
       absentStatus: "Auto-SMS dispatched",
     },
@@ -76,13 +83,13 @@ export default function AdminOverview() {
       divisionsText: "Classes 11–12 (6 Divisions)",
       description:
         "Classes 11–12 (Plus One & Plus Two) consolidated roll-call sync with Kerala DHSE portal.",
-      turnout: "95.9%",
+      turnout: "100%",
       turnoutDiff: "+0.5% vs yesterday",
-      totalEnrolled: 296,
-      totalPresent: 284,
-      totalAbsent: 12,
-      divisionsLocked: "6 / 6",
-      syncStatus: "100% Higher Secondary Synced",
+      totalEnrolled: 0,
+      totalPresent: 0,
+      totalAbsent: 0,
+      divisionsLocked: "0 / 6",
+      syncStatus: "Syncing with MongoDB...",
       presentStatus: "Marked in class",
       absentStatus: "Auto-SMS dispatched",
     },
@@ -98,8 +105,9 @@ export default function AdminOverview() {
         const res = await api.get("/admin/overview-stats");
         if (isMounted && res.data.success) {
           if (res.data.stats) setStats(res.data.stats);
-          if (res.data.sections && res.data.sections.length > 0) {
-            setSections(res.data.sections);
+          const incomingSections = res.data.sections || res.data.stats?.sections;
+          if (incomingSections && incomingSections.length > 0) {
+            setSections(incomingSections);
           }
         }
         try {
@@ -151,25 +159,27 @@ export default function AdminOverview() {
             <div className="overview-stat-card">
               <span className="card-label">PUPIL CENSUS</span>
               <div className="overview-number">
-                {(stats.totalPupils || 1248).toLocaleString()} Pupils
+                {(stats.totalPupils ?? stats.totalStudents ?? 0).toLocaleString()} Pupils
               </div>
-              <div className="sub-text">48 in 10-A • 26 Academic Divisions</div>
+              <div className="sub-text">
+                {stats.class10ACount || 15} in 10-A • {stats.totalDivisions || 26} Academic Divisions
+              </div>
             </div>
             <div className="overview-stat-card">
               <span className="card-label">TEACHERS</span>
               <div className="overview-number">
-                {stats.totalStaff || 64} Staff Members
+                {stats.totalStaff ?? stats.totalTeachers ?? 0} Staff Members
               </div>
               <div className="sub-text text-green">
-                58 Present Today • 6 On Leave
+                {(stats.activeTeachers ?? stats.totalStaff ?? 0)} Active • {(stats.onDutyTeachers ?? 0)} On Duty
               </div>
             </div>
             <div className="overview-stat-card">
               <span className="card-label">TODAY'S STUDENT MUSTER</span>
-              <div className="overview-number">{stats.turnout || "96.4%"} Turnout</div>
+              <div className="overview-number">{stats.turnout || stats.todayTurnout || "100%"} Turnout</div>
               <div className="sub-text text-green">
-                {(stats.totalPresent || 1203).toLocaleString()} Present •{" "}
-                <span className="text-red">{(stats.totalAbsent || 45)} Absent</span>
+                {(stats.totalPresent ?? 0).toLocaleString()} Present •{" "}
+                <span className="text-red">{(stats.totalAbsent ?? 0)} Absent</span>
               </div>
             </div>
             <div className="overview-stat-card">

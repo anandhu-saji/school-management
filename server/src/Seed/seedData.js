@@ -6,7 +6,10 @@ import Teacher from "../models/Teacher.js";
 import Student from "../models/Student.js";
 import Attendance from "../models/Attendance.js";
 import Exam from "../models/Exam.js";
+import FeePayment from "../models/FeePayment.js";
+import InternalMark from "../models/InternalMark.js";
 import { ACADEMIC_WINGS, ALL_CLASSES } from "../utils/classData.js";
+import { calculateKeralaGrade } from "../utils/gradeCalculator.js";
 
 const MONGO_URI =
   process.env.MONGO_URI ||
@@ -130,7 +133,7 @@ const seedDatabase = async () => {
         pen: "849201",
         department: "HST Mathematics",
         designation: "HST",
-        assignedClass: "Class 10-A Mentor",
+        assignedClass: "Class 10-A",
         mentorClass: "10-A",
         subject: "Mathematics",
         phone: "+91 94471 23450",
@@ -151,7 +154,7 @@ const seedDatabase = async () => {
         pen: "849202",
         department: "HST Mathematics",
         designation: "HST",
-        assignedClass: "Class 10-B Mentor",
+        assignedClass: "Class 10-B",
         mentorClass: "10-B",
         subject: "Mathematics",
         phone: "+91 94462 88219",
@@ -172,7 +175,7 @@ const seedDatabase = async () => {
         pen: "849205",
         department: "HST Physical Science",
         designation: "HST",
-        assignedClass: "Class 9-A Mentor",
+        assignedClass: "Class 9-A",
         mentorClass: "9-A",
         subject: "Physical Science",
         phone: "+91 98470 55123",
@@ -193,7 +196,7 @@ const seedDatabase = async () => {
         pen: "849207",
         department: "HST Natural Science",
         designation: "HST",
-        assignedClass: "Class 9-B Mentor",
+        assignedClass: "Class 9-B",
         mentorClass: "9-B",
         subject: "Natural Science",
         phone: "+91 98470 55199",
@@ -214,7 +217,7 @@ const seedDatabase = async () => {
         pen: "849214",
         department: "HST Social Science",
         designation: "HST",
-        assignedClass: "Class 8-B Mentor",
+        assignedClass: "Class 8-B",
         mentorClass: "8-B",
         subject: "Social Science",
         phone: "+91 94468 11902",
@@ -235,7 +238,7 @@ const seedDatabase = async () => {
         pen: "849208",
         department: "HST Malayalam",
         designation: "HST",
-        assignedClass: "Class 8-A Mentor",
+        assignedClass: "Class 8-A",
         mentorClass: "8-A",
         subject: "Malayalam",
         phone: "+91 94471 99208",
@@ -258,7 +261,7 @@ const seedDatabase = async () => {
         pen: "849219",
         department: "HSST Chemistry",
         designation: "HSST",
-        assignedClass: "Class 11-Science Mentor",
+        assignedClass: "Class 11-Science",
         mentorClass: "11-Science",
         subject: "Chemistry",
         phone: "+91 94956 77123",
@@ -279,7 +282,7 @@ const seedDatabase = async () => {
         pen: "849241",
         department: "HSST Commerce",
         designation: "HSST",
-        assignedClass: "Class 11-Commerce Mentor",
+        assignedClass: "Class 11-Commerce",
         mentorClass: "11-Commerce",
         subject: "Commerce",
         phone: "+91 94956 88241",
@@ -300,7 +303,7 @@ const seedDatabase = async () => {
         pen: "849210",
         department: "HSST English",
         designation: "HSST",
-        assignedClass: "Class 11-Humanities Mentor",
+        assignedClass: "Class 11-Humanities",
         mentorClass: "11-Humanities",
         subject: "English",
         phone: "+91 94951 44321",
@@ -321,7 +324,7 @@ const seedDatabase = async () => {
         pen: "849242",
         department: "HSST Physics",
         designation: "HSST",
-        assignedClass: "Class 12-Science Mentor",
+        assignedClass: "Class 12-Science",
         mentorClass: "12-Science",
         subject: "Physics",
         phone: "+91 94956 99242",
@@ -342,7 +345,7 @@ const seedDatabase = async () => {
         pen: "849243",
         department: "HSST Economics",
         designation: "HSST",
-        assignedClass: "Class 12-Commerce Mentor",
+        assignedClass: "Class 12-Commerce",
         mentorClass: "12-Commerce",
         subject: "Economics",
         phone: "+91 94956 99243",
@@ -363,7 +366,7 @@ const seedDatabase = async () => {
         pen: "849244",
         department: "HSST History",
         designation: "HSST",
-        assignedClass: "Class 12-Humanities Mentor",
+        assignedClass: "Class 12-Humanities",
         mentorClass: "12-Humanities",
         subject: "History",
         phone: "+91 94956 99244",
@@ -386,7 +389,7 @@ const seedDatabase = async () => {
         pen: "849231",
         department: "UPSA Malayalam",
         designation: "UPSA",
-        assignedClass: "Class 5-A Mentor",
+        assignedClass: "Class 5-A",
         mentorClass: "5-A",
         subject: "Malayalam",
         phone: "+91 94471 11231",
@@ -406,7 +409,7 @@ const seedDatabase = async () => {
         pen: "849232",
         department: "UPSA Mathematics",
         designation: "UPSA",
-        assignedClass: "Class 5-B Mentor",
+        assignedClass: "Class 5-B",
         mentorClass: "5-B",
         subject: "Mathematics",
         phone: "+91 94471 11232",
@@ -426,7 +429,7 @@ const seedDatabase = async () => {
         pen: "849233",
         department: "UPSA Science",
         designation: "UPSA",
-        assignedClass: "Class 6-A Mentor",
+        assignedClass: "Class 6-A",
         mentorClass: "6-A",
         subject: "Science",
         phone: "+91 94471 11233",
@@ -446,7 +449,7 @@ const seedDatabase = async () => {
         pen: "849234",
         department: "UPSA Social Science",
         designation: "UPSA",
-        assignedClass: "Class 6-B Mentor",
+        assignedClass: "Class 6-B",
         mentorClass: "6-B",
         subject: "Social Science",
         phone: "+91 94471 11234",
@@ -466,7 +469,7 @@ const seedDatabase = async () => {
         pen: "849235",
         department: "UPSA English",
         designation: "UPSA",
-        assignedClass: "Class 7-A Mentor",
+        assignedClass: "Class 7-A",
         mentorClass: "7-A",
         subject: "English",
         phone: "+91 94471 11235",
@@ -486,7 +489,7 @@ const seedDatabase = async () => {
         pen: "849236",
         department: "UPSA Mathematics",
         designation: "UPSA",
-        assignedClass: "Class 7-B Mentor",
+        assignedClass: "Class 7-B",
         mentorClass: "7-B",
         subject: "Mathematics",
         phone: "+91 94471 11236",
@@ -508,7 +511,7 @@ const seedDatabase = async () => {
         pen: "849221",
         department: "LPSA Primary Education",
         designation: "LPSA",
-        assignedClass: "Class 1-A Mentor",
+        assignedClass: "Class 1-A",
         mentorClass: "1-A",
         subject: "Primary Education",
         phone: "+91 94471 22221",
@@ -528,7 +531,7 @@ const seedDatabase = async () => {
         pen: "849222",
         department: "LPSA Primary Education",
         designation: "LPSA",
-        assignedClass: "Class 1-B Mentor",
+        assignedClass: "Class 1-B",
         mentorClass: "1-B",
         subject: "Primary Education",
         phone: "+91 94471 22222",
@@ -548,7 +551,7 @@ const seedDatabase = async () => {
         pen: "849223",
         department: "LPSA Primary Education",
         designation: "LPSA",
-        assignedClass: "Class 2-A Mentor",
+        assignedClass: "Class 2-A",
         mentorClass: "2-A",
         subject: "Primary Education",
         phone: "+91 94471 22223",
@@ -568,7 +571,7 @@ const seedDatabase = async () => {
         pen: "849224",
         department: "LPSA Primary Education",
         designation: "LPSA",
-        assignedClass: "Class 2-B Mentor",
+        assignedClass: "Class 2-B",
         mentorClass: "2-B",
         subject: "Primary Education",
         phone: "+91 94471 22224",
@@ -588,7 +591,7 @@ const seedDatabase = async () => {
         pen: "849225",
         department: "LPSA Primary Education",
         designation: "LPSA",
-        assignedClass: "Class 3-A Mentor",
+        assignedClass: "Class 3-A",
         mentorClass: "3-A",
         subject: "Primary Education",
         phone: "+91 94471 22225",
@@ -608,7 +611,7 @@ const seedDatabase = async () => {
         pen: "849226",
         department: "LPSA Primary Education",
         designation: "LPSA",
-        assignedClass: "Class 3-B Mentor",
+        assignedClass: "Class 3-B",
         mentorClass: "3-B",
         subject: "Primary Education",
         phone: "+91 94471 22226",
@@ -628,7 +631,7 @@ const seedDatabase = async () => {
         pen: "849227",
         department: "LPSA Primary Education",
         designation: "LPSA",
-        assignedClass: "Class 4-A Mentor",
+        assignedClass: "Class 4-A",
         mentorClass: "4-A",
         subject: "Primary Education",
         phone: "+91 94471 22227",
@@ -648,7 +651,7 @@ const seedDatabase = async () => {
         pen: "849228",
         department: "LPSA Primary Education",
         designation: "LPSA",
-        assignedClass: "Class 4-B Mentor",
+        assignedClass: "Class 4-B",
         mentorClass: "4-B",
         subject: "Primary Education",
         phone: "+91 94471 22228",
@@ -1122,6 +1125,263 @@ const seedDatabase = async () => {
     await Exam.insertMany(examTimetables);
     console.log(`✅ Seeded ${examTimetables.length} exam schedules across all standards in MongoDB!`);
 
+    // -------------------------------------------------------------
+    // 6. SEED OFFICIAL FEE PAYMENTS ACROSS DIVISIONS
+    // -------------------------------------------------------------
+    await FeePayment.deleteMany({});
+    const feeTemplates = [
+      { feeCategory: "Bus Fee", totalAmount: 4500, term: "Monthly Bus Pass", remarks: "School Bus Route 03 - Rajakkad Town to Kallar" },
+      { feeCategory: "Annual Fee", totalAmount: 6800, term: "Annual", remarks: "Composite Academic & Amenities Fee 2026-27" },
+      { feeCategory: "PTA Fund", totalAmount: 1500, term: "Annual", remarks: "Parent-Teacher Association Development Fund" },
+      { feeCategory: "Bus Fee", totalAmount: 4800, term: "Monthly Bus Pass", remarks: "School Bus Route 01 - Ponmudi & Bisonvalley" },
+      { feeCategory: "Lab & Computer Fee", totalAmount: 2200, term: "Term 1", remarks: "High-Tech Computer Lab & Smart Classroom Charge" },
+      { feeCategory: "Special / Exam Fee", totalAmount: 1200, term: "Term 1", remarks: "SCERT Model & Board Examination Fee" },
+      { feeCategory: "Sports & Library", totalAmount: 850, term: "Annual", remarks: "Sports Equipment & Library Lending Card" },
+      { feeCategory: "PTA Fund", totalAmount: 1500, term: "Annual", remarks: "General Education Protection Mission Support" },
+    ];
+
+    const paymentModes = [
+      "UPI / Online (Google Pay / PhonePe)",
+      "Net Banking",
+      "Cash at School Counter",
+      "Bank Challan (SBT/SBI)",
+    ];
+
+    const feeDocsToInsert = [];
+    let receiptCounter = 1042;
+
+    const selectedFeeStudents = insertedStudents.slice(0, 45);
+    selectedFeeStudents.forEach((s, idx) => {
+      const template1 = feeTemplates[idx % feeTemplates.length];
+      const template2 = feeTemplates[(idx + 2) % feeTemplates.length];
+      const items = [template1, template2];
+
+      items.forEach((tmpl, iIdx) => {
+        receiptCounter++;
+        const isPaid = (idx + iIdx) % 5 !== 0;
+        const amountPaid = isPaid ? tmpl.totalAmount : Math.round(tmpl.totalAmount * 0.5);
+        const dueAmount = tmpl.totalAmount - amountPaid;
+        const status = dueAmount === 0 ? "Paid" : "Partial";
+
+        let wing = "High School";
+        const divLower = (s.classDivision || "").toLowerCase();
+        if (divLower.includes("11") || divLower.includes("12") || divLower.includes("science") || divLower.includes("commerce")) {
+          wing = "Higher Secondary";
+        } else if (divLower.includes("5") || divLower.includes("6") || divLower.includes("7")) {
+          wing = "UP School";
+        } else if (divLower.includes("1") || divLower.includes("2") || divLower.includes("3") || divLower.includes("4")) {
+          wing = "LP School";
+        }
+
+        feeDocsToInsert.push({
+          receiptNumber: `REC-2026-${receiptCounter}`,
+          studentId: s._id,
+          studentName: s.name,
+          admissionNumber: s.admissionNumber,
+          classDivision: s.classDivision,
+          wing,
+          feeCategory: tmpl.feeCategory,
+          term: tmpl.term,
+          totalAmount: tmpl.totalAmount,
+          amountPaid,
+          dueAmount,
+          paymentDate: `2026-10-${String(10 + (idx % 18)).padStart(2, "0")}`,
+          paymentMode: paymentModes[(idx + iIdx) % paymentModes.length],
+          transactionReference:
+            (idx + iIdx) % 2 === 0
+              ? `UPI/${629000000 + receiptCounter}`
+              : `COUNTER-CASH-${receiptCounter}`,
+          status,
+          collectedBy: "Accounts Desk / Sri. R. Krishnan",
+          remarks: tmpl.remarks,
+        });
+      });
+    });
+
+    await FeePayment.insertMany(feeDocsToInsert);
+    console.log(`✅ Seeded ${feeDocsToInsert.length} fee transaction records in MongoDB!`);
+
+    // -------------------------------------------------------------
+    // 7. SEED CONTINUOUS EVALUATION (CE) & INTERNAL MARKS
+    // -------------------------------------------------------------
+    await InternalMark.deleteMany({});
+
+    const internalMarksToInsert = [];
+
+    // Class 10-A: Mathematics - Continuous Evaluation (CE)
+    const class10AStudents = insertedStudents.filter((s) => s.classDivision === "Class 10-A");
+    if (class10AStudents.length > 0) {
+      const maxMarks = 20;
+      const passMarks = 6;
+      const ceRecords = class10AStudents.map((std, idx) => {
+        const marksObtained = 14 + (idx % 7);
+        const { grade } = calculateKeralaGrade(marksObtained, maxMarks);
+        return {
+          studentId: std._id,
+          rollNumber: std.rollNumber,
+          admissionNumber: std.admissionNumber,
+          studentName: std.name,
+          marksObtained,
+          isAbsent: false,
+          grade,
+          remarks: marksObtained >= 18 ? "Outstanding performance" : "Satisfactory",
+        };
+      });
+
+      const totalMarks = ceRecords.reduce((acc, r) => acc + r.marksObtained, 0);
+      const classAverage = Number((totalMarks / ceRecords.length).toFixed(1));
+      const highestScore = Math.max(...ceRecords.map((r) => r.marksObtained));
+      const lowestScore = Math.min(...ceRecords.map((r) => r.marksObtained));
+
+      internalMarksToInsert.push({
+        examTerm: "First Terminal Examination 2026",
+        standard: "Class 10",
+        classDivision: "Class 10-A",
+        subject: "Mathematics",
+        evaluationType: "Continuous Evaluation (CE)",
+        maxMarks,
+        passMarks,
+        teacherName: "Mrs. Indu B Nair",
+        teacherEmail: "kathalanx@gmail.com",
+        teacherPen: "849201",
+        records: ceRecords,
+        classAverage,
+        highestScore,
+        lowestScore,
+        passPercentage: 100,
+        status: "Submitted",
+      });
+
+      // Class 10-A: Mathematics - Written Exam
+      const writtenMax = 80;
+      const writtenPass = 24;
+      const writtenRecords = class10AStudents.map((std, idx) => {
+        const marksObtained = 52 + ((idx * 4) % 27);
+        const { grade } = calculateKeralaGrade(marksObtained, writtenMax);
+        return {
+          studentId: std._id,
+          rollNumber: std.rollNumber,
+          admissionNumber: std.admissionNumber,
+          studentName: std.name,
+          marksObtained,
+          isAbsent: false,
+          grade,
+          remarks: marksObtained >= 70 ? "Excellent" : "Good grasp of concepts",
+        };
+      });
+
+      const writtenTotalMarks = writtenRecords.reduce((acc, r) => acc + r.marksObtained, 0);
+      const writtenAverage = Number((writtenTotalMarks / writtenRecords.length).toFixed(1));
+
+      internalMarksToInsert.push({
+        examTerm: "First Terminal Examination 2026",
+        standard: "Class 10",
+        classDivision: "Class 10-A",
+        subject: "Mathematics",
+        evaluationType: "Written Exam",
+        maxMarks: writtenMax,
+        passMarks: writtenPass,
+        teacherName: "Mrs. Indu B Nair",
+        teacherEmail: "kathalanx@gmail.com",
+        teacherPen: "849201",
+        records: writtenRecords,
+        classAverage: writtenAverage,
+        highestScore: Math.max(...writtenRecords.map((r) => r.marksObtained)),
+        lowestScore: Math.min(...writtenRecords.map((r) => r.marksObtained)),
+        passPercentage: 100,
+        status: "Submitted",
+      });
+    }
+
+    // Class 10-B: Mathematics - Continuous Evaluation (CE)
+    const class10BStudents = insertedStudents.filter((s) => s.classDivision === "Class 10-B");
+    if (class10BStudents.length > 0) {
+      const maxMarks = 20;
+      const passMarks = 6;
+      const ceRecords10B = class10BStudents.map((std, idx) => {
+        const marksObtained = 13 + (idx % 8);
+        const { grade } = calculateKeralaGrade(marksObtained, maxMarks);
+        return {
+          studentId: std._id,
+          rollNumber: std.rollNumber,
+          admissionNumber: std.admissionNumber,
+          studentName: std.name,
+          marksObtained,
+          isAbsent: false,
+          grade,
+          remarks: "Good",
+        };
+      });
+
+      const totalMarks10B = ceRecords10B.reduce((acc, r) => acc + r.marksObtained, 0);
+
+      internalMarksToInsert.push({
+        examTerm: "First Terminal Examination 2026",
+        standard: "Class 10",
+        classDivision: "Class 10-B",
+        subject: "Mathematics",
+        evaluationType: "Continuous Evaluation (CE)",
+        maxMarks,
+        passMarks,
+        teacherName: "Sri. George K.",
+        teacherEmail: "george.k@ghssrajakkad.kerala.gov.in",
+        teacherPen: "849202",
+        records: ceRecords10B,
+        classAverage: Number((totalMarks10B / ceRecords10B.length).toFixed(1)),
+        highestScore: Math.max(...ceRecords10B.map((r) => r.marksObtained)),
+        lowestScore: Math.min(...ceRecords10B.map((r) => r.marksObtained)),
+        passPercentage: 100,
+        status: "Submitted",
+      });
+    }
+
+    // Class 12-Science: Physics - Continuous Evaluation (CE)
+    const class12SciStudents = insertedStudents.filter((s) => s.classDivision === "Class 12-Science");
+    if (class12SciStudents.length > 0) {
+      const maxMarks = 20;
+      const passMarks = 6;
+      const ceRecords12Sci = class12SciStudents.map((std, idx) => {
+        const marksObtained = 15 + (idx % 6);
+        const { grade } = calculateKeralaGrade(marksObtained, maxMarks);
+        return {
+          studentId: std._id,
+          rollNumber: std.rollNumber,
+          admissionNumber: std.admissionNumber,
+          studentName: std.name,
+          marksObtained,
+          isAbsent: false,
+          grade,
+          remarks: "Regular in laboratory and assignments",
+        };
+      });
+
+      const totalMarks12Sci = ceRecords12Sci.reduce((acc, r) => acc + r.marksObtained, 0);
+
+      internalMarksToInsert.push({
+        examTerm: "First Terminal Examination 2026",
+        standard: "Class 12",
+        classDivision: "Class 12-Science",
+        subject: "Physics",
+        evaluationType: "Continuous Evaluation (CE)",
+        maxMarks,
+        passMarks,
+        teacherName: "Sri. Manoj P.",
+        teacherEmail: "manoj.p@ghssrajakkad.kerala.gov.in",
+        teacherPen: "849242",
+        records: ceRecords12Sci,
+        classAverage: Number((totalMarks12Sci / ceRecords12Sci.length).toFixed(1)),
+        highestScore: Math.max(...ceRecords12Sci.map((r) => r.marksObtained)),
+        lowestScore: Math.min(...ceRecords12Sci.map((r) => r.marksObtained)),
+        passPercentage: 100,
+        status: "Submitted",
+      });
+    }
+
+    if (internalMarksToInsert.length > 0) {
+      await InternalMark.insertMany(internalMarksToInsert);
+      console.log(`✅ Seeded ${internalMarksToInsert.length} internal evaluation mark registers in MongoDB!`);
+    }
+
     console.log("\n========================================================");
     console.log("       🎉 MASTER SEEDING COMPLETED SUCCESSFULLY!        ");
     console.log("========================================================");
@@ -1131,6 +1391,8 @@ const seedDatabase = async () => {
     console.log(`  TOTAL TEACHERS / MENTORS   : ${fullFacultyCadre.length}`);
     console.log(`  TOTAL ATTENDANCE REGISTERS : ${attendanceDocsToInsert.length}`);
     console.log(`  TOTAL EXAM SCHEDULES       : ${examTimetables.length}`);
+    console.log(`  TOTAL FEE PAYMENTS         : ${feeDocsToInsert.length}`);
+    console.log(`  TOTAL INTERNAL MARK PAPERS : ${internalMarksToInsert.length}`);
     console.log("--------------------------------------------------------");
     console.log("  LOGIN CREDENTIALS:");
     console.log("  - Super Admin : admin@ghss.edu     / Admin@12345");

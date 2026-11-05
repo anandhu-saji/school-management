@@ -18,11 +18,11 @@ export default function StudentsRecords() {
   // State
   const [students, setStudents] = useState([]);
   const [stats, setStats] = useState({
-    totalEnrolled: 1248,
-    boysCount: 612,
-    girlsCount: 636,
-    class10Candidates: 242,
-    plusTwoCount: 468,
+    totalEnrolled: 0,
+    boysCount: 0,
+    girlsCount: 0,
+    class10Candidates: 0,
+    plusTwoCount: 0,
     sampoornaVerified: "100%",
   });
   const [loading, setLoading] = useState(true);

@@ -12,10 +12,10 @@ export default function ExamTimetables() {
   // State
   const [exams, setExams] = useState([]);
   const [stats, setStats] = useState({
-    totalSchedules: 11,
-    upcomingCount: 8,
-    hallsAllocated: 12,
-    invigilatorCadre: 24,
+    totalSchedules: 0,
+    upcomingCount: 0,
+    hallsAllocated: 0,
+    invigilatorCadre: 0,
   });
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");

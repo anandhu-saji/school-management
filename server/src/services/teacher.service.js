@@ -45,10 +45,14 @@ export class TeacherService {
 
     const totalSanctioned = teachers.length;
     const regularTeachers = teachers.filter(
-      (t) => t.employmentType && t.employmentType.toLowerCase().includes("permanent")
-    ).length || Math.ceil(totalSanctioned * 0.85);
+      (t) =>
+        (t.employmentType && t.employmentType.toLowerCase().includes("permanent")) ||
+        ["HST", "HSST", "LPSA", "UPSA"].includes(t.designation)
+    ).length;
 
-    const guestFaculty = totalSanctioned - regularTeachers;
+    const onDutyStaff = teachers.filter((t) => t.status === "On Duty").length;
+    const vacantPosts = Math.max(0, 26 - totalSanctioned);
+    const guestFaculty = Math.max(0, totalSanctioned - regularTeachers);
     const periodsPerWeek = teachers.reduce(
       (acc, t) => acc + (Number(t.periodsPerWeek) || 24),
       0
@@ -58,7 +62,11 @@ export class TeacherService {
       teachers,
       stats: {
         totalSanctioned,
+        totalFaculty: totalSanctioned,
+        permanentPosts: regularTeachers,
         regularTeachers,
+        onDutyStaff,
+        vacantPosts,
         guestFaculty,
         periodsPerWeek,
       },
@@ -741,8 +749,8 @@ export class TeacherService {
       },
     ];
 
-    // 2. Official Examinations & Invigilation Duties
-    let allExams = await Exam.find({ isActive: true }).sort({ date: 1, startTime: 1 }).lean();
+    // 2. Official Examinations & Invigilation Duties from MongoDB
+    let allExams = await Exam.find({}).sort({ examDate: 1, date: 1, startTime: 1 }).lean();
     if (!allExams || allExams.length === 0) {
       allExams = [
         {
@@ -805,22 +813,30 @@ export class TeacherService {
       ];
     }
 
-    const firstWordOfName = teacherName.split(" ")[0].toLowerCase();
     const cleanPen = String(teacherPen).replace(/\D/g, "");
+    const coreNameParts = teacherName
+      .replace(/^(mrs\.|mr\.|smt\.|sri\.|dr\.)\s*/i, "")
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((p) => p.length > 2);
 
     const examsWithDutyFlag = allExams.map((ex) => {
-      const isInvigilator =
-        (ex.invigilator && ex.invigilator.toLowerCase().includes(firstWordOfName)) ||
-        (ex.invigilatorName && ex.invigilatorName.toLowerCase().includes(firstWordOfName)) ||
-        (ex.invigilatorPen && String(ex.invigilatorPen).includes(cleanPen)) ||
-        (ex.seatingPlan &&
-          ex.seatingPlan.some((sp) =>
-            sp.invigilatorName?.toLowerCase().includes(firstWordOfName)
-          ));
+      const invStr = `${ex.invigilator || ""} ${ex.invigilatorName || ""}`.toLowerCase();
+      const hasPen =
+        (cleanPen && ex.invigilatorPen && String(ex.invigilatorPen).includes(cleanPen)) ||
+        (cleanPen && ex.seatingPlan?.some((sp) => sp.invigilatorPen && String(sp.invigilatorPen).includes(cleanPen)));
+      const hasName =
+        coreNameParts.some((part) => invStr.includes(part)) ||
+        ex.seatingPlan?.some((sp) =>
+          coreNameParts.some((part) => (sp.invigilatorName || "").toLowerCase().includes(part))
+        );
+
+      const isInvigilator = Boolean(hasPen || hasName);
 
       return {
         ...ex,
-        isMyDuty: Boolean(isInvigilator),
+        isMyDuty: isInvigilator,
       };
     });
 

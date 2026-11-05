@@ -24,14 +24,14 @@ export class AttendanceService {
         divisionsText: "Classes 8–10 (6 Divisions)",
         description:
           "Classes 8–10 consolidated roll-call sync from teacher terminals with Kerala Pareeksha Bhavan portal.",
-        turnout: "96.4%",
+        turnout: "100%",
         turnoutDiff: "+1.2% vs yesterday",
-        totalEnrolled: 364,
-        totalPresent: 351,
-        totalAbsent: 13,
+        totalEnrolled: 0,
+        totalPresent: 0,
+        totalAbsent: 0,
         divisionsCount: 6,
-        divisionsLocked: "6 / 6",
-        syncStatus: "100% High School Synced",
+        divisionsLocked: "0 / 6",
+        syncStatus: "High School Attendance Pending",
         presentStatus: "Marked in class",
         absentStatus: "Auto-SMS dispatched",
         classPrefixes: ["Class 8", "Class 9", "Class 10", "8-", "9-", "10-"],
@@ -43,14 +43,14 @@ export class AttendanceService {
         divisionsText: "Classes 5–7 (6 Divisions)",
         description:
           "Classes 5–7 consolidated roll-call sync from teacher terminals with Kerala Pareeksha Bhavan portal.",
-        turnout: "96.7%",
+        turnout: "100%",
         turnoutDiff: "+0.8% vs yesterday",
-        totalEnrolled: 276,
-        totalPresent: 267,
-        totalAbsent: 9,
+        totalEnrolled: 0,
+        totalPresent: 0,
+        totalAbsent: 0,
         divisionsCount: 6,
-        divisionsLocked: "6 / 6",
-        syncStatus: "100% UP School Synced",
+        divisionsLocked: "0 / 6",
+        syncStatus: "UP School Attendance Pending",
         presentStatus: "Marked in class",
         absentStatus: "Auto-SMS dispatched",
         classPrefixes: ["Class 5", "Class 6", "Class 7", "5-", "6-", "7-"],
@@ -62,14 +62,14 @@ export class AttendanceService {
         divisionsText: "Classes 1–4 (8 Divisions)",
         description:
           "Classes 1–4 consolidated roll-call sync from teacher terminals with General Education Department portal.",
-        turnout: "96.5%",
+        turnout: "100%",
         turnoutDiff: "+1.5% vs yesterday",
-        totalEnrolled: 312,
-        totalPresent: 301,
-        totalAbsent: 11,
+        totalEnrolled: 0,
+        totalPresent: 0,
+        totalAbsent: 0,
         divisionsCount: 8,
-        divisionsLocked: "8 / 8",
-        syncStatus: "100% LP School Synced",
+        divisionsLocked: "0 / 8",
+        syncStatus: "LP School Attendance Pending",
         presentStatus: "Marked in class",
         absentStatus: "Auto-SMS dispatched",
         classPrefixes: ["Class 1", "Class 2", "Class 3", "Class 4", "1-", "2-", "3-", "4-"],
@@ -81,81 +81,135 @@ export class AttendanceService {
         divisionsText: "Classes 11–12 (6 Divisions)",
         description:
           "Classes 11–12 consolidated roll-call sync from teacher terminals with Kerala DHSE portal.",
-        turnout: "95.9%",
+        turnout: "100%",
         turnoutDiff: "+0.5% vs yesterday",
-        totalEnrolled: 296,
-        totalPresent: 284,
-        totalAbsent: 12,
+        totalEnrolled: 0,
+        totalPresent: 0,
+        totalAbsent: 0,
         divisionsCount: 6,
-        divisionsLocked: "6 / 6",
-        syncStatus: "100% Higher Secondary Synced",
+        divisionsLocked: "0 / 6",
+        syncStatus: "Higher Secondary Attendance Pending",
         presentStatus: "Marked in class",
         absentStatus: "Auto-SMS dispatched",
         classPrefixes: ["Class 11", "Class 12", "11-", "12-", "Plus One", "Plus Two"],
       },
     ];
 
-    const sections = sectionDefinitions.map((sec) => {
-      const wing = ACADEMIC_WINGS.find((w) => w.code === sec.id);
-      const wingClassNames = wing ? wing.classes.map((c) => c.name.toLowerCase()) : [];
-      const wingClassIds = wing ? wing.classes.map((c) => c.id.toLowerCase()) : [];
+    // Compute live wing enrolled counts from Student collection
+    const sections = await Promise.all(
+      sectionDefinitions.map(async (sec) => {
+        const wing = ACADEMIC_WINGS.find((w) => w.code === sec.id);
+        const wingClassNames = wing ? wing.classes.map((c) => c.name.toLowerCase().trim()) : [];
+        const wingClassIds = wing ? wing.classes.map((c) => c.id.toLowerCase().trim()) : [];
 
-      const matched = todayAttendances.filter((att) => {
-        const divName = (att.classDivision || att.division || "").toLowerCase();
-        return (
-          wingClassNames.some((wcn) => divName.includes(wcn) || wcn.includes(divName)) ||
-          wingClassIds.some((wci) => divName.includes(wci)) ||
-          sec.classPrefixes.some((p) => divName.toLowerCase().startsWith(p.toLowerCase()))
-        );
-      });
+        // Exact match against wing classes
+        const wingOrConditions = [
+          ...wingClassNames.map((n) => ({ classDivision: new RegExp(`^${n}$`, "i") })),
+          ...wingClassIds.map((id) => ({ division: new RegExp(`^${id}$`, "i") })),
+        ];
+        const wingEnrolledInDb = await Student.countDocuments({ $or: wingOrConditions });
 
-      if (matched.length > 0) {
-        let presentSum = 0;
-        let absentSum = 0;
-        let enrolledSum = 0;
-
-        matched.forEach((m) => {
-          const recCount = m.records?.length || 0;
-          const p = m.presentCount ?? m.records?.filter((r) => r.status === "Present").length ?? 0;
-          const a = m.absentCount ?? m.records?.filter((r) => r.status === "Absent").length ?? 0;
-          presentSum += p;
-          absentSum += a;
-          enrolledSum += recCount > 0 ? recCount : p + a;
+        const matched = todayAttendances.filter((att) => {
+          const divName = (att.classDivision || att.division || "").toLowerCase().trim();
+          const clean = divName.replace(/^class\s+/i, "");
+          return wingClassNames.includes(divName) || wingClassIds.includes(clean);
         });
 
-        const totalEnrolled = enrolledSum > 0 ? enrolledSum : sec.totalEnrolled;
-        const totalPresent = presentSum > 0 ? presentSum : Math.round(totalEnrolled * 0.96);
-        const totalAbsent = absentSum > 0 ? absentSum : totalEnrolled - totalPresent;
-        const rate =
-          totalEnrolled > 0
-            ? ((totalPresent / totalEnrolled) * 100).toFixed(1) + "%"
-            : sec.turnout;
+        if (matched.length > 0) {
+          let presentSum = 0;
+          let absentSum = 0;
+          let enrolledSum = 0;
+
+          matched.forEach((m) => {
+            const recCount = m.records?.length || 0;
+            const p =
+              m.totalPresent !== undefined && m.totalPresent > 0
+                ? m.totalPresent
+                : m.presentCount !== undefined && m.presentCount > 0
+                ? m.presentCount
+                : m.records?.filter((r) => r.status === "Present").length || 0;
+
+            const a =
+              m.totalAbsent !== undefined && m.totalAbsent > 0
+                ? m.totalAbsent
+                : m.absentCount !== undefined && m.absentCount > 0
+                ? m.absentCount
+                : m.records?.filter((r) => r.status === "Absent").length || 0;
+
+            presentSum += p;
+            absentSum += a;
+            enrolledSum += recCount > 0 ? recCount : p + a;
+          });
+
+          const totalEnrolled = enrolledSum > 0 ? enrolledSum : wingEnrolledInDb;
+          const totalPresent = presentSum;
+          const totalAbsent = absentSum > 0 ? absentSum : Math.max(0, totalEnrolled - totalPresent);
+          const rate =
+            totalEnrolled > 0
+              ? ((totalPresent / totalEnrolled) * 100).toFixed(1) + "%"
+              : "100%";
+
+          return {
+            ...sec,
+            totalEnrolled,
+            totalPresent,
+            totalAbsent,
+            turnout: rate,
+            divisionsLocked: `${matched.length} / ${sec.divisionsCount}`,
+            syncStatus: `${matched.length} / ${sec.divisionsCount} Divisions Synced`,
+          };
+        }
 
         return {
           ...sec,
-          totalEnrolled,
-          totalPresent,
-          totalAbsent,
-          turnout: rate,
-          divisionsLocked: `${matched.length} / ${sec.divisionsCount}`,
-          syncStatus: `${matched.length} Divisions Synced`,
+          totalEnrolled: wingEnrolledInDb,
+          totalPresent: 0,
+          totalAbsent: 0,
+          turnout: "0.0%",
+          divisionsLocked: `0 / ${sec.divisionsCount}`,
+          syncStatus: "0 Divisions Synced",
         };
-      }
-
-      return sec;
-    });
+      })
+    );
 
     const enrolledTotal = sections.reduce((acc, s) => acc + s.totalEnrolled, 0);
     const presentTotal = sections.reduce((acc, s) => acc + s.totalPresent, 0);
+    const absentTotal = sections.reduce((acc, s) => acc + s.totalAbsent, 0);
     const avgTurnout =
       enrolledTotal > 0
         ? ((presentTotal / enrolledTotal) * 100).toFixed(1) + "%"
-        : "96.4%";
+        : "100%";
+
+    // Live teacher roster counts from MongoDB
+    const activeTeachers = await Teacher.countDocuments({
+      status: { $in: ["Active", "In Class"] },
+    });
+    const onDutyTeachers = await Teacher.countDocuments({ status: "On Duty" });
+    const onLeaveTeachers = await Teacher.countDocuments({ status: "On Leave" });
+
+    // Class 10-A census count from MongoDB
+    const class10ACount = await Student.countDocuments({
+      $or: [
+        { classDivision: { $regex: /^class\s*10-?a$/i } },
+        { division: { $regex: /^10-?a$/i } },
+      ],
+    });
 
     return {
-      totalStudents: totalStudents || 1248,
-      totalTeachers: totalTeachers || 62,
+      totalStudents,
+      totalPupils: totalStudents,
+      totalTeachers,
+      totalStaff: totalTeachers,
+      activeTeachers: activeTeachers > 0 ? activeTeachers : totalTeachers,
+      onDutyTeachers,
+      onLeaveTeachers,
+      totalPresent: presentTotal,
+      totalAbsent: absentTotal,
+      totalEnrolled: enrolledTotal > 0 ? enrolledTotal : totalStudents,
       todayTurnout: avgTurnout,
+      turnout: avgTurnout,
+      class10ACount: class10ACount > 0 ? class10ACount : 15,
+      totalDivisions: 26,
       sampoornaSync: "100%",
       sections,
     };
@@ -167,6 +221,22 @@ export class AttendanceService {
   static async getDivisionMuster() {
     const todayStr = new Date().toISOString().split("T")[0];
     const todayAttendances = await Attendance.find({ date: todayStr }).lean();
+    const allTeachers = await Teacher.find({}).lean();
+
+    const studentsByDiv = await Student.aggregate([
+      {
+        $group: {
+          _id: "$classDivision",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+    const divStudentMap = new Map();
+    studentsByDiv.forEach((g) => {
+      if (g._id) {
+        divStudentMap.set(g._id.toLowerCase().replace(/[\s-]/g, ""), g.count);
+      }
+    });
 
     const divisions = ALL_CLASSES.map((c) => {
       const cleanName = c.name.replace(/[\s-]/g, "");
@@ -179,10 +249,22 @@ export class AttendanceService {
         );
       });
 
-      let present = c.present || 43;
-      let absent = c.absent || 2;
-      let enrolled = c.enrolled || 45;
-      let rate = c.turnoutRate || "95.6%";
+      // Find real mentor from MongoDB Teacher collection
+      const matchedTeacher = allTeachers.find((t) => {
+        const assigned = (t.assignedClass || "").replace(/[\s-]/g, "").toLowerCase();
+        return (
+          assigned === cleanName.toLowerCase() ||
+          assigned.includes(cleanName.toLowerCase()) ||
+          cleanName.toLowerCase().includes(assigned)
+        );
+      });
+
+      const dbEnrolled = divStudentMap.get(cleanName.toLowerCase()) || 0;
+
+      let present = 0;
+      let absent = 0;
+      let enrolled = dbEnrolled || (matched?.records?.length || 0);
+      let rate = "100%";
 
       if (matched && matched.records?.length) {
         present = matched.presentCount ?? matched.records.filter((r) => r.status === "Present").length;
@@ -191,11 +273,15 @@ export class AttendanceService {
         rate = enrolled > 0 ? ((present / enrolled) * 100).toFixed(1) + "%" : "100%";
       }
 
+      const mentorDisplay = matchedTeacher
+        ? `${matchedTeacher.name} (${matchedTeacher.designation || "Faculty"})`
+        : c.mentor;
+
       return {
         id: c.id,
         standardDivision: c.name,
         stream: c.stream ? `(${c.stream})` : "(General)",
-        mentor: c.mentor,
+        mentor: mentorDisplay,
         enrolled,
         present,
         absent,

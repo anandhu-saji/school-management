@@ -11,15 +11,14 @@ export class StudentExamsService {
     const regex = new RegExp(`(standard\\s*${stdNumber}|class\\s*${stdNumber}|${stdNumber}\\b|sslc)`, "i");
 
     let exams = await Exam.find({
-      isActive: true,
       $or: [
         { standard: { $regex: regex } },
         { standard: { $regex: /all|general|school/i } },
       ],
-    }).sort({ date: 1 }).lean();
+    }).sort({ examDate: 1, date: 1 }).lean();
 
     if (!exams || exams.length === 0) {
-      exams = await Exam.find({ isActive: true }).sort({ date: 1 }).lean();
+      exams = await Exam.find({}).sort({ examDate: 1, date: 1 }).lean();
     }
 
     if (!exams || exams.length === 0) {

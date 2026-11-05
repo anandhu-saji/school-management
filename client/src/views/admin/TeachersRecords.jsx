@@ -14,10 +14,10 @@ export default function TeachersRecords() {
   // State
   const [teachers, setTeachers] = useState([]);
   const [stats, setStats] = useState({
-    totalFaculty: 64,
-    permanentPosts: 58,
-    onDutyStaff: 4,
-    vacantPosts: 2,
+    totalFaculty: 0,
+    permanentPosts: 0,
+    onDutyStaff: 0,
+    vacantPosts: 0,
   });
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");

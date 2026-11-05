@@ -8,7 +8,7 @@ import { ApiResponse } from "../../utils/ApiResponse.js";
  */
 export const getAdminOverviewStats = asyncHandler(async (req, res) => {
   const stats = await AttendanceService.getOverviewStats();
-  return ApiResponse.ok(res, { stats });
+  return ApiResponse.ok(res, { stats, sections: stats.sections });
 });
 
 /**

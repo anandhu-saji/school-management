@@ -1,4 +1,5 @@
 import Exam from "../models/Exam.js";
+import Teacher from "../models/Teacher.js";
 import { ApiError } from "../utils/ApiError.js";
 
 export class ExamService {
@@ -153,11 +154,18 @@ export class ExamService {
       await Exam.insertMany(defaultExams);
     }
 
-    const exams = await Exam.find({}).sort({ date: 1 }).lean();
+    const exams = await Exam.find({}).sort({ examDate: 1, date: 1 }).lean();
     const totalSchedules = exams.length;
     const upcomingCount = exams.filter((e) => e.status === "Approved & Published").length;
-    const hallsAllocated = 12;
-    const invigilatorCadre = 24;
+
+    const allHalls = new Set();
+    exams.forEach((e) => {
+      if (e.hall) e.hall.split(",").forEach((h) => allHalls.add(h.trim()));
+      if (e.seatingPlan) e.seatingPlan.forEach((sp) => sp.hallNumber && allHalls.add(sp.hallNumber.trim()));
+    });
+    const hallsAllocated = allHalls.size > 0 ? allHalls.size : 12;
+    const teacherCount = await Teacher.countDocuments();
+    const invigilatorCadre = teacherCount > 0 ? teacherCount : 26;
 
     return {
       exams,
