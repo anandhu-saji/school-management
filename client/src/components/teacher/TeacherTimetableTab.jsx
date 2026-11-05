@@ -14,13 +14,19 @@ export default function TeacherTimetableTab({
     teacher: {},
   });
 
+  const cleanDivision =
+    (selectedDivision || "Class 10-A")
+      .replace(/\s*(Mentor|Class Teacher|In-charge|Teacher)\s*$/i, "")
+      .replace(/\s*\(.*?\)\s*$/, "")
+      .trim() || "Class 10-A";
+
   useEffect(() => {
     let isMounted = true;
     const fetchTimetable = async () => {
       try {
         setLoading(true);
         const res = await api.get(
-          `/teacher/timetable?division=${encodeURIComponent(selectedDivision)}`
+          `/teacher/timetable?division=${encodeURIComponent(cleanDivision)}`
         );
         if (isMounted && res.data.success && res.data.data) {
           setData(res.data.data);
@@ -36,7 +42,7 @@ export default function TeacherTimetableTab({
     return () => {
       isMounted = false;
     };
-  }, [selectedDivision]);
+  }, [cleanDivision]);
 
   return (
     <div>

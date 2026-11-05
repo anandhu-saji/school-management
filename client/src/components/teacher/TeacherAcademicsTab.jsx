@@ -39,6 +39,15 @@ export default function TeacherAcademicsTab({
     return filteredStudents.slice(start, start + pageSize);
   }, [filteredStudents, currentPage, pageSize]);
 
+  const displayDivision = useMemo(() => {
+    return (
+      (selectedDivision || "Class 10-A")
+        .replace(/\s*(Mentor|Class Teacher|In-charge|Teacher)\s*$/i, "")
+        .replace(/\s*\(.*?\)\s*$/, "")
+        .trim() || "Class 10-A"
+    );
+  }, [selectedDivision]);
+
   return (
     <div>
       {/* Overview Metric Cards */}
@@ -46,7 +55,7 @@ export default function TeacherAcademicsTab({
         <div className="overview-stat-card">
           <span className="card-label">CLASS STRENGTH</span>
           <div className="overview-number">{students.length} Students</div>
-          <div className="sub-text">{selectedDivision} Active Roll</div>
+          <div className="sub-text">{displayDivision} Active Roll</div>
         </div>
         <div className="overview-stat-card">
           <span className="card-label">BOYS CANDIDATES</span>
@@ -147,7 +156,7 @@ export default function TeacherAcademicsTab({
             {paginatedStudents.length === 0 ? (
               <tr>
                 <td colSpan="8" style={{ textAlign: "center", padding: "28px", color: "#64748b" }}>
-                  No students match your query in {selectedDivision}.
+                  No students match your query in {displayDivision}.
                 </td>
               </tr>
             ) : (

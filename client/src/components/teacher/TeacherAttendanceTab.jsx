@@ -52,6 +52,15 @@ export default function TeacherAttendanceTab({
     return dt.getUTCDay() === 0;
   }, [selectedDate]);
 
+  const displayDivision = useMemo(() => {
+    return (
+      (selectedDivision || "Class 10-A")
+        .replace(/\s*(Mentor|Class Teacher|In-charge|Teacher)\s*$/i, "")
+        .replace(/\s*\(.*?\)\s*$/, "")
+        .trim() || "Class 10-A"
+    );
+  }, [selectedDivision]);
+
   return (
     <div>
       {/* Hero Banner Card */}
@@ -62,7 +71,7 @@ export default function TeacherAttendanceTab({
         </div>
         <h1>Good day, {teacherProfile.name || "Mrs. Indu B Nair"}</h1>
         <p>
-          GHSS Rajakkad • {selectedDivision} Daily Attendance Register for{" "}
+          GHSS Rajakkad • {displayDivision} Daily Attendance Register for{" "}
           <strong>{selectedDate}</strong>. Record roll-call attendance per Kerala Education Rules (KER).
         </p>
       </section>
@@ -94,7 +103,7 @@ export default function TeacherAttendanceTab({
         <div className="overview-stat-card">
           <span className="card-label">TOTAL ENROLLED</span>
           <div className="overview-number">{totalCount} Pupils</div>
-          <div className="sub-text">{selectedDivision} Official Roster</div>
+          <div className="sub-text">{displayDivision} Official Roster</div>
         </div>
         <div className="overview-stat-card">
           <span className="card-label">TODAY'S PRESENT</span>
@@ -194,7 +203,7 @@ export default function TeacherAttendanceTab({
             {paginatedStudents.length === 0 ? (
               <tr>
                 <td colSpan="6" style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>
-                  No student records found for {selectedDivision}.
+                  No student records found for {displayDivision}.
                 </td>
               </tr>
             ) : (

@@ -64,13 +64,26 @@ const teacherSchema = new mongoose.Schema(
     },
     assignedClass: {
       type: String,
-      default: "Class 10-A Mentor",
+      default: "Class 10-A",
       trim: true,
+      set: (v) =>
+        v
+          ? v
+              .replace(/\s*(Mentor|Class Teacher|In-charge|Teacher)\s*$/i, "")
+              .trim() || "Class 10-A"
+          : "Class 10-A",
     },
     mentorClass: {
       type: String,
       default: "10-A",
       trim: true,
+      set: (v) =>
+        v
+          ? v
+              .replace(/^Class\s*/i, "")
+              .replace(/\s*(Mentor|Class Teacher|In-charge|Teacher)\s*$/i, "")
+              .trim() || "10-A"
+          : "10-A",
     },
     subject: {
       type: String,

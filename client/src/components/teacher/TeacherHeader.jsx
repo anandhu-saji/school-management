@@ -9,6 +9,11 @@ export default function TeacherHeader({
   selectedDate,
   onDateChange,
 }) {
+  const cleanDivision = (selectedDivision || "Class 10-A")
+    .replace(/\s*(Mentor|Class Teacher|In-charge|Teacher)\s*$/i, "")
+    .replace(/\s*\(.*?\)\s*$/, "")
+    .trim() || "Class 10-A";
+
   const getTabTitle = () => {
     switch (activeTab) {
       case "academics":
@@ -38,7 +43,7 @@ export default function TeacherHeader({
         <div className="header-breadcrumbs">
           <span>Teacher Console</span> / <span>Academics</span> /{" "}
           <strong>
-            {selectedDivision} {getTabTitle()}
+            {cleanDivision} {getTabTitle()}
           </strong>
         </div>
       </div>
@@ -48,7 +53,7 @@ export default function TeacherHeader({
           <label style={{ fontSize: "12px", fontWeight: "700", color: "#64748b" }}>Division:</label>
           <select
             className="teacher-class-select"
-            value={selectedDivision}
+            value={cleanDivision}
             onChange={(e) => onDivisionChange(e.target.value)}
             style={{
               padding: "7px 12px",

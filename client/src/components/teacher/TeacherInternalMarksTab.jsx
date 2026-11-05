@@ -45,6 +45,15 @@ export default function TeacherInternalMarksTab({
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState({ type: "", message: "" });
 
+  const cleanDivision = useMemo(() => {
+    return (
+      (selectedDivision || "Class 10-A")
+        .replace(/\s*(Mentor|Class Teacher|In-charge|Teacher)\s*$/i, "")
+        .replace(/\s*\(.*?\)\s*$/, "")
+        .trim() || "Class 10-A"
+    );
+  }, [selectedDivision]);
+
   // Update default maxMarks when evaluationType changes
   useEffect(() => {
     if (evaluationType === "Continuous Evaluation (CE)") {
@@ -62,7 +71,7 @@ export default function TeacherInternalMarksTab({
       setLoading(true);
       const res = await api.get(
         `/teacher/internal-marks?division=${encodeURIComponent(
-          selectedDivision
+          cleanDivision
         )}&term=${encodeURIComponent(examTerm)}&subject=${encodeURIComponent(
           subject
         )}&type=${encodeURIComponent(evaluationType)}`
@@ -167,7 +176,7 @@ export default function TeacherInternalMarksTab({
       setFeedback({ type: "", message: "" });
 
       const payload = {
-        classDivision: selectedDivision,
+        classDivision: cleanDivision,
         examTerm,
         subject,
         evaluationType,
@@ -423,7 +432,7 @@ export default function TeacherInternalMarksTab({
           </div>
         ) : records.length === 0 ? (
           <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
-            No students registered for {selectedDivision}.
+            No students registered for {cleanDivision}.
           </div>
         ) : (
           <table className="roster-table">

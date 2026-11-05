@@ -82,13 +82,19 @@ export default function TeacherDashboard() {
       try {
         const res = await api.get("/teacher/profile");
         if (isMounted && res.data.success && res.data.teacher) {
+          const rawClass = res.data.teacher.assignedClass || "Class 10-A";
+          const cleanClass =
+            rawClass
+              .replace(/\s*(Mentor|Class Teacher|In-charge|Teacher)\s*$/i, "")
+              .replace(/\s*\(.*?\)\s*$/, "")
+              .trim() || "Class 10-A";
+
           setTeacherProfile((prev) => ({
             ...prev,
             ...res.data.teacher,
+            assignedClass: cleanClass,
           }));
-          if (res.data.teacher.assignedClass) {
-            setSelectedDivision(res.data.teacher.assignedClass);
-          }
+          setSelectedDivision(cleanClass);
         }
       } catch (err) {
         console.error("Failed to load teacher profile:", err);
@@ -105,18 +111,32 @@ export default function TeacherDashboard() {
   const fetchRoster = useCallback(
     async (divisionToFetch = selectedDivision, dateToFetch = selectedDate) => {
       try {
+        const cleanDiv =
+          (divisionToFetch || "Class 10-A")
+            .replace(/\s*(Mentor|Class Teacher|In-charge|Teacher)\s*$/i, "")
+            .replace(/\s*\(.*?\)\s*$/, "")
+            .trim() || "Class 10-A";
+
         const res = await api.get(
           `/teacher/students?division=${encodeURIComponent(
-            divisionToFetch
+            cleanDiv
           )}&date=${dateToFetch}`
         );
 
         if (res.data.success) {
           setStudents(res.data.students || []);
           if (res.data.teacher) {
+            const rawTeacherClass = res.data.teacher.assignedClass || cleanDiv;
+            const cleanTeacherClass =
+              rawTeacherClass
+                .replace(/\s*(Mentor|Class Teacher|In-charge|Teacher)\s*$/i, "")
+                .replace(/\s*\(.*?\)\s*$/, "")
+                .trim() || cleanDiv;
+
             setTeacherProfile((prev) => ({
               ...prev,
               ...res.data.teacher,
+              assignedClass: cleanTeacherClass,
             }));
           }
         }
