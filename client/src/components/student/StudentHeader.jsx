@@ -6,7 +6,7 @@ export default function StudentHeader({
   getInitials,
 }) {
   return (
-    <header className="topbar admin-header" style={{ padding: "0 28px" }}>
+    <header className="topbar admin-header">
       <div className="header-breadcrumbs">
         <span>Student Portal</span> / <span>Academics</span> /{" "}
         <strong>

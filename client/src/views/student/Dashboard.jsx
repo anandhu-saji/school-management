@@ -227,7 +227,7 @@ export default function StudentDashboard() {
     exams[0];
 
   return (
-    <div className="portal">
+    <div className="portal student-portal">
       {/* ---------------- SIDEBAR NAVIGATION ---------------- */}
       <StudentSidebar
         activeTab={activeTab}
@@ -239,7 +239,7 @@ export default function StudentDashboard() {
         handleLogout={handleLogout}
       />
 
-      <div className="main">
+      <div className="main portal-main student-main-wrapper">
         {/* ---------------- TOPBAR HEADER ---------------- */}
         <StudentHeader
           activeTab={activeTab}
@@ -250,7 +250,7 @@ export default function StudentDashboard() {
         />
 
         {/* ---------------- DASHBOARD CONTENT CONTAINER ---------------- */}
-        <main className="content student-content" style={{ padding: "28px" }}>
+        <main className="content student-content dashboard-content">
           {activeTab === "overview" && (
             <StudentOverviewTab
               displayName={displayName}
