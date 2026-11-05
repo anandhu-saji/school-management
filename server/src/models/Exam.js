@@ -36,7 +36,7 @@ const examSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      default: "SSLC Board Examination March 2026",
+      default: "SSLC Board Examination March 2027",
     },
     standard: {
       type: String,
@@ -51,7 +51,7 @@ const examSchema = new mongoose.Schema(
     date: {
       type: String,
       required: true,
-      trim: true, // e.g. "12 March 2026, Thu"
+      trim: true, // e.g. "12 March 2027, Fri"
     },
     examDate: {
       type: Date,
@@ -94,6 +94,14 @@ const examSchema = new mongoose.Schema(
     invigilator: {
       type: String,
       default: "Mrs. Indu B Nair, Sri. George K.",
+      trim: true,
+    },
+    invigilatorName: {
+      type: String,
+      trim: true,
+    },
+    invigilatorPen: {
+      type: String,
       trim: true,
     },
     maxMarks: {

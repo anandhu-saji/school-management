@@ -814,25 +814,47 @@ export class TeacherService {
     }
 
     const cleanPen = String(teacherPen).replace(/\D/g, "");
-    const coreNameParts = teacherName
-      .replace(/^(mrs\.|mr\.|smt\.|sri\.|dr\.)\s*/i, "")
-      .trim()
-      .toLowerCase()
-      .split(/\s+/)
-      .filter((p) => p.length > 2);
+
+    // Helper to accurately match teacher identity to assigned invigilator strings
+    const isTeacherAssigned = (invText, targetName, targetPen) => {
+      if (!invText) return false;
+      const lowerInv = invText.toLowerCase();
+      if (targetPen && lowerInv.includes(targetPen)) return true;
+
+      const cleanTarget = (targetName || "")
+        .replace(/^(mrs\.|mr\.|smt\.|sri\.|dr\.)\s*/i, "")
+        .trim()
+        .toLowerCase();
+
+      const assignedNames = lowerInv
+        .split(/[,/;&]|\band\b/i)
+        .map((s) => s.replace(/^(mrs\.|mr\.|smt\.|sri\.|dr\.)\s*/i, "").trim())
+        .filter(Boolean);
+
+      for (const assigned of assignedNames) {
+        if (assigned === cleanTarget) return true;
+        const targetTokens = cleanTarget.split(/\s+/).filter((t) => t.length > 2);
+        const assignedTokens = assigned.split(/\s+/).filter((t) => t.length > 2);
+        if (targetTokens.length > 0 && assignedTokens.length > 0) {
+          if (targetTokens[0] === assignedTokens[0]) return true;
+        }
+      }
+      return false;
+    };
 
     const examsWithDutyFlag = allExams.map((ex) => {
-      const invStr = `${ex.invigilator || ""} ${ex.invigilatorName || ""}`.toLowerCase();
-      const hasPen =
+      const invStr = `${ex.invigilator || ""} ${ex.invigilatorName || ""}`;
+      const hasPenMatch =
         (cleanPen && ex.invigilatorPen && String(ex.invigilatorPen).includes(cleanPen)) ||
         (cleanPen && ex.seatingPlan?.some((sp) => sp.invigilatorPen && String(sp.invigilatorPen).includes(cleanPen)));
-      const hasName =
-        coreNameParts.some((part) => invStr.includes(part)) ||
+
+      const hasNameMatch =
+        isTeacherAssigned(invStr, teacherName, cleanPen) ||
         ex.seatingPlan?.some((sp) =>
-          coreNameParts.some((part) => (sp.invigilatorName || "").toLowerCase().includes(part))
+          isTeacherAssigned(sp.invigilatorName || "", teacherName, cleanPen)
         );
 
-      const isInvigilator = Boolean(hasPen || hasName);
+      const isInvigilator = Boolean(hasPenMatch || hasNameMatch);
 
       return {
         ...ex,

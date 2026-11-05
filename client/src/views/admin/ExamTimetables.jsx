@@ -42,7 +42,7 @@ export default function ExamTimetables() {
 
   // Form Initial Data
   const initialForm = {
-    term: "SSLC Board Examination March 2026",
+    term: "SSLC Board Examination March 2027",
     standard: "Standard 10 (SSLC)",
     date: "",
     startTime: "09:30 AM",
@@ -156,7 +156,7 @@ export default function ExamTimetables() {
   const openEditExamModal = (exam) => {
     setEditingExam(exam);
     setFormData({
-      term: exam.term || "SSLC Board Examination March 2026",
+      term: exam.term || "SSLC Board Examination March 2027",
       standard: exam.standard || "Standard 10 (SSLC)",
       date: exam.date || "",
       startTime: exam.startTime || "09:30 AM",
@@ -373,13 +373,16 @@ export default function ExamTimetables() {
               >
                 <option value="All">All Examination Terms</option>
                 <option value="SSLC Board Examination">
-                  SSLC Board Examination 2026
+                  SSLC Board Examination (2026-2027)
                 </option>
                 <option value="Plus Two Higher Secondary">
-                  Plus Two Higher Secondary 2026
+                  Plus Two Higher Secondary (2026-2027)
                 </option>
                 <option value="High School Annual">
                   High School Annual Evaluation (8 &amp; 9)
+                </option>
+                <option value="Primary Evaluation">
+                  Primary Evaluation (LP &amp; UP)
                 </option>
               </select>
 

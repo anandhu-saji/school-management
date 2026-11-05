@@ -2,6 +2,7 @@ export default function StudentTimetableTab({
   loadingExams,
   exams,
   onViewHallTicket,
+  onRefreshExams,
 }) {
   return (
     <div>
@@ -12,8 +13,21 @@ export default function StudentTimetableTab({
             Published by Pareeksha Bhavan / SCERT Kerala for Standard 10 &amp; Plus Two
           </p>
         </div>
-        <div style={{ display: "flex", gap: "10px" }}>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          {onRefreshExams && (
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={onRefreshExams}
+              disabled={loadingExams}
+              title="Refresh latest published examination timetables"
+              style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+            >
+              🔄 {loadingExams ? "Refreshing..." : "Refresh Timetable"}
+            </button>
+          )}
           <button
+            type="button"
             className="primary-button"
             onClick={onViewHallTicket}
           >

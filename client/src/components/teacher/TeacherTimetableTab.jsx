@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import api from "../../api/axiosclient";
 
 export default function TeacherTimetableTab({
   selectedDivision,
 }) {
   const [subView, setSubView] = useState("schedule"); // "schedule" | "duties"
+  const [dutyFilter, setDutyFilter] = useState("all"); // "all" | "my"
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({
     weeklySchedule: [],
@@ -20,29 +21,30 @@ export default function TeacherTimetableTab({
       .replace(/\s*\(.*?\)\s*$/, "")
       .trim() || "Class 10-A";
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetchTimetable = async () => {
-      try {
-        setLoading(true);
-        const res = await api.get(
-          `/teacher/timetable?division=${encodeURIComponent(cleanDivision)}`
-        );
-        if (isMounted && res.data.success && res.data.data) {
-          setData(res.data.data);
-        }
-      } catch (err) {
-        console.error("Failed to fetch timetable:", err);
-      } finally {
-        if (isMounted) setLoading(false);
+  const fetchTimetable = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await api.get(
+        `/teacher/timetable?division=${encodeURIComponent(cleanDivision)}`
+      );
+      if (res.data.success && res.data.data) {
+        setData(res.data.data);
       }
-    };
-
-    fetchTimetable();
-    return () => {
-      isMounted = false;
-    };
+    } catch (err) {
+      console.error("Failed to fetch timetable:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [cleanDivision]);
+
+  useEffect(() => {
+    fetchTimetable();
+  }, [fetchTimetable]);
+
+  const displayedExams =
+    dutyFilter === "my"
+      ? data.myDuties || []
+      : data.exams || [];
 
   return (
     <div>
@@ -71,21 +73,34 @@ export default function TeacherTimetableTab({
           </p>
         </div>
 
-        <div className="filter-group">
+        <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
           <button
             type="button"
-            className={`filter-btn ${subView === "schedule" ? "active" : ""}`}
-            onClick={() => setSubView("schedule")}
+            className="secondary-button"
+            onClick={fetchTimetable}
+            disabled={loading}
+            title="Refresh latest timetable and exam duties from server"
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
           >
-            📅 Weekly Periods ({data.weeklySchedule?.length || 5} Days)
+            🔄 {loading ? "Updating..." : "Refresh"}
           </button>
-          <button
-            type="button"
-            className={`filter-btn ${subView === "duties" ? "active" : ""}`}
-            onClick={() => setSubView("duties")}
-          >
-            🛡️ Exam Invigilation ({data.myDuties?.length || 0} Duties)
-          </button>
+
+          <div className="filter-group">
+            <button
+              type="button"
+              className={`filter-btn ${subView === "schedule" ? "active" : ""}`}
+              onClick={() => setSubView("schedule")}
+            >
+              📅 Weekly Periods ({data.weeklySchedule?.length || 5} Days)
+            </button>
+            <button
+              type="button"
+              className={`filter-btn ${subView === "duties" ? "active" : ""}`}
+              onClick={() => setSubView("duties")}
+            >
+              🛡️ Exam Invigilation ({data.myDuties?.length || 0} Duties)
+            </button>
+          </div>
         </div>
       </div>
 
@@ -223,22 +238,41 @@ export default function TeacherTimetableTab({
                 You have <strong>{data.myDuties?.length || 0} assigned invigilation sessions</strong> for upcoming board / terminal exams.
               </p>
             </div>
-            <span
-              style={{
-                padding: "4px 12px",
-                borderRadius: "20px",
-                background: "#2563eb",
-                color: "#ffffff",
-                fontSize: "12px",
-                fontWeight: "700",
-              }}
-            >
-              School Code: 06042
-            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              {/* Duty Filter Selector */}
+              <div className="filter-group">
+                <button
+                  type="button"
+                  className={`filter-btn ${dutyFilter === "all" ? "active" : ""}`}
+                  onClick={() => setDutyFilter("all")}
+                >
+                  All School Exams ({data.exams?.length || 0})
+                </button>
+                <button
+                  type="button"
+                  className={`filter-btn ${dutyFilter === "my" ? "active" : ""}`}
+                  onClick={() => setDutyFilter("my")}
+                >
+                  ⭐ My Duties Only ({data.myDuties?.length || 0})
+                </button>
+              </div>
+              <span
+                style={{
+                  padding: "4px 12px",
+                  borderRadius: "20px",
+                  background: "#2563eb",
+                  color: "#ffffff",
+                  fontSize: "12px",
+                  fontWeight: "700",
+                }}
+              >
+                School Code: 06042
+              </span>
+            </div>
           </div>
 
-          {data.exams && data.exams.length > 0 ? (
-            data.exams.map((exam) => (
+          {displayedExams && displayedExams.length > 0 ? (
+            displayedExams.map((exam) => (
               <div
                 key={exam._id}
                 className="exam-item-card"
@@ -252,7 +286,7 @@ export default function TeacherTimetableTab({
                     <div style={{ fontSize: "11.5px", color: "#64748b", fontWeight: "700" }}>
                       {exam.term} • {exam.standard}
                     </div>
-                    <h3 className="exam-subject-title" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <h3 className="exam-subject-title" style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
                       <span>{exam.subject}</span>
                       {exam.isMyDuty && (
                         <span
@@ -307,8 +341,10 @@ export default function TeacherTimetableTab({
               </div>
             ))
           ) : (
-            <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
-              No exams scheduled in repository.
+            <div className="dossier-card" style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
+              {dutyFilter === "my"
+                ? "No invigilation duties currently assigned to your profile."
+                : "No exams scheduled in repository."}
             </div>
           )}
         </div>

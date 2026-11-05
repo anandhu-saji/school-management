@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosclient";
 import { isSessionValid, clearAuthSession } from "../../utils/auth";
@@ -100,14 +100,22 @@ export default function StudentDashboard() {
   const [isDossierModalOpen, setIsDossierModalOpen] = useState(false);
   const [viewingReceipt, setViewingReceipt] = useState(null);
   const [viewingHallTicket, setViewingHallTicket] = useState(false);
-  const [copiedField, setCopiedField] = useState("");
+  const [, setCopiedField] = useState("");
 
-  const handleCopy = (text, fieldName) => {
-    if (!text) return;
-    navigator.clipboard.writeText(text);
-    setCopiedField(fieldName);
-    setTimeout(() => setCopiedField(""), 2000);
-  };
+  // Fetch published exams (memoized callback)
+  const fetchExams = useCallback(async () => {
+    try {
+      setLoadingExams(true);
+      const res = await api.get("/student/exams");
+      if (res.data.success) {
+        setExams(res.data.exams || []);
+      }
+    } catch (err) {
+      console.error("Failed to load student exams:", err);
+    } finally {
+      setLoadingExams(false);
+    }
+  }, []);
 
   useEffect(() => {
     // 1. Verify session validity
@@ -147,22 +155,7 @@ export default function StudentDashboard() {
       }
     }
 
-    // 5. Fetch published exams
-    async function fetchExams() {
-      try {
-        setLoadingExams(true);
-        const res = await api.get("/student/exams");
-        if (res.data.success) {
-          setExams(res.data.exams || []);
-        }
-      } catch (err) {
-        console.error("Failed to load student exams:", err);
-      } finally {
-        setLoadingExams(false);
-      }
-    }
-
-    // 6. Fetch fees ledger
+    // 5. Fetch fees ledger
     async function fetchFees() {
       try {
         setLoadingFees(true);
@@ -185,7 +178,14 @@ export default function StudentDashboard() {
       window.removeEventListener("popstate", handlePopState);
       clearInterval(interval);
     };
-  }, [navigate]);
+  }, [navigate, fetchExams]);
+
+  // Refresh exam timetable automatically when opening timetable or overview tab
+  useEffect(() => {
+    if (activeTab === "timetable" || activeTab === "overview") {
+      fetchExams();
+    }
+  }, [activeTab, fetchExams]);
 
   const handleLogout = () => {
     clearAuthSession();
@@ -222,7 +222,9 @@ export default function StudentDashboard() {
 
   const displayClass = studentProfile?.className || "Class 10-A";
   const totalFeeDue = feesData?.summary?.totalDue ?? 0;
-  const nextExam = exams?.[0];
+  const nextExam =
+    exams.find((e) => e.status !== "Completed" && e.status !== "Postponed") ||
+    exams[0];
 
   return (
     <div className="portal">
@@ -282,6 +284,7 @@ export default function StudentDashboard() {
               loadingExams={loadingExams}
               exams={exams}
               onViewHallTicket={() => setViewingHallTicket(true)}
+              onRefreshExams={fetchExams}
             />
           )}
 
@@ -298,26 +301,31 @@ export default function StudentDashboard() {
             <span>
               © 2026 G.H.S.S Rajakkad - General Education Dept., Govt. of Kerala
             </span>
-            <span>
-              Affiliation: SCERT Kerala • School Code: 06042 • Sampoorna 2.0
-            </span>
+            <div className="footer-links">
+              <span>Sampoorna Integrated</span>
+              <span>•</span>
+              <span>Kerala Pareeksha Bhavan Direct Sync</span>
+            </div>
           </footer>
         </main>
       </div>
 
-      {/* ---------------- MODALS ---------------- */}
-      <StudentDossierModal
-        isOpen={isDossierModalOpen}
-        onClose={() => setIsDossierModalOpen(false)}
-        displayName={displayName}
-        displayClass={displayClass}
-        studentProfile={studentProfile}
-        user={user}
-        copiedField={copiedField}
-        onCopy={handleCopy}
-        getInitials={getInitials}
-      />
+      {/* Student Identity Dossier & KYC Modal */}
+      {studentProfile && (
+        <StudentDossierModal
+          isOpen={isDossierModalOpen}
+          onClose={() => setIsDossierModalOpen(false)}
+          student={studentProfile}
+          displayName={displayName}
+          displayClass={displayClass}
+          onCopy={(_, fieldName) => {
+            setCopiedField(fieldName);
+            setTimeout(() => setCopiedField(""), 2000);
+          }}
+        />
+      )}
 
+      {/* Printable Pareeksha Bhavan Hall Ticket Modal */}
       <StudentHallTicketModal
         isOpen={viewingHallTicket}
         onClose={() => setViewingHallTicket(false)}
@@ -327,10 +335,17 @@ export default function StudentDashboard() {
         exams={exams}
       />
 
-      <StudentReceiptModal
-        receipt={viewingReceipt}
-        onClose={() => setViewingReceipt(null)}
-      />
+      {/* Receipt Modal */}
+      {viewingReceipt && (
+        <StudentReceiptModal
+          isOpen={Boolean(viewingReceipt)}
+          onClose={() => setViewingReceipt(null)}
+          receipt={viewingReceipt}
+          studentName={displayName}
+          studentClass={displayClass}
+          admissionNumber={studentProfile?.admissionNumber || "ADM-10A-101"}
+        />
+      )}
     </div>
   );
 }

@@ -7,6 +7,36 @@ import {
   formatDateToStandard,
 } from "../utils/examDateValidator.js";
 
+/**
+ * Helper to resolve teacher names and PEN numbers from Teacher collection
+ */
+async function resolveInvigilatorsWithPen(invigilatorString) {
+  if (!invigilatorString) return [];
+  const rawNames = invigilatorString
+    .split(/[,/;&]|\band\b/i)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  let teachersList = [];
+  try {
+    teachersList = await Teacher.find({}).select("name pen penNumber").lean();
+  } catch {
+    teachersList = [];
+  }
+
+  return rawNames.map((name) => {
+    const clean = name.replace(/^(mrs\.|mr\.|smt\.|sri\.|dr\.)\s*/i, "").trim().toLowerCase();
+    const found = teachersList.find((t) => {
+      const tClean = (t.name || "").replace(/^(mrs\.|mr\.|smt\.|sri\.|dr\.)\s*/i, "").trim().toLowerCase();
+      return tClean === clean || tClean.includes(clean) || clean.includes(tClean);
+    });
+    return {
+      name,
+      pen: found?.pen || found?.penNumber?.replace(/\D/g, "") || "",
+    };
+  });
+}
+
 export class ExamService {
   /**
    * Fetch all exam timetables with summary stats (or seed initial records if empty)
@@ -16,9 +46,10 @@ export class ExamService {
     if (count === 0) {
       const defaultExams = [
         {
-          term: "SSLC Board Examination March 2026",
+          term: "SSLC Board Examination March 2027",
           standard: "Standard 10 (SSLC)",
-          date: "12 March 2026, Thu",
+          date: "12 March 2027, Fri",
+          examDate: new Date("2027-03-12T04:00:00.000Z"),
           startTime: "09:30 AM",
           endTime: "11:45 AM",
           duration: "2 hrs 15 mins",
@@ -27,6 +58,8 @@ export class ExamService {
           hall: "Halls 01, 02, 03, 04",
           totalCandidates: 242,
           invigilator: "Mrs. Indu B Nair, Sri. George K.",
+          invigilatorName: "Mrs. Indu B Nair",
+          invigilatorPen: "849201",
           maxMarks: 40,
           passMarks: 12,
           status: "Approved & Published",
@@ -68,9 +101,10 @@ export class ExamService {
           ],
         },
         {
-          term: "SSLC Board Examination March 2026",
+          term: "SSLC Board Examination March 2027",
           standard: "Standard 10 (SSLC)",
-          date: "16 March 2026, Mon",
+          date: "16 March 2027, Tue",
+          examDate: new Date("2027-03-16T04:00:00.000Z"),
           startTime: "09:30 AM",
           endTime: "12:15 PM",
           duration: "2 hrs 45 mins",
@@ -79,6 +113,8 @@ export class ExamService {
           hall: "Halls 01, 02, 03, 04",
           totalCandidates: 242,
           invigilator: "Sri. Thomas Joseph, Smt. Radhakrishnan N.",
+          invigilatorName: "Sri. Thomas Joseph",
+          invigilatorPen: "849210",
           maxMarks: 80,
           passMarks: 24,
           status: "Approved & Published",
@@ -120,9 +156,10 @@ export class ExamService {
           ],
         },
         {
-          term: "SSLC Board Examination March 2026",
+          term: "SSLC Board Examination March 2027",
           standard: "Standard 10 (SSLC)",
-          date: "19 March 2026, Thu",
+          date: "19 March 2027, Fri",
+          examDate: new Date("2027-03-19T04:00:00.000Z"),
           startTime: "09:30 AM",
           endTime: "12:15 PM",
           duration: "2 hrs 45 mins",
@@ -131,6 +168,8 @@ export class ExamService {
           hall: "Halls 01, 02, 03, 04",
           totalCandidates: 242,
           invigilator: "Mrs. Indu B Nair, Sri. Manoj V.",
+          invigilatorName: "Mrs. Indu B Nair",
+          invigilatorPen: "849201",
           maxMarks: 80,
           passMarks: 24,
           status: "Approved & Published",
@@ -138,17 +177,20 @@ export class ExamService {
             "Log tables & drawing instruments authorized. Graph sheets will be provided by Pareeksha Bhavan center.",
         },
         {
-          term: "SSLC Board Examination March 2026",
+          term: "SSLC Board Examination March 2027",
           standard: "Standard 10 (SSLC)",
-          date: "23 March 2026, Mon",
+          date: "23 March 2027, Tue",
+          examDate: new Date("2027-03-23T04:00:00.000Z"),
           startTime: "09:30 AM",
           endTime: "11:45 AM",
           duration: "2 hrs 15 mins",
-          subject: "Physics",
+          subject: "Physical Science (Physics)",
           qpCode: "PHY-105",
           hall: "Halls 01, 02, 03, 04",
           totalCandidates: 242,
           invigilator: "Smt. Bindu S., Sri. George K.",
+          invigilatorName: "Smt. Bindu S.",
+          invigilatorPen: "849205",
           maxMarks: 40,
           passMarks: 12,
           status: "Approved & Published",
@@ -159,7 +201,7 @@ export class ExamService {
       await Exam.insertMany(defaultExams);
     }
 
-    const exams = await Exam.find({}).sort({ examDate: 1, date: 1 }).lean();
+    const exams = await Exam.find({}).sort({ examDate: 1, date: 1, startTime: 1 }).lean();
     const totalSchedules = exams.length;
     const upcomingCount = exams.filter((e) => e.status === "Approved & Published").length;
 
@@ -216,38 +258,45 @@ export class ExamService {
       throw ApiError.conflict(`Exam paper with QP Code ${data.qpCode} is already scheduled.`);
     }
 
+    // Resolve invigilators from Teacher collection to get real PEN numbers
+    const resolvedInvigilators = await resolveInvigilatorsWithPen(data.invigilator);
+    const inv1 = resolvedInvigilators[0] || { name: "Mrs. Indu B Nair", pen: "849201" };
+    const inv2 = resolvedInvigilators[1] || { name: "Sri. George K.", pen: "849202" };
+    const inv3 = resolvedInvigilators[2] || { name: "Smt. Bindu S.", pen: "849205" };
+    const inv4 = resolvedInvigilators[3] || { name: "Sri. Thomas Joseph", pen: "849210" };
+
     const defaultSeatingPlan = [
       {
         hallNumber: "Hall 01",
         roomName: "Room 101 - Main Academic Block",
         rollRange: "ADM-14920 to ADM-14960",
         candidateCount: 40,
-        invigilatorName: data.invigilator?.split(",")[0]?.trim() || "Mrs. Indu B Nair",
-        invigilatorPen: "849201",
+        invigilatorName: inv1.name,
+        invigilatorPen: inv1.pen,
       },
       {
         hallNumber: "Hall 02",
         roomName: "Room 102 - Main Academic Block",
         rollRange: "ADM-14961 to ADM-15000",
         candidateCount: 40,
-        invigilatorName: data.invigilator?.split(",")[1]?.trim() || "Sri. George K.",
-        invigilatorPen: "849202",
+        invigilatorName: inv2.name,
+        invigilatorPen: inv2.pen,
       },
       {
         hallNumber: "Hall 03",
         roomName: "Room 201 - Science Wing First Floor",
         rollRange: "ADM-15001 to ADM-15080",
         candidateCount: 80,
-        invigilatorName: "Smt. Bindu S.",
-        invigilatorPen: "849205",
+        invigilatorName: inv3.name,
+        invigilatorPen: inv3.pen,
       },
       {
         hallNumber: "Hall 04",
         roomName: "Room 202 - Science Wing First Floor",
         rollRange: "ADM-15081 to ADM-15162",
         candidateCount: 82,
-        invigilatorName: "Sri. Thomas Joseph",
-        invigilatorPen: "849210",
+        invigilatorName: inv4.name,
+        invigilatorPen: inv4.pen,
       },
     ];
 
@@ -255,6 +304,8 @@ export class ExamService {
       ...data,
       date: standardDateStr,
       examDate: parsedExamDate || new Date(),
+      invigilatorName: inv1.name,
+      invigilatorPen: inv1.pen,
       totalCandidates: Number(data.totalCandidates) || 242,
       maxMarks: Number(data.maxMarks) || 80,
       passMarks: Number(data.passMarks) || 24,
@@ -276,6 +327,14 @@ export class ExamService {
       const parsedExamDate = parseExamDate(data.date);
       data.examDate = parsedExamDate || new Date();
       data.date = formatDateToStandard(parsedExamDate) || data.date;
+    }
+
+    if (data.invigilator) {
+      const resolved = await resolveInvigilatorsWithPen(data.invigilator);
+      if (resolved.length > 0) {
+        data.invigilatorName = resolved[0].name;
+        data.invigilatorPen = resolved[0].pen;
+      }
     }
 
     if (data.qpCode) {

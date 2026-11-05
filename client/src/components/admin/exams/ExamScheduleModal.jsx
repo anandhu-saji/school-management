@@ -96,17 +96,20 @@ export default function ExamScheduleModal({
                 }
                 required
               >
+                <option value="SSLC Board Examination March 2027">
+                  SSLC Board Examination March 2027
+                </option>
+                <option value="Plus Two Higher Secondary Board Examination 2027">
+                  Plus Two Higher Secondary Board Examination 2027
+                </option>
+                <option value="First Terminal Model Evaluation December 2026">
+                  First Terminal Model Evaluation December 2026
+                </option>
+                <option value="High School Annual Evaluation (Class 8 & 9) 2027">
+                  High School Annual Evaluation (Class 8 &amp; 9) 2027
+                </option>
                 <option value="SSLC Board Examination March 2026">
                   SSLC Board Examination March 2026
-                </option>
-                <option value="Plus Two Higher Secondary Board Examination 2026">
-                  Plus Two Higher Secondary Board Examination 2026
-                </option>
-                <option value="High School Annual Evaluation (Class 8 & 9)">
-                  High School Annual Evaluation (Class 8 &amp; 9)
-                </option>
-                <option value="First Terminal Model Evaluation">
-                  First Terminal Model Evaluation
                 </option>
               </select>
             </div>
@@ -132,6 +135,9 @@ export default function ExamScheduleModal({
                 </option>
                 <option value="Standard 9">Standard 9</option>
                 <option value="Standard 8">Standard 8</option>
+                <option value="All Standards / School Level">
+                  All Standards / School Level
+                </option>
               </select>
             </div>
           </div>
@@ -293,12 +299,30 @@ export default function ExamScheduleModal({
               <input
                 type="text"
                 className="form-input"
+                list="registered-invigilator-list"
                 placeholder="e.g. Mrs. Indu B Nair, Sri. George K."
                 value={formData.invigilator}
                 onChange={(e) =>
                   setFormData({ ...formData, invigilator: e.target.value })
                 }
               />
+              <datalist id="registered-invigilator-list">
+                <option value="Mrs. Indu B Nair, Sri. George K." />
+                <option value="Mrs. Indu B Nair" />
+                <option value="Sri. George K." />
+                <option value="Smt. Bindu S." />
+                <option value="Sri. Suresh C. K." />
+                <option value="Mrs. Priya Nair" />
+                <option value="Sri. Thomas Joseph" />
+                <option value="Sri. K. R. Suresh" />
+                <option value="Smt. Deepa Nair" />
+                <option value="Sri. Manoj V." />
+                <option value="Smt. Mini V." />
+                <option value="Sri. Radhakrishnan N." />
+              </datalist>
+              <span style={{ fontSize: "11px", color: "#64748b", marginTop: "3px", display: "block" }}>
+                💡 Assigned faculty will immediately see this session in their Invigilation Duties roster.
+              </span>
             </div>
 
             <div className="form-group">
