@@ -2,6 +2,10 @@ import { Router } from "express";
 import {
   getStudentsByDivision,
   saveAttendance,
+  getTeacherSchedule,
+  getInternalMarks,
+  saveInternalMarks,
+  getTeacherProfile,
 } from "../controllers/teacher.controller.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 import { requireTeacher } from "../middleware/role.middleware.js";
@@ -15,5 +19,9 @@ router.use(authenticate, requireTeacher);
 
 router.get("/students", getStudentsByDivision);
 router.post("/attendance", validate(saveAttendanceSchema), saveAttendance);
+router.get("/timetable", getTeacherSchedule);
+router.get("/internal-marks", getInternalMarks);
+router.post("/internal-marks", saveInternalMarks);
+router.get("/profile", getTeacherProfile);
 
 export default router;

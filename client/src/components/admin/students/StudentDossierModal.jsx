@@ -325,15 +325,25 @@ export default function StudentDossierModal({ student, onClose, onEdit }) {
           </button>
           <button
             type="button"
-            className="btn-modal-save"
-            onClick={() => {
-              const target = student;
-              onClose();
-              if (onEdit) onEdit(target);
-            }}
+            className="btn-modal-cancel"
+            onClick={() => window.print()}
+            style={{ background: "#f1f5f9", color: "#334155" }}
           >
-            ✏️ Edit Records
+            🖨️ Print Dossier
           </button>
+          {onEdit && (
+            <button
+              type="button"
+              className="btn-modal-save"
+              onClick={() => {
+                const target = student;
+                onClose();
+                onEdit(target);
+              }}
+            >
+              ✏️ Edit Records
+            </button>
+          )}
         </div>
       </div>
     </div>
