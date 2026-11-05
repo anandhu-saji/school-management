@@ -1,6 +1,11 @@
 import Exam from "../models/Exam.js";
 import Teacher from "../models/Teacher.js";
 import { ApiError } from "../utils/ApiError.js";
+import {
+  validateExamDate,
+  parseExamDate,
+  formatDateToStandard,
+} from "../utils/examDateValidator.js";
 
 export class ExamService {
   /**
@@ -197,6 +202,15 @@ export class ExamService {
       throw ApiError.badRequest("Subject, date, and question paper code are mandatory.");
     }
 
+    // Date validation: enforce that exams cannot be scheduled in the past
+    const dateCheck = validateExamDate(data.date);
+    if (dateCheck !== true) {
+      throw ApiError.badRequest(dateCheck);
+    }
+
+    const parsedExamDate = parseExamDate(data.date);
+    const standardDateStr = formatDateToStandard(parsedExamDate) || data.date;
+
     const existing = await Exam.findOne({ qpCode: data.qpCode });
     if (existing) {
       throw ApiError.conflict(`Exam paper with QP Code ${data.qpCode} is already scheduled.`);
@@ -239,6 +253,8 @@ export class ExamService {
 
     const exam = await Exam.create({
       ...data,
+      date: standardDateStr,
+      examDate: parsedExamDate || new Date(),
       totalCandidates: Number(data.totalCandidates) || 242,
       maxMarks: Number(data.maxMarks) || 80,
       passMarks: Number(data.passMarks) || 24,
@@ -252,6 +268,16 @@ export class ExamService {
    * Update exam schedule by ID
    */
   static async updateExam(id, data) {
+    if (data.date !== undefined) {
+      const dateCheck = validateExamDate(data.date);
+      if (dateCheck !== true) {
+        throw ApiError.badRequest(dateCheck);
+      }
+      const parsedExamDate = parseExamDate(data.date);
+      data.examDate = parsedExamDate || new Date();
+      data.date = formatDateToStandard(parsedExamDate) || data.date;
+    }
+
     if (data.qpCode) {
       const existing = await Exam.findOne({
         qpCode: data.qpCode,

@@ -1,3 +1,5 @@
+import { validateExamDate } from "../utils/examDateValidator.js";
+
 export const createExamSchema = {
   body: {
     subject: {
@@ -7,6 +9,7 @@ export const createExamSchema = {
     date: {
       required: true,
       message: "Exam date is required.",
+      custom: (val) => validateExamDate(val),
     },
     qpCode: {
       required: true,
@@ -20,6 +23,14 @@ export const updateExamSchema = {
     id: {
       required: true,
       message: "Exam schedule ID is required in URL path.",
+    },
+  },
+  body: {
+    date: {
+      custom: (val) => {
+        if (!val) return true;
+        return validateExamDate(val);
+      },
     },
   },
 };

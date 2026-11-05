@@ -7,6 +7,10 @@ import AdminHeader from "../../components/admin/AdminHeader";
 import ExamStatsCards from "../../components/admin/exams/ExamStatsCards";
 import ExamScheduleModal from "../../components/admin/exams/ExamScheduleModal";
 import ExamSeatingModal from "../../components/admin/exams/ExamSeatingModal";
+import {
+  validateExamDate,
+  formatDateToStandard,
+} from "../../utils/examDateValidator";
 
 export default function ExamTimetables() {
   // State
@@ -134,11 +138,15 @@ export default function ExamTimetables() {
   // Open Add Exam Modal
   const openAddExamModal = () => {
     setEditingExam(null);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const defaultUpcomingDate = formatDateToStandard(tomorrow);
+
     setFormData({
       ...initialForm,
-      date: "12 March 2026, Thu",
+      date: defaultUpcomingDate,
       subject: "",
-      qpCode: "MAL-101",
+      qpCode: "",
     });
     setFeedback({ type: "", message: "" });
     setIsScheduleModalOpen(true);
@@ -181,6 +189,16 @@ export default function ExamTimetables() {
       setFeedback({
         type: "error",
         message: "Subject, Exam Date, and QP Code are required.",
+      });
+      return;
+    }
+
+    // Client-side validation: prevent scheduling exams in the past
+    const dateValidation = validateExamDate(formData.date);
+    if (dateValidation !== true) {
+      setFeedback({
+        type: "error",
+        message: dateValidation,
       });
       return;
     }

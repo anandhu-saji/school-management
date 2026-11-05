@@ -1,3 +1,11 @@
+import {
+  getTodayISODate,
+  parseExamDate,
+  formatDateToStandard,
+  toISODateString,
+  validateExamDate,
+} from "../../../utils/examDateValidator";
+
 export default function ExamScheduleModal({
   isOpen,
   onClose,
@@ -8,6 +16,38 @@ export default function ExamScheduleModal({
   onSave,
   feedback,
 }) {
+  const todayStr = getTodayISODate();
+
+  // Compute ISO string for date picker from current formData.date
+  const parsedDate = parseExamDate(formData?.date);
+  const isoDateValue = parsedDate ? toISODateString(parsedDate) : "";
+
+  // Real-time validation check
+  const dateValidation = formData?.date ? validateExamDate(formData.date) : null;
+  const isPastDate = typeof dateValidation === "string" && dateValidation.includes("past");
+
+  const handleDateChange = (e) => {
+    const isoVal = e.target.value;
+    if (!isoVal) {
+      setFormData({ ...formData, date: "" });
+      return;
+    }
+    const d = parseExamDate(isoVal);
+    if (d) {
+      const formatted = formatDateToStandard(d);
+      setFormData({
+        ...formData,
+        date: formatted,
+        examDate: isoVal,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        date: isoVal,
+      });
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -138,17 +178,51 @@ export default function ExamScheduleModal({
             }}
           >
             <div className="form-group">
-              <label className="form-label">Date of Exam *</label>
+              <label
+                className="form-label"
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <span>Date of Exam *</span>
+                <span style={{ fontSize: "11px", color: "#64748b", fontWeight: "normal" }}>
+                  (Min: Today)
+                </span>
+              </label>
               <input
-                type="text"
+                type="date"
                 className="form-input"
-                placeholder="e.g. 19 March 2026, Thu"
-                value={formData.date}
-                onChange={(e) =>
-                  setFormData({ ...formData, date: e.target.value })
+                min={todayStr}
+                value={isoDateValue}
+                onChange={handleDateChange}
+                style={
+                  isPastDate
+                    ? { borderColor: "#ef4444", backgroundColor: "#fef2f2" }
+                    : {}
                 }
                 required
               />
+              {formData.date && (
+                <div
+                  style={{
+                    marginTop: "4px",
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    color: isPastDate ? "#dc2626" : "#047857",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
+                  {isPastDate ? (
+                    <>⚠️ {dateValidation}</>
+                  ) : (
+                    <>📅 {formData.date}</>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="form-group">
@@ -309,7 +383,8 @@ export default function ExamScheduleModal({
             <button
               type="submit"
               className="btn-submit"
-              disabled={formSubmitting}
+              disabled={formSubmitting || isPastDate}
+              title={isPastDate ? "Cannot schedule exam for a past date" : ""}
             >
               {formSubmitting
                 ? "Saving Schedule..."
