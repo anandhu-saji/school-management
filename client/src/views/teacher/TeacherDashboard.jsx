@@ -233,7 +233,7 @@ export default function TeacherDashboard() {
           onDateChange={setSelectedDate}
         />
 
-        <main className="teacher-content" style={{ padding: "24px 28px" }}>
+        <main className="teacher-content">
           {activeTab === "attendance" && (
             <TeacherAttendanceTab
               teacherProfile={teacherProfile}

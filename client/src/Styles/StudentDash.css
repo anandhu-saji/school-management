@@ -1411,30 +1411,67 @@ button {
 
   .sidebar,
   .admin-sidebar {
-    width: 100%;
-    min-width: 100%;
-    height: auto;
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    max-width: 85vw;
+    height: 100vh;
+    min-height: 100vh;
+    transform: translateX(-100%);
+    box-shadow: 6px 0 28px rgba(0, 0, 0, 0.22);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 140;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background-color: #ffffff;
+  }
+
+  .sidebar.open,
+  .admin-sidebar.open {
+    transform: translateX(0);
   }
 
   .content,
   .student-content,
   .dashboard-content {
-    padding: 20px 16px 36px;
+    padding: 14px 12px 36px;
   }
 
   .welcome-card {
     flex-direction: column;
     align-items: flex-start;
+    padding: 18px 14px;
+    gap: 14px;
   }
 
   .welcome-actions {
     width: 100%;
-    justify-content: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .welcome-actions button {
+    width: 100%;
+    justify-content: center;
+    min-height: 42px;
   }
 
   .metrics-grid {
     grid-template-columns: 1fr;
+  }
+
+  .student-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    margin-bottom: 20px;
+    border-radius: 12px;
+  }
+
+  .student-data-table {
+    min-width: 650px;
   }
 
   .hall-ticket-grid {
@@ -1443,6 +1480,10 @@ button {
 
   .candidate-photo-box {
     height: 120px;
+  }
+
+  .header-scert-pill {
+    display: none;
   }
 }
 

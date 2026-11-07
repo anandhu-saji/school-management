@@ -866,6 +866,52 @@
 }
 
 @media (max-width: 768px) {
+  .teacher-main {
+    padding: 14px 12px;
+  }
+
+  .teacher-content {
+    padding: 14px 12px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .header-breadcrumbs {
+    font-size: 12px;
+    max-width: 200px;
+  }
+
+  .header-breadcrumbs span {
+    display: none;
+  }
+
+  .header-breadcrumbs strong {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    max-width: 100%;
+  }
+
+  .bulk-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .bulk-actions button {
+    flex: 1 1 calc(50% - 4px);
+    min-height: 38px;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .bulk-actions .btn-save-attendance {
+    flex: 1 1 100%;
+  }
+
   .hamburger-btn {
     display: inline-flex;
   }

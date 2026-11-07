@@ -17,8 +17,9 @@ export default function StudentHeader({
         </strong>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+      <div className="student-header-right" style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
         <span
+          className="header-class-pill"
           style={{
             background: "#eff6ff",
             color: "#1d4ed8",
@@ -29,9 +30,10 @@ export default function StudentHeader({
             border: "1px solid #bfdbfe",
           }}
         >
-          {displayClass} (Malayalam Medium)
+          {displayClass}
         </span>
         <span
+          className="header-scert-pill"
           style={{
             background: "#dcfce7",
             color: "#15803d",
@@ -42,7 +44,7 @@ export default function StudentHeader({
             border: "1px solid #bbf7d0",
           }}
         >
-          🟢 SCERT Core Active
+          🟢 SCERT Active
         </span>
 
         {/* Profile Avatar Trigger in Header */}
@@ -56,7 +58,7 @@ export default function StudentHeader({
           </div>
           <div className="topbar-profile-info">
             <span className="topbar-profile-name">{displayName.split(" ")[0]}</span>
-            <span className="topbar-profile-badge">🪪 My ID &amp; Docs</span>
+            <span className="topbar-profile-badge">🪪 My ID</span>
           </div>
         </button>
       </div>

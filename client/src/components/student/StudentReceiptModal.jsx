@@ -55,10 +55,8 @@ export default function StudentReceiptModal({ receipt, onClose }) {
           </div>
 
           <div
+            className="receipt-info-grid"
             style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "10px",
               fontSize: "12.5px",
               marginBottom: "16px",
             }}

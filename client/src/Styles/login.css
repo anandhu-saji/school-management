@@ -266,21 +266,75 @@ body {
 }
 
 /* Responsive layout */
-@media (max-width: 380px) {
+@media (max-width: 480px) {
   .login-page {
-    padding: 20px 12px;
+    padding: 16px 12px;
+    max-width: 100%;
   }
-
   .login-card {
-    padding: 24px 18px;
+    padding: 22px 16px;
+    border-radius: 12px;
   }
-
+  .login-header {
+    margin-bottom: 20px;
+  }
+  .university-logo {
+    width: 72px;
+    height: 72px;
+    margin-bottom: 12px;
+  }
+  .shield {
+    width: 66px;
+    height: 66px;
+    font-size: 32px;
+  }
   .login-header h1 {
-    font-size: 23px;
+    font-size: 21px;
   }
-
+  .university-name {
+    font-size: 11.5px;
+    letter-spacing: 1px;
+  }
+  .login-portal-tagline {
+    font-size: 11.5px;
+  }
   .form-options {
     font-size: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .input-box {
+    height: 48px;
+    margin-bottom: 16px;
+  }
+  .sign-in-button {
+    height: 48px;
+    font-size: 14px;
+  }
+  .demo-btn-group {
+    gap: 6px;
+  }
+  .demo-pill-btn {
+    flex: 1 1 calc(50% - 6px);
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  .login-page {
+    padding: 12px 8px;
+  }
+  .login-card {
+    padding: 18px 12px;
+  }
+  .demo-pill-btn {
+    flex: 1 1 100%;
+  }
+  .form-options {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 }
 

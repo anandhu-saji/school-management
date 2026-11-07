@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import "./Styles/Responsive.css";
 import Login from "./views/auth/login.jsx";
 import ForgotPassword from "./views/auth/ForgotPassword.jsx";
 import ResetPassword from "./views/auth/ResetPassword.jsx";

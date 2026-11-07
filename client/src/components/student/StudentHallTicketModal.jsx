@@ -75,38 +75,40 @@ export default function StudentHallTicketModal({
             </div>
           </div>
 
-          <table className="student-data-table" style={{ fontSize: "11.5px" }}>
-            <thead>
-              <tr>
-                <th>Date &amp; Day</th>
-                <th>Time</th>
-                <th>Subject</th>
-                <th>QP Code</th>
-                <th>Invigilator Initial</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(exams.length > 0
-                ? exams
-                : [
-                    { date: "12 Mar 2026, Thu", startTime: "09:30 AM", subject: "Malayalam Part I", qpCode: "MAL-101" },
-                    { date: "16 Mar 2026, Mon", startTime: "09:30 AM", subject: "English", qpCode: "ENG-102" },
-                    { date: "19 Mar 2026, Thu", startTime: "09:30 AM", subject: "Mathematics", qpCode: "MAT-103" },
-                    { date: "23 Mar 2026, Mon", startTime: "09:30 AM", subject: "Physics", qpCode: "PHY-104" },
-                  ]
-              ).map((e, idx) => (
-                <tr key={idx}>
-                  <td>{e.date}</td>
-                  <td>{e.startTime}</td>
-                  <td>
-                    <strong>{e.subject}</strong>
-                  </td>
-                  <td>{e.qpCode}</td>
-                  <td style={{ borderBottom: "1px dashed #cbd5e1" }}></td>
+          <div className="hall-ticket-table-wrapper">
+            <table className="student-data-table" style={{ fontSize: "11.5px" }}>
+              <thead>
+                <tr>
+                  <th>Date &amp; Day</th>
+                  <th>Time</th>
+                  <th>Subject</th>
+                  <th>QP Code</th>
+                  <th>Invigilator Initial</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {(exams.length > 0
+                  ? exams
+                  : [
+                      { date: "12 Mar 2026, Thu", startTime: "09:30 AM", subject: "Malayalam Part I", qpCode: "MAL-101" },
+                      { date: "16 Mar 2026, Mon", startTime: "09:30 AM", subject: "English", qpCode: "ENG-102" },
+                      { date: "19 Mar 2026, Thu", startTime: "09:30 AM", subject: "Mathematics", qpCode: "MAT-103" },
+                      { date: "23 Mar 2026, Mon", startTime: "09:30 AM", subject: "Physics", qpCode: "PHY-104" },
+                    ]
+                ).map((e, idx) => (
+                  <tr key={idx}>
+                    <td>{e.date}</td>
+                    <td>{e.startTime}</td>
+                    <td>
+                      <strong>{e.subject}</strong>
+                    </td>
+                    <td>{e.qpCode}</td>
+                    <td style={{ borderBottom: "1px dashed #cbd5e1" }}></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           <div className="hall-ticket-footer">
             <div>
