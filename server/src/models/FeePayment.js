@@ -86,18 +86,34 @@ const feePaymentSchema = new mongoose.Schema(
     paymentMode: {
       type: String,
       enum: [
+        "Razorpay / Online",
         "UPI / Online (Google Pay / PhonePe)",
         "Net Banking",
         "Cash at School Counter",
         "Bank Challan (SBT/SBI)",
         "Demand Draft",
       ],
-      default: "UPI / Online (Google Pay / PhonePe)",
+      default: "Razorpay / Online",
     },
     transactionReference: {
       type: String,
       trim: true,
       default: "",
+    },
+    razorpayOrderId: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    razorpayPaymentId: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    razorpaySignature: {
+      type: String,
+      trim: true,
+      default: null,
     },
     status: {
       type: String,

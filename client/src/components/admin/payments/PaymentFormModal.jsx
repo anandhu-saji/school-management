@@ -199,6 +199,7 @@ export default function PaymentFormModal({
                   value={paymentForm.paymentMode}
                   onChange={(e) => setPaymentForm({ ...paymentForm, paymentMode: e.target.value })}
                 >
+                  <option value="Razorpay / Online">Razorpay / Online Gateway</option>
                   <option value="UPI / Online (Google Pay / PhonePe)">
                     UPI / Online (Google Pay / PhonePe)
                   </option>

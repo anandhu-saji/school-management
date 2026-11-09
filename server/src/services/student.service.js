@@ -16,6 +16,8 @@ export class StudentService {
   static getStudentMetrics = StudentMetricsService.getStudentMetrics;
   static getStudentExams = StudentExamsService.getStudentExams;
   static getStudentFees = StudentFeesService.getStudentFees;
+  static createOnlineFeeOrder = StudentFeesService.createOnlineFeeOrder;
+  static verifyAndProcessPayment = StudentFeesService.verifyAndProcessPayment;
 
   // Administrative Operations
   static getStudentsRecords = StudentAdminService.getStudentsRecords;

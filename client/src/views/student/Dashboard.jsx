@@ -117,6 +117,21 @@ export default function StudentDashboard() {
     }
   }, []);
 
+  // Fetch fees ledger (memoized callback)
+  const fetchFees = useCallback(async () => {
+    try {
+      setLoadingFees(true);
+      const res = await api.get("/student/fees");
+      if (res.data.success) {
+        setFeesData(res.data);
+      }
+    } catch (err) {
+      console.error("Failed to load student fees:", err);
+    } finally {
+      setLoadingFees(false);
+    }
+  }, []);
+
   useEffect(() => {
     // 1. Verify session validity
     if (!isSessionValid()) {
@@ -155,21 +170,6 @@ export default function StudentDashboard() {
       }
     }
 
-    // 5. Fetch fees ledger
-    async function fetchFees() {
-      try {
-        setLoadingFees(true);
-        const res = await api.get("/student/fees");
-        if (res.data.success) {
-          setFeesData(res.data);
-        }
-      } catch (err) {
-        console.error("Failed to load student fees:", err);
-      } finally {
-        setLoadingFees(false);
-      }
-    }
-
     fetchDashboardMetrics();
     fetchExams();
     fetchFees();
@@ -178,7 +178,7 @@ export default function StudentDashboard() {
       window.removeEventListener("popstate", handlePopState);
       clearInterval(interval);
     };
-  }, [navigate, fetchExams]);
+  }, [navigate, fetchExams, fetchFees]);
 
   // Refresh exam timetable automatically when opening timetable or overview tab
   useEffect(() => {
@@ -292,6 +292,8 @@ export default function StudentDashboard() {
             <StudentFeesTab
               feesData={feesData}
               totalFeeDue={totalFeeDue}
+              studentProfile={studentProfile}
+              onRefreshFees={fetchFees}
               onViewReceipt={(receipt) => setViewingReceipt(receipt)}
             />
           )}

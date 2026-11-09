@@ -3,6 +3,8 @@ import {
   getStudentDashboardData,
   getStudentExamsData,
   getStudentFeesData,
+  createRazorpayOrder,
+  verifyRazorpayPayment,
 } from "../controllers/student.controller.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 import { requireStudent } from "../middleware/role.middleware.js";
@@ -20,5 +22,9 @@ router.get("/exams", getStudentExamsData);
 
 // GET /api/student/fees
 router.get("/fees", getStudentFeesData);
+
+// Razorpay Online Payment Endpoints
+router.post("/create-razorpay-order", createRazorpayOrder);
+router.post("/verify-razorpay-payment", verifyRazorpayPayment);
 
 export default router;

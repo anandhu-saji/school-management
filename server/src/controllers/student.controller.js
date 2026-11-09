@@ -60,3 +60,70 @@ export const getStudentFeesData = asyncHandler(async (req, res) => {
 
   return ApiResponse.ok(res, feeData);
 });
+
+/**
+ * Controller: Create Razorpay Order for online fee payment
+ * Route: POST /api/student/create-razorpay-order
+ */
+export const createRazorpayOrder = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const email = req.user?.email;
+
+  let student = null;
+  if (userId) student = await Student.findOne({ userId }).lean();
+  if (!student && email) student = await Student.findOne({ email: email.toLowerCase() }).lean();
+
+  const { feePaymentId, amount, feeCategory } = req.body;
+
+  const result = await StudentService.createOnlineFeeOrder({
+    studentId: student?.studentId,
+    admissionNumber: student?.admissionNumber,
+    studentName: student?.name,
+    feePaymentId,
+    amount,
+    feeCategory,
+  });
+
+  return ApiResponse.ok(res, result);
+});
+
+/**
+ * Controller: Verify Razorpay Payment Signature and record fee clearance
+ * Route: POST /api/student/verify-razorpay-payment
+ */
+export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const email = req.user?.email;
+
+  let student = null;
+  if (userId) student = await Student.findOne({ userId }).lean();
+  if (!student && email) student = await Student.findOne({ email: email.toLowerCase() }).lean();
+
+  const {
+    orderId,
+    paymentId,
+    signature,
+    feePaymentId,
+    amountPaid,
+    feeCategory,
+    term,
+    remarks,
+  } = req.body;
+
+  const result = await StudentService.verifyAndProcessPayment({
+    studentId: student?._id,
+    admissionNumber: student?.admissionNumber,
+    studentName: student?.name,
+    classDivision: student?.classDivision,
+    orderId,
+    paymentId,
+    signature,
+    feePaymentId,
+    amountPaid,
+    feeCategory,
+    term,
+    remarks,
+  });
+
+  return ApiResponse.ok(res, result);
+});

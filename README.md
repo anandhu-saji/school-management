@@ -66,11 +66,14 @@ For quick evaluation, click the demo role buttons on the login page or use the c
      GOOGLE_CLIENT_ID=32761059022-844p29bnje7l77fh1cb1hpavlq72h07u.apps.googleusercontent.com
      EMAIL_USER=sajianandhu043@gmail.com
      EMAIL_PASS=pvlhamnnpqfwenzs
+     RAZORPAY_KEY_ID=rzp_test_school_gateway_2026
+     RAZORPAY_KEY_SECRET=rzp_test_secret_key_2026
      ```
    - `client/.env`:
      ```env
      VITE_API_URL=http://localhost:5000/api
      VITE_GOOGLE_CLIENT_ID=32761059022-844p29bnje7l77fh1cb1hpavlq72h07u.apps.googleusercontent.com
+     VITE_RAZORPAY_KEY_ID=rzp_test_school_gateway_2026
      ```
 
 4. **Seed the Database with Baseline Records:**
