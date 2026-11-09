@@ -83,6 +83,16 @@ export class RazorpayService {
    * @param {string} params.signature - razorpay_signature
    * @returns {boolean} True if authentic, throws ApiError if invalid
    */
+    /**
+   * Generates a valid HMAC SHA256 signature for test/simulation orders
+   */
+  static generateMockSignature(orderId, paymentId) {
+    return crypto
+      .createHmac("sha256", keySecret)
+      .update(`${orderId}|${paymentId}`)
+      .digest("hex");
+  }
+
   static verifyPaymentSignature({ orderId, paymentId, signature }) {
     if (!orderId || !paymentId) {
       throw ApiError.badRequest("Razorpay Order ID and Payment ID are required for verification.");

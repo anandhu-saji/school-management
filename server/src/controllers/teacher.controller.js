@@ -49,10 +49,10 @@ export const getTeacherSchedule = asyncHandler(async (req, res) => {
 export const getInternalMarks = asyncHandler(async (req, res) => {
   const { division, term, subject, type } = req.query;
   const result = await TeacherService.getInternalMarks({
-    division,
-    examTerm: term,
-    subject,
-    evaluationType: type,
+    division: division || "Class 10-A",
+    examTerm: term || "First Terminal Examination 2026",
+    subject: subject || "Mathematics",
+    evaluationType: type || "Continuous Evaluation (CE)",
   });
 
   return ApiResponse.ok(res, result);

@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import FeePayment from "../../models/FeePayment.js";
 import Student from "../../models/Student.js";
 import { RazorpayService } from "../razorpay.service.js";
@@ -10,10 +11,20 @@ export class StudentFeesService {
   static async getStudentFees({ studentId, admissionNumber, studentName, studentMongoId }) {
     const query = { $or: [] };
 
-    if (studentMongoId) query.$or.push({ studentId: studentMongoId });
-    if (studentId) query.$or.push({ studentId });
-    if (admissionNumber) query.$or.push({ admissionNumber });
-    if (studentName) query.$or.push({ studentName: { $regex: new RegExp(`^${studentName.trim()}$`, "i") } });
+    // studentId on FeePayment is an ObjectId. Ensure we only query studentId with valid ObjectIds.
+    const validMongoId = studentMongoId || (studentId && mongoose.Types.ObjectId.isValid(studentId) ? studentId : null);
+    if (validMongoId) {
+      query.$or.push({ studentId: validMongoId });
+    }
+    if (admissionNumber) {
+      query.$or.push({ admissionNumber });
+    }
+    if (studentId && typeof studentId === "string" && !mongoose.Types.ObjectId.isValid(studentId)) {
+      query.$or.push({ admissionNumber: studentId });
+    }
+    if (studentName) {
+      query.$or.push({ studentName: { $regex: new RegExp(`^${studentName.trim()}$`, "i") } });
+    }
 
     let payments = [];
     if (query.$or.length > 0) {
@@ -93,7 +104,7 @@ export class StudentFeesService {
 
     // Lookup fee payment if ID provided
     let feeRecord = null;
-    if (feePaymentId) {
+    if (feePaymentId && mongoose.Types.ObjectId.isValid(feePaymentId)) {
       feeRecord = await FeePayment.findById(feePaymentId);
       if (feeRecord && numAmount > feeRecord.dueAmount && feeRecord.dueAmount > 0) {
         throw ApiError.badRequest(`Amount cannot exceed the pending due balance of ₹${feeRecord.dueAmount}.`);
@@ -155,7 +166,7 @@ export class StudentFeesService {
     const today = new Date().toISOString().split("T")[0];
 
     // Case A: Updating an existing partial or pending fee payment
-    if (feePaymentId && feePaymentId.length === 24) {
+    if (feePaymentId && mongoose.Types.ObjectId.isValid(feePaymentId)) {
       paymentRecord = await FeePayment.findById(feePaymentId);
     }
 
@@ -178,8 +189,7 @@ export class StudentFeesService {
       await paymentRecord.save();
     } else {
       // Case B: Create new fee payment receipt
-      const receiptCount = await FeePayment.countDocuments();
-      const recNumber = `REC-2026-${1045 + receiptCount + 1}`;
+      const recNumber = `REC-2026-${Date.now().toString().slice(-6)}`;
 
       paymentRecord = await FeePayment.create({
         receiptNumber: recNumber,

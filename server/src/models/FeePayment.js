@@ -139,7 +139,7 @@ const feePaymentSchema = new mongoose.Schema(
 );
 
 // Pre-save calculation helper
-feePaymentSchema.pre("save", function (next) {
+feePaymentSchema.pre("save", function () {
   if (this.totalAmount !== undefined && this.amountPaid !== undefined) {
     this.dueAmount = Math.max(0, this.totalAmount - this.amountPaid);
     if (this.amountPaid >= this.totalAmount) {
@@ -150,7 +150,6 @@ feePaymentSchema.pre("save", function (next) {
       this.status = "Pending";
     }
   }
-  next();
 });
 
 export default mongoose.model("FeePayment", feePaymentSchema);
