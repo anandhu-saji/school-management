@@ -1,15 +1,24 @@
 {
   "name": "ghss-student-portal",
   "version": "1.0.0",
+  "description": "GHSS Rajakkad - Integrated State Government School Digital Management Portal",
   "private": true,
   "scripts": {
+    "setup": "npm --prefix server install && npm --prefix client install",
+    "install:all": "npm --prefix server install && npm --prefix client install",
     "client": "npm --prefix client run dev",
     "client:build": "npm --prefix client run build",
     "server": "npm --prefix server run dev",
     "server:start": "npm --prefix server start",
+    "build": "npm --prefix client run build",
+    "start": "npm --prefix server start",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
     "seed": "npm --prefix server run seed",
     "seed:admin": "npm --prefix server run seed:admin",
-    "seed:teacher": "npm --prefix server run seed:teacher"
+    "seed:teacher": "npm --prefix server run seed:teacher",
+    "lint": "npm --prefix client run lint",
+    "check": "node --check server/src/app.js server/src/server.js"
   },
   "dependencies": {
     "mongoose": "^9.11.2"

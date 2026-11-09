@@ -73,21 +73,42 @@ const seedDatabase = async () => {
     // -------------------------------------------------------------
     // 1. ENSURE CORE AUTH USERS
     // -------------------------------------------------------------
-    // 1a. Super Admin
+    // 1a. Super Admin (Headmaster)
     let adminUser = await User.findOne({ email: "admin@ghss.edu" });
     if (!adminUser) {
       adminUser = await User.create({
         name: "Headmaster Sri. K. R. Madhavan",
         username: "admin_ghss",
         email: "admin@ghss.edu",
+        password: "Admin@123",
+        role: "admin",
+        isActive: true,
+      });
+      console.log("[OK] Created Admin User: admin@ghss.edu (Password: Admin@123)");
+    } else {
+      adminUser.password = "Admin@123";
+      await adminUser.save();
+      console.log("[OK] Refreshed Admin User password: admin@ghss.edu (Password: Admin@123)");
+    }
+
+    // 1b. Principal / Secondary Admin
+    let principalUser = await User.findOne({ email: "principal@ghss.edu" });
+    if (!principalUser) {
+      principalUser = await User.create({
+        name: "Principal Smt. V. S. Radhamani",
+        username: "principal_ghss",
+        email: "principal@ghss.edu",
         password: "Admin@12345",
         role: "admin",
         isActive: true,
       });
-      console.log("[OK] Created Admin User: admin@ghss.edu");
+      console.log("[OK] Created Principal Admin User: principal@ghss.edu (Password: Admin@12345)");
+    } else {
+      principalUser.password = "Admin@12345";
+      await principalUser.save();
     }
 
-    // 1b. Teacher User (Mrs. Indu B Nair)
+    // 1c. Teacher User (Mrs. Indu B Nair - High School Math)
     let teacherUser = await User.findOne({ email: "kathalanx@gmail.com" });
     if (!teacherUser) {
       teacherUser = await User.create({
@@ -98,10 +119,47 @@ const seedDatabase = async () => {
         role: "teacher",
         isActive: true,
       });
-      console.log("[OK] Created Teacher User: kathalanx@gmail.com");
+      console.log("[OK] Created Teacher User: kathalanx@gmail.com (Password: Teacher@123)");
+    } else {
+      teacherUser.password = "Teacher@123";
+      await teacherUser.save();
     }
 
-    // 1c. Student User (Anandhu Saji)
+    // 1d. Quick Demo Teacher User (teacher@ghss.edu)
+    let demoTeacherUser = await User.findOne({ email: "teacher@ghss.edu" });
+    if (!demoTeacherUser) {
+      demoTeacherUser = await User.create({
+        name: "Mrs. Indu B Nair",
+        username: "teacher_ghss",
+        email: "teacher@ghss.edu",
+        password: "Teacher@123",
+        role: "teacher",
+        isActive: true,
+      });
+      console.log("[OK] Created Demo Teacher User: teacher@ghss.edu (Password: Teacher@123)");
+    } else {
+      demoTeacherUser.password = "Teacher@123";
+      await demoTeacherUser.save();
+    }
+
+    // 1e. Higher Secondary Teacher User (Sri. Manoj P. - HSST Physics)
+    let hsstTeacherUser = await User.findOne({ email: "manoj.p@ghssrajakkad.kerala.gov.in" });
+    if (!hsstTeacherUser) {
+      hsstTeacherUser = await User.create({
+        name: "Sri. Manoj P.",
+        username: "manojphysics",
+        email: "manoj.p@ghssrajakkad.kerala.gov.in",
+        password: "Teacher@123",
+        role: "teacher",
+        isActive: true,
+      });
+      console.log("[OK] Created HSST Teacher User: manoj.p@ghssrajakkad.kerala.gov.in (Password: Teacher@123)");
+    } else {
+      hsstTeacherUser.password = "Teacher@123";
+      await hsstTeacherUser.save();
+    }
+
+    // 1f. High School Student User (Anandhu Saji - Class 10-A)
     let studentUser = await User.findOne({
       $or: [
         { email: "student@ghss.edu" },
@@ -118,7 +176,28 @@ const seedDatabase = async () => {
         role: "student",
         isActive: true,
       });
-      console.log("[OK] Created Student User: student@ghss.edu");
+      console.log("[OK] Created Student User: student@ghss.edu (Password: Student@123)");
+    } else {
+      studentUser.password = "Student@123";
+      await studentUser.save();
+      console.log("[OK] Refreshed Student User password: student@ghss.edu (Password: Student@123)");
+    }
+
+    // 1g. Higher Secondary Student User (Devanand P. B. - Class 12-Science)
+    let hssStudentUser = await User.findOne({ email: "hss_student@ghss.edu" });
+    if (!hssStudentUser) {
+      hssStudentUser = await User.create({
+        name: "Devanand P. B.",
+        username: "devanand_12sci",
+        email: "hss_student@ghss.edu",
+        password: "Student@123",
+        role: "student",
+        isActive: true,
+      });
+      console.log("[OK] Created Higher Secondary Student User: hss_student@ghss.edu (Password: Student@123)");
+    } else {
+      hssStudentUser.password = "Student@123";
+      await hssStudentUser.save();
     }
 
     // -------------------------------------------------------------
@@ -760,6 +839,10 @@ const seedDatabase = async () => {
           doc.userId = studentUser._id;
           doc.email = "student@ghss.edu";
         }
+        if (clsCode === "12-Science" && roll === 1) {
+          doc.userId = hssStudentUser._id;
+          doc.email = "hss_student@ghss.edu";
+        }
 
         allStudentsToInsert.push(doc);
         globalRollIndex++;
@@ -770,40 +853,62 @@ const seedDatabase = async () => {
     console.log(`[OK] Seeded ${insertedStudents.length} students across all 26 classes in MongoDB!`);
 
     // -------------------------------------------------------------
-    // 4. SEED DAILY MUSTER ATTENDANCE FOR ALL 26 CLASSES FOR TODAY
+    // 4. SEED DAILY MUSTER ATTENDANCE FOR ALL 26 CLASSES ACROSS PAST 10 DAYS
     // -------------------------------------------------------------
     await Attendance.deleteMany({});
-    const todayStr = new Date().toISOString().split("T")[0];
+
+    // Collect last 10 non-Sunday academic dates
+    const workingDates = [];
+    const baseDate = new Date();
+    for (let dayOffset = 0; dayOffset < 20; dayOffset++) {
+      const d = new Date(baseDate);
+      d.setDate(baseDate.getDate() - dayOffset);
+      if (d.getDay() !== 0) {
+        workingDates.push(d.toISOString().split("T")[0]);
+      }
+      if (workingDates.length >= 10) break;
+    }
 
     const attendanceDocsToInsert = [];
 
-    ALL_CLASSES.forEach((cls) => {
-      const clsStudents = insertedStudents.filter(
-        (s) => s.classDivision === cls.name || s.division === cls.id
-      );
+    workingDates.forEach((dateStr, dayIndex) => {
+      ALL_CLASSES.forEach((cls) => {
+        const clsStudents = insertedStudents.filter(
+          (s) => s.classDivision === cls.name || s.division === cls.id
+        );
 
-      const records = clsStudents.map((s, idx) => ({
-        studentId: s._id,
-        rollNumber: s.rollNumber,
-        name: s.name,
-        status: idx === 3 ? "Absent" : "Present", // 1 absent per class for realistic turnout
-      }));
+        const records = clsStudents.map((s, idx) => {
+          const isAbsent = (idx + dayIndex) % 14 === 3;
+          const isOnLeave = (idx + dayIndex) % 24 === 7;
+          const status = isAbsent ? "Absent" : isOnLeave ? "On Leave" : "Present";
+          return {
+            studentId: s._id,
+            rollNumber: s.rollNumber,
+            name: s.name,
+            status,
+            remarks: isAbsent ? "Unexcused Absence" : isOnLeave ? "Medical Leave Application" : "",
+          };
+        });
 
-      const totalPresent = records.filter((r) => r.status === "Present").length;
-      const totalAbsent = records.filter((r) => r.status === "Absent").length;
+        const totalPresent = records.filter((r) => r.status === "Present").length;
+        const totalAbsent = records.filter((r) => r.status === "Absent" || r.status === "On Leave").length;
 
-      attendanceDocsToInsert.push({
-        date: todayStr,
-        classDivision: cls.name,
-        records,
-        totalPresent,
-        totalAbsent,
-        markedBy: "admin@ghss.edu (Headmaster Sign-off)",
+        attendanceDocsToInsert.push({
+          date: dateStr,
+          classDivision: cls.name,
+          division: cls.id,
+          records,
+          totalPresent,
+          totalAbsent,
+          presentCount: totalPresent,
+          absentCount: totalAbsent,
+          markedBy: dayIndex === 0 ? "admin@ghss.edu (Headmaster Sign-off)" : "Class Mentor Verification",
+        });
       });
     });
 
     await Attendance.insertMany(attendanceDocsToInsert);
-    console.log(`[OK] Seeded ${attendanceDocsToInsert.length} daily attendance registers in MongoDB for ${todayStr}.`);
+    console.log(`[OK] Seeded ${attendanceDocsToInsert.length} daily attendance registers across 10 academic days in MongoDB.`);
 
     // -------------------------------------------------------------
     // 5. SEED EXAM TIMETABLES & SEATING PLANS ACROSS ALL WINGS
@@ -1126,7 +1231,7 @@ const seedDatabase = async () => {
     console.log(`[OK] Seeded ${examTimetables.length} exam schedules across all standards in MongoDB!`);
 
     // -------------------------------------------------------------
-    // 6. SEED OFFICIAL FEE PAYMENTS ACROSS DIVISIONS
+    // 6. SEED OFFICIAL FEE PAYMENTS ACROSS DIVISIONS (INCLUDING LIVE RAZORPAY)
     // -------------------------------------------------------------
     await FeePayment.deleteMany({});
     const feeTemplates = [
@@ -1141,6 +1246,7 @@ const seedDatabase = async () => {
     ];
 
     const paymentModes = [
+      "Razorpay / Online",
       "UPI / Online (Google Pay / PhonePe)",
       "Net Banking",
       "Cash at School Counter",
@@ -1148,9 +1254,118 @@ const seedDatabase = async () => {
     ];
 
     const feeDocsToInsert = [];
-    let receiptCounter = 1042;
+    let receiptCounter = 1100;
 
-    const selectedFeeStudents = insertedStudents.slice(0, 45);
+    // 4a. Pin-to-pin curated fee ledger for student@ghss.edu (Anandhu Saji)
+    const anandhuStudent = insertedStudents.find((s) => s.email === "student@ghss.edu" || s.name === "Anandhu Saji");
+    if (anandhuStudent) {
+      feeDocsToInsert.push(
+        {
+          receiptNumber: "REC-2026-1041",
+          studentId: anandhuStudent._id,
+          studentName: anandhuStudent.name,
+          admissionNumber: anandhuStudent.admissionNumber,
+          classDivision: anandhuStudent.classDivision,
+          wing: "High School",
+          feeCategory: "Annual Fee",
+          term: "Annual",
+          totalAmount: 6800,
+          amountPaid: 6800,
+          dueAmount: 0,
+          paymentDate: "2026-10-12",
+          paymentMode: "Razorpay / Online",
+          transactionReference: "rzp_pay_942001A",
+          razorpayOrderId: "order_mock_seed_101",
+          razorpayPaymentId: "pay_mock_seed_101",
+          razorpaySignature: "sig_mock_seed_101",
+          status: "Paid",
+          collectedBy: "Razorpay Payment Gateway",
+          remarks: "Composite Academic & Amenities Annual Fee 2026-27",
+        },
+        {
+          receiptNumber: "REC-2026-1042",
+          studentId: anandhuStudent._id,
+          studentName: anandhuStudent.name,
+          admissionNumber: anandhuStudent.admissionNumber,
+          classDivision: anandhuStudent.classDivision,
+          wing: "High School",
+          feeCategory: "Bus Fee",
+          term: "Monthly Bus Pass",
+          totalAmount: 1800,
+          amountPaid: 1800,
+          dueAmount: 0,
+          paymentDate: "2026-10-15",
+          paymentMode: "UPI / Online (Google Pay / PhonePe)",
+          transactionReference: "UPI/629041043",
+          status: "Paid",
+          collectedBy: "Accounts Desk / Sri. R. Krishnan",
+          remarks: "School Bus Route 03 - Rajakkad to Kallar • Month of October",
+        },
+        {
+          receiptNumber: "REC-2026-1043",
+          studentId: anandhuStudent._id,
+          studentName: anandhuStudent.name,
+          admissionNumber: anandhuStudent.admissionNumber,
+          classDivision: anandhuStudent.classDivision,
+          wing: "High School",
+          feeCategory: "Special / Exam Fee",
+          term: "Term 1",
+          totalAmount: 1200,
+          amountPaid: 600,
+          dueAmount: 600,
+          paymentDate: "2026-10-18",
+          paymentMode: "Cash at School Counter",
+          transactionReference: "COUNTER-CASH-1003",
+          status: "Partial",
+          collectedBy: "Accounts Desk / Sri. R. Krishnan",
+          remarks: "First installment for SCERT Model & Board Exam clearance",
+        },
+        {
+          receiptNumber: "REC-2026-1044",
+          studentId: anandhuStudent._id,
+          studentName: anandhuStudent.name,
+          admissionNumber: anandhuStudent.admissionNumber,
+          classDivision: anandhuStudent.classDivision,
+          wing: "High School",
+          feeCategory: "Lab & Computer Fee",
+          term: "Term 1",
+          totalAmount: 2200,
+          amountPaid: 0,
+          dueAmount: 2200,
+          paymentDate: "2026-11-01",
+          paymentMode: "Razorpay / Online",
+          transactionReference: "PENDING_ONLINE_PAYMENT",
+          status: "Partial",
+          collectedBy: "Pending Online Clearance",
+          remarks: "High-Tech Computer Lab & Smart Classroom Charge",
+        },
+        {
+          receiptNumber: "REC-2026-1045",
+          studentId: anandhuStudent._id,
+          studentName: anandhuStudent.name,
+          admissionNumber: anandhuStudent.admissionNumber,
+          classDivision: anandhuStudent.classDivision,
+          wing: "High School",
+          feeCategory: "PTA Fund",
+          term: "Annual",
+          totalAmount: 1500,
+          amountPaid: 0,
+          dueAmount: 1500,
+          paymentDate: "2026-11-05",
+          paymentMode: "Cash at School Counter",
+          transactionReference: "UNPAID_COUNTER",
+          status: "Partial",
+          collectedBy: "Pending School Office Clearance",
+          remarks: "Parent-Teacher Association Development Fund",
+        }
+      );
+    }
+
+    // 4b. Seed fees for additional students across all 26 classes
+    const selectedFeeStudents = insertedStudents.filter(
+      (s) => s.email !== "student@ghss.edu"
+    ).slice(0, 50);
+
     selectedFeeStudents.forEach((s, idx) => {
       const template1 = feeTemplates[idx % feeTemplates.length];
       const template2 = feeTemplates[(idx + 2) % feeTemplates.length];
@@ -1158,7 +1373,7 @@ const seedDatabase = async () => {
 
       items.forEach((tmpl, iIdx) => {
         receiptCounter++;
-        const isPaid = (idx + iIdx) % 5 !== 0;
+        const isPaid = (idx + iIdx) % 4 !== 0;
         const amountPaid = isPaid ? tmpl.totalAmount : Math.round(tmpl.totalAmount * 0.5);
         const dueAmount = tmpl.totalAmount - amountPaid;
         const status = dueAmount === 0 ? "Paid" : "Partial";
@@ -1173,6 +1388,9 @@ const seedDatabase = async () => {
           wing = "LP School";
         }
 
+        const mode = paymentModes[(idx + iIdx) % paymentModes.length];
+        const isRazorpay = mode === "Razorpay / Online";
+
         feeDocsToInsert.push({
           receiptNumber: `REC-2026-${receiptCounter}`,
           studentId: s._id,
@@ -1186,13 +1404,17 @@ const seedDatabase = async () => {
           amountPaid,
           dueAmount,
           paymentDate: `2026-10-${String(10 + (idx % 18)).padStart(2, "0")}`,
-          paymentMode: paymentModes[(idx + iIdx) % paymentModes.length],
-          transactionReference:
-            (idx + iIdx) % 2 === 0
-              ? `UPI/${629000000 + receiptCounter}`
-              : `COUNTER-CASH-${receiptCounter}`,
+          paymentMode: mode,
+          transactionReference: isRazorpay
+            ? `rzp_pay_${receiptCounter}KL`
+            : (idx + iIdx) % 2 === 0
+            ? `UPI/${629000000 + receiptCounter}`
+            : `COUNTER-CASH-${receiptCounter}`,
+          razorpayOrderId: isRazorpay ? `order_RP2026_${receiptCounter}` : undefined,
+          razorpayPaymentId: isRazorpay ? `pay_RP2026_${receiptCounter}` : undefined,
+          razorpaySignature: isRazorpay ? `sig_RP2026_${receiptCounter}` : undefined,
           status,
-          collectedBy: "Accounts Desk / Sri. R. Krishnan",
+          collectedBy: isRazorpay ? "Razorpay Online Gateway" : "Accounts Desk / Sri. R. Krishnan",
           remarks: tmpl.remarks,
         });
       });
@@ -1377,6 +1599,114 @@ const seedDatabase = async () => {
       });
     }
 
+
+    // Class 10-A: English Language & Literature - Continuous Evaluation (CE)
+    if (class10AStudents.length > 0) {
+      const ceEnglishRecords = class10AStudents.map((std, idx) => {
+        const marksObtained = 15 + (idx % 6);
+        const { grade } = calculateKeralaGrade(marksObtained, 20);
+        return {
+          studentId: std._id,
+          rollNumber: std.rollNumber,
+          admissionNumber: std.admissionNumber,
+          studentName: std.name,
+          marksObtained,
+          isAbsent: false,
+          grade,
+          remarks: "Active in classroom discourse and assignments",
+        };
+      });
+      internalMarksToInsert.push({
+        examTerm: "First Terminal Examination 2026",
+        standard: "Class 10",
+        classDivision: "Class 10-A",
+        subject: "English Language & Literature",
+        evaluationType: "Continuous Evaluation (CE)",
+        maxMarks: 20,
+        passMarks: 6,
+        teacherName: "Sri. Suresh C. K.",
+        teacherEmail: "suresh.ck@ghssrajakkad.kerala.gov.in",
+        teacherPen: "849209",
+        records: ceEnglishRecords,
+        classAverage: 17.5,
+        highestScore: 20,
+        lowestScore: 15,
+        passPercentage: 100,
+        status: "Submitted",
+      });
+
+      // Class 10-A: Physical Science - Continuous Evaluation (CE)
+      const cePhysicsRecords = class10AStudents.map((std, idx) => {
+        const marksObtained = 14 + ((idx * 3) % 7);
+        const { grade } = calculateKeralaGrade(marksObtained, 20);
+        return {
+          studentId: std._id,
+          rollNumber: std.rollNumber,
+          admissionNumber: std.admissionNumber,
+          studentName: std.name,
+          marksObtained,
+          isAbsent: false,
+          grade,
+          remarks: "Good lab participation and notebook maintenance",
+        };
+      });
+      internalMarksToInsert.push({
+        examTerm: "First Terminal Examination 2026",
+        standard: "Class 10",
+        classDivision: "Class 10-A",
+        subject: "Physical Science",
+        evaluationType: "Continuous Evaluation (CE)",
+        maxMarks: 20,
+        passMarks: 6,
+        teacherName: "Smt. Bindu S.",
+        teacherEmail: "bindu.s@ghssrajakkad.kerala.gov.in",
+        teacherPen: "849205",
+        records: cePhysicsRecords,
+        classAverage: 16.8,
+        highestScore: 20,
+        lowestScore: 14,
+        passPercentage: 100,
+        status: "Submitted",
+      });
+    }
+
+    // Class 12-Commerce: Accountancy - Continuous Evaluation (CE)
+    const class12ComStudents = insertedStudents.filter((s) => s.classDivision === "Class 12-Commerce");
+    if (class12ComStudents.length > 0) {
+      const ceAccRecords = class12ComStudents.map((std, idx) => {
+        const marksObtained = 16 + (idx % 5);
+        const { grade } = calculateKeralaGrade(marksObtained, 20);
+        return {
+          studentId: std._id,
+          rollNumber: std.rollNumber,
+          admissionNumber: std.admissionNumber,
+          studentName: std.name,
+          marksObtained,
+          isAbsent: false,
+          grade,
+          remarks: "Consistent in computerized accounting assignments",
+        };
+      });
+      internalMarksToInsert.push({
+        examTerm: "First Terminal Examination 2026",
+        standard: "Class 12",
+        classDivision: "Class 12-Commerce",
+        subject: "Accountancy with AFS",
+        evaluationType: "Continuous Evaluation (CE)",
+        maxMarks: 20,
+        passMarks: 6,
+        teacherName: "Sri. Harikrishnan V.",
+        teacherEmail: "harikrishnan.v@ghssrajakkad.kerala.gov.in",
+        teacherPen: "849246",
+        records: ceAccRecords,
+        classAverage: 18.0,
+        highestScore: 20,
+        lowestScore: 16,
+        passPercentage: 100,
+        status: "Submitted",
+      });
+    }
+
     if (internalMarksToInsert.length > 0) {
       await InternalMark.insertMany(internalMarksToInsert);
       console.log(`[OK] Seeded ${internalMarksToInsert.length} internal evaluation mark registers in MongoDB!`);
@@ -1394,11 +1724,15 @@ const seedDatabase = async () => {
     console.log(`  TOTAL FEE PAYMENTS         : ${feeDocsToInsert.length}`);
     console.log(`  TOTAL INTERNAL MARK PAPERS : ${internalMarksToInsert.length}`);
     console.log("--------------------------------------------------------");
-    console.log("  LOGIN CREDENTIALS:");
-    console.log("  - Super Admin : admin@ghss.edu     / Admin@12345");
-    console.log("  - Teacher     : kathalanx@gmail.com / Teacher@123");
-    console.log("  - Student     : student@ghss.edu   / Student@123");
-    console.log("========================================================\n");
+    console.log(`  LOGIN CREDENTIALS:
+  - Super Admin (Headmaster)    : admin@ghss.edu                     / Admin@123 (or Admin@12345)
+  - Secondary Admin (Principal) : principal@ghss.edu                 / Admin@12345
+  - Faculty Mentor (10-A Math)  : kathalanx@gmail.com                / Teacher@123
+  - Quick Demo Teacher          : teacher@ghss.edu                   / Teacher@123
+  - Faculty Mentor (12-Sci)     : manoj.p@ghssrajakkad.kerala.gov.in / Teacher@123
+  - Student Scholar (10-A)      : student@ghss.edu                   / Student@123
+  - Student Scholar (12-Sci)    : hss_student@ghss.edu               / Student@123
+========================================================\n`);
 
     process.exit(0);
   } catch (error) {

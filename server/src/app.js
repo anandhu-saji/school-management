@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
+import fs from "fs";
+import mongoose from "mongoose";
 
 // Route imports
 import authRoutes from "./routes/auth.routes.js";
@@ -68,6 +70,32 @@ app.use("/api/auth", authRoutes);
 app.use("/api/teacher", teacherRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/upload", uploadRoutes);
+
+// Health Check & Monitoring Probe
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(process.uptime()),
+    database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    service: "GHSS School Portal API",
+    version: "1.0.0",
+  });
+});
+
+// Production Client Static Serving (Single-Port Production Deployment)
+const clientDistPath = path.resolve("../client/dist");
+if (fs.existsSync(clientDistPath) && (process.env.NODE_ENV === "production" || process.env.SERVE_CLIENT === "true")) {
+  app.use(express.static(clientDistPath));
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api") || req.path.startsWith("/uploads")) {
+      return next();
+    }
+    res.sendFile(path.join(clientDistPath, "index.html"), (err) => {
+      if (err) next();
+    });
+  });
+}
 
 // 404 Not Found Handler
 app.use((req, res, next) => {
