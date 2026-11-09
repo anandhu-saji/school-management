@@ -23,7 +23,7 @@ const createAdmin = async () => {
       user.loginAttempts = 0;
       user.lockUntil = null;
       await user.save();
-      console.log(`✅ Updated existing user (${adminEmail}) to ADMIN role.`);
+      console.log(`[OK] Updated existing user (${adminEmail}) to ADMIN role.`);
     } else {
       user = await User.create({
         name: adminName,
@@ -33,7 +33,7 @@ const createAdmin = async () => {
         role: "admin",
         isActive: true,
       });
-      console.log("✅ Admin account created successfully!");
+      console.log("[OK] Admin account created successfully!");
     }
 
     console.log("=========================================");
@@ -45,7 +45,7 @@ const createAdmin = async () => {
 
     process.exit(0);
   } catch (error) {
-    console.error("❌ Admin creation failed:", error.message);
+    console.error("[ERROR] Admin creation failed:", error.message);
     process.exit(1);
   }
 };

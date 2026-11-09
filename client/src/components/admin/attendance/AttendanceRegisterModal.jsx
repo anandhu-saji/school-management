@@ -66,7 +66,7 @@ export default function AttendanceRegisterModal({
           {/* Date Picker & Close Button */}
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <div className="attendance-date-picker-box">
-              <span style={{ fontSize: "14px" }}>📅</span>
+              <span style={{ fontSize: "14px" }}></span>
               <input
                 type="date"
                 className="attendance-date-input"

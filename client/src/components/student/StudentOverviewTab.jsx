@@ -26,7 +26,7 @@ export default function StudentOverviewTab({
           title="Click to view My ID &amp; Documents Dossier"
         >
           {getInitials(displayName)}
-          <span className="avatar-id-badge" title="View Identity Dossier">🪪</span>
+          <span className="avatar-id-badge" title="View Identity Dossier">ID</span>
         </div>
 
         <div className="welcome-info">
@@ -73,7 +73,7 @@ export default function StudentOverviewTab({
             onClick={onOpenDossier}
             title="View Aadhaar, Birth Certificate, and Statutory Identity"
           >
-            🪪 My ID &amp; Documents
+            My ID &amp; Documents
           </button>
           <button
             className="secondary-button"
@@ -85,7 +85,7 @@ export default function StudentOverviewTab({
             className="primary-button"
             onClick={onOpenHallTicket}
           >
-            🖨️ Hall Ticket
+            Hall Ticket
           </button>
         </div>
       </section>

@@ -516,7 +516,7 @@ export default function StudentsRecords() {
           {/* Action Header Banner */}
           <section className="student-header-banner">
             <div className="registry-title-left">
-              <div className="registry-icon-badge">🎓</div>
+              <div className="registry-icon-badge"></div>
               <div className="registry-title-text">
                 <h1>Student Admission &amp; Academic Registry</h1>
                 <p>
@@ -529,7 +529,7 @@ export default function StudentsRecords() {
             <div className="registry-controls-right">
               {/* Search Box */}
               <div className="search-input-wrapper">
-                <span className="search-input-icon">🔍</span>
+                <span className="search-input-icon"></span>
                 <input
                   type="text"
                   placeholder="Name, Roll No, Adm No, Aadhaar, Sampoorna ID..."
@@ -568,7 +568,7 @@ export default function StudentsRecords() {
                 className="btn-new-admission"
                 onClick={openNewAdmissionModal}
               >
-                <span>👤+</span> New Admission
+                <span>+</span> New Admission
               </button>
             </div>
           </section>
@@ -653,7 +653,7 @@ export default function StudentsRecords() {
                                 className="aadhaar-pending-pill"
                                 title="Aadhaar UID not linked yet"
                               >
-                                ⚠ UID Pending
+                                UID Pending
                               </span>
                             )}
 
@@ -667,7 +667,7 @@ export default function StudentsRecords() {
                                 title={`View Uploaded ${std.idProofType || "ID Proof"} (${std.idProofFileName || "Document"})`}
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                📎 {std.idProofFileType === "pdf" ? "PDF" : "Doc"}
+                                {std.idProofFileType === "pdf" ? "PDF" : "Doc"}
                               </a>
                             )}
                           </div>
@@ -686,7 +686,7 @@ export default function StudentsRecords() {
                               className="subtext-dim"
                               style={{ color: "#2563eb", fontSize: "11px", display: "block", marginTop: "2px" }}
                             >
-                              ✉ {std.email}
+                              {std.email}
                             </span>
                           )}
                         </td>
@@ -795,7 +795,7 @@ export default function StudentsRecords() {
               </div>
 
               <button className="btn-export-link" onClick={handleExportCSV}>
-                Export Sampoorna SSLC Nominal Roll (CSV/PDF) 📥
+                Export Sampoorna SSLC Nominal Roll (CSV/PDF)
               </button>
             </div>
           </div>
@@ -812,7 +812,7 @@ export default function StudentsRecords() {
               </div>
             </div>
             <div className="operational-pill">
-              Sampoorna Academic Management Platform v2.0 • 🟢 Operational
+              Sampoorna Academic Management Platform v2.0 • Operational
             </div>
           </footer>
         </main>

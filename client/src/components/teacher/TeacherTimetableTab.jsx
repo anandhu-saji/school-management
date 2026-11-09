@@ -82,7 +82,7 @@ export default function TeacherTimetableTab({
             title="Refresh latest timetable and exam duties from server"
             style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
           >
-            🔄 {loading ? "Updating..." : "Refresh"}
+            {loading ? "Updating..." : "Refresh"}
           </button>
 
           <div className="filter-group">
@@ -91,14 +91,14 @@ export default function TeacherTimetableTab({
               className={`filter-btn ${subView === "schedule" ? "active" : ""}`}
               onClick={() => setSubView("schedule")}
             >
-              📅 Weekly Periods ({data.weeklySchedule?.length || 5} Days)
+              Weekly Periods ({data.weeklySchedule?.length || 5} Days)
             </button>
             <button
               type="button"
               className={`filter-btn ${subView === "duties" ? "active" : ""}`}
               onClick={() => setSubView("duties")}
             >
-              🛡️ Exam Invigilation ({data.myDuties?.length || 0} Duties)
+              Exam Invigilation ({data.myDuties?.length || 0} Duties)
             </button>
           </div>
         </div>
@@ -134,7 +134,7 @@ export default function TeacherTimetableTab({
                   }}
                 >
                   <h4 style={{ fontSize: "15px", fontWeight: "800", color: "#1e293b", margin: 0 }}>
-                    📌 {dayItem.day}
+                    {dayItem.day}
                   </h4>
                   <span
                     style={{
@@ -198,9 +198,9 @@ export default function TeacherTimetableTab({
                         }}
                       >
                         <span style={{ fontWeight: "600", color: "#2563eb" }}>
-                          🏫 {p.division}
+                          {p.division}
                         </span>
-                        <span>📍 {p.room}</span>
+                        <span>{p.room}</span>
                       </div>
                     </div>
                   ))}
@@ -253,7 +253,7 @@ export default function TeacherTimetableTab({
                   className={`filter-btn ${dutyFilter === "my" ? "active" : ""}`}
                   onClick={() => setDutyFilter("my")}
                 >
-                  ⭐ My Duties Only ({data.myDuties?.length || 0})
+                  My Duties Only ({data.myDuties?.length || 0})
                 </button>
               </div>
               <span
@@ -299,7 +299,7 @@ export default function TeacherTimetableTab({
                             fontWeight: "800",
                           }}
                         >
-                          ⭐ YOUR INVIGILATION DUTY
+                          YOUR INVIGILATION DUTY
                         </span>
                       )}
                     </h3>
@@ -310,14 +310,14 @@ export default function TeacherTimetableTab({
                 </div>
 
                 <div className="exam-meta-row" style={{ marginTop: "10px" }}>
-                  <span className="exam-meta-pill">📅 {exam.date}</span>
+                  <span className="exam-meta-pill">{exam.date}</span>
                   <span className="exam-meta-pill">
-                    ⏰ {exam.startTime} - {exam.endTime} ({exam.duration})
+                    {exam.startTime} - {exam.endTime} ({exam.duration})
                   </span>
-                  <span className="exam-meta-pill">🏷️ QP Code: {exam.qpCode}</span>
-                  <span className="exam-meta-pill">🏛️ Hall: {exam.hall}</span>
+                  <span className="exam-meta-pill">QP Code: {exam.qpCode}</span>
+                  <span className="exam-meta-pill">Hall: {exam.hall}</span>
                   <span className="exam-meta-pill">
-                    👥 Candidates: {exam.totalCandidates || 242}
+                    Candidates: {exam.totalCandidates || 242}
                   </span>
                   <span>
                     Invigilator: <strong>{exam.invigilatorName || exam.invigilator || "Staff"}</strong>

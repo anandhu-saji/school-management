@@ -23,7 +23,7 @@ export default function StudentDossierModal({
         <div className="student-modal-header">
           <div>
             <h3 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span>🪪</span> My Identity &amp; Statutory Documents Dossier
+              My Identity &amp; Statutory Documents Dossier
             </h3>
             <p style={{ margin: "3px 0 0", fontSize: "12px", color: "#64748b" }}>
               Government of Kerala • General Education Dept. • Sampoorna 2.0 Form 6A
@@ -94,7 +94,7 @@ export default function StudentDossierModal({
           <div className="dossier-card">
             <div className="dossier-card-header">
               <div className="dossier-card-title">
-                <span className="icon">🏛️</span>
+                <span className="icon"></span>
                 Statutory Identification
               </div>
             </div>
@@ -195,7 +195,7 @@ export default function StudentDossierModal({
           <div className="dossier-card">
             <div className="dossier-card-header">
               <div className="dossier-card-title">
-                <span className="icon">📁</span>
+                <span className="icon"></span>
                 Attached Identity Documents
               </div>
               <span style={{ fontSize: "11px", color: "#64748b" }}>
@@ -210,7 +210,7 @@ export default function StudentDossierModal({
               }`}
             >
               <div className="student-doc-info">
-                <div className="student-doc-icon-circle">🪪</div>
+                <div className="student-doc-icon-circle">ID</div>
                 <div className="student-doc-text">
                   <h4>Aadhaar Card Copy (UIDAI)</h4>
                   <p>
@@ -255,7 +255,7 @@ export default function StudentDossierModal({
               }`}
             >
               <div className="student-doc-info">
-                <div className="student-doc-icon-circle">📜</div>
+                <div className="student-doc-icon-circle">BC</div>
                 <div className="student-doc-text">
                   <h4>Birth Certificate Copy</h4>
                   <p>
@@ -325,7 +325,7 @@ export default function StudentDossierModal({
           <div className="dossier-card">
             <div className="dossier-card-header">
               <div className="dossier-card-title">
-                <span className="icon">👨‍👩‍👦</span>
+                <span className="icon"></span>
                 Family &amp; Guardian Details
               </div>
             </div>
@@ -373,7 +373,7 @@ export default function StudentDossierModal({
           <div className="dossier-card">
             <div className="dossier-card-header">
               <div className="dossier-card-title">
-                <span className="icon">🏡</span>
+                <span className="icon"></span>
                 Residential Address
               </div>
             </div>
@@ -402,7 +402,7 @@ export default function StudentDossierModal({
                   color: "#475569",
                 }}
               >
-                📍 Postal Address: {studentProfile?.fullAddress}
+                Postal Address: {studentProfile?.fullAddress}
               </div>
             </div>
           </div>
@@ -421,7 +421,7 @@ export default function StudentDossierModal({
             Close
           </button>
           <button className="primary-button" onClick={() => window.print()}>
-            🖨️ Print Dossier (Form 6A)
+            Print Dossier (Form 6A)
           </button>
         </div>
       </div>

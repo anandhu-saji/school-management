@@ -346,13 +346,13 @@ export default function DivisionAttendance() {
               </p>
             </div>
             <button className="btn-sync" onClick={fetchMuster}>
-              🔄 Refresh Sync
+              Refresh Sync
             </button>
           </div>
 
           <div className="muster-card">
             <div className="muster-header">
-              <h2>☑️ Division Muster Verification Register</h2>
+              <h2>Division Muster Verification Register</h2>
               <input
                 type="text"
                 placeholder="Search Division, Mentor..."
@@ -450,7 +450,7 @@ export default function DivisionAttendance() {
                           onClick={() => handleOpenRegister(div)}
                           title={`Open ${div.standardDivision} Class Attendance Register`}
                         >
-                          Register 📖
+                          Register
                         </button>
                       </td>
                     </tr>

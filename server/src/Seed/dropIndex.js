@@ -27,9 +27,9 @@ async function dropLegacyIndexes() {
 
     if (legacyIndexExists) {
       await attendanceCollection.dropIndex("date_1_studentId_1");
-      console.log("✅ Successfully dropped legacy index: 'date_1_studentId_1'");
+      console.log("[OK] Successfully dropped legacy index: 'date_1_studentId_1'");
     } else {
-      console.log("ℹ️ Legacy index 'date_1_studentId_1' does not exist.");
+      console.log("[INFO] Legacy index 'date_1_studentId_1' does not exist.");
     }
 
     // Ensure the new correct unique index exists for (date + classDivision)
@@ -37,11 +37,11 @@ async function dropLegacyIndexes() {
       { date: 1, classDivision: 1 },
       { unique: true }
     );
-    console.log("✅ Ensured unique compound index { date: 1, classDivision: 1 } is active.");
+    console.log("[OK] Ensured unique compound index { date: 1, classDivision: 1 } is active.");
 
     process.exit(0);
   } catch (error) {
-    console.error("❌ Failed to drop or update indexes:", error);
+    console.error("[ERROR] Failed to drop or update indexes:", error);
     process.exit(1);
   }
 }

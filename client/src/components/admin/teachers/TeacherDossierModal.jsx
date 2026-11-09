@@ -64,7 +64,7 @@ export default function TeacherDossierModal({ teacher, onClose }) {
             <strong style={{ color: "#2563eb", fontSize: "12.5px" }}>
               {teacher.email ? (
                 <a href={"mailto:" + teacher.email} style={{ color: "#2563eb", textDecoration: "none" }}>
-                  ✉ {teacher.email}
+                  {teacher.email}
                 </a>
               ) : (
                 "Not registered"
@@ -74,7 +74,7 @@ export default function TeacherDossierModal({ teacher, onClose }) {
 
           {/* 1. Government Identity Documents */}
           <h4 style={{ margin: "24px 0 12px 0", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
-            <span>🛡️</span> Statutory Identification &amp; SPARK Allotment
+            Statutory Identification &amp; SPARK Allotment
           </h4>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
             {/* Aadhaar */}
@@ -132,7 +132,7 @@ export default function TeacherDossierModal({ teacher, onClose }) {
 
           {/* 2. Educational & Qualification Certificates */}
           <h4 style={{ margin: "24px 0 12px 0", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
-            <span>🎓</span> Academic Degrees &amp; Teaching Qualifications
+            Academic Degrees &amp; Teaching Qualifications
           </h4>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
             {/* B.Ed Degree */}

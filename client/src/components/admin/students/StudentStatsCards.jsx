@@ -5,7 +5,7 @@ export default function StudentStatsCards({ stats }) {
       <div className="overview-stat-card">
         <div className="stat-card-header">
           <span className="card-label">TOTAL ENROLLED</span>
-          <div className="stat-icon-circle blue">👥</div>
+          <div className="stat-icon-circle blue"></div>
         </div>
         <div className="overview-number">
           {stats.totalEnrolled.toLocaleString()}
@@ -19,7 +19,7 @@ export default function StudentStatsCards({ stats }) {
       <div className="overview-stat-card">
         <div className="stat-card-header">
           <span className="card-label">CLASS 10 (SSLC CADRE)</span>
-          <div className="stat-icon-circle green">🎓</div>
+          <div className="stat-icon-circle green"></div>
         </div>
         <div className="overview-number stat-number-green">
           {stats.class10Candidates} Candidates
@@ -31,7 +31,7 @@ export default function StudentStatsCards({ stats }) {
       <div className="overview-stat-card">
         <div className="stat-card-header">
           <span className="card-label">PLUS ONE &amp; PLUS TWO</span>
-          <div className="stat-icon-circle purple">📖</div>
+          <div className="stat-icon-circle purple"></div>
         </div>
         <div className="overview-number">
           {stats.plusTwoCount} Students
@@ -43,7 +43,7 @@ export default function StudentStatsCards({ stats }) {
       <div className="overview-stat-card">
         <div className="stat-card-header">
           <span className="card-label">SAMPOORNA ID LINKED</span>
-          <div className="stat-icon-circle emerald">🛡️</div>
+          <div className="stat-icon-circle emerald"></div>
         </div>
         <div className="overview-number stat-number-emerald">
           {stats.sampoornaVerified} Verified

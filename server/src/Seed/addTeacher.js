@@ -27,12 +27,12 @@ const addTeacherRecord = async () => {
         role: "teacher",
         isActive: true,
       });
-      console.log(`✅ Created User login account for ${user.email}`);
+      console.log(`[OK] Created User login account for ${user.email}`);
     } else {
       user.role = "teacher";
       user.password = teacherAccount.password;
       await user.save();
-      console.log(`✅ Updated User login account for ${user.email}`);
+      console.log(`[OK] Updated User login account for ${user.email}`);
     }
 
     // 2. Create or update Teacher profile document
@@ -49,13 +49,13 @@ const addTeacherRecord = async () => {
         phone: "+91 94470 12345",
         isActive: true,
       });
-      console.log("✅ Teacher profile document created!");
+      console.log("[OK] Teacher profile document created!");
     } else {
       profile.name = teacherAccount.name;
       profile.mentorClass = "Class 10-A";
       profile.assignedClass = "Class 10-A";
       await profile.save();
-      console.log("✅ Teacher profile document updated.");
+      console.log("[OK] Teacher profile document updated.");
     }
 
     console.log("=========================================");
@@ -68,7 +68,7 @@ const addTeacherRecord = async () => {
 
     process.exit(0);
   } catch (error) {
-    console.error("❌ Error seeding teacher:", error.message);
+    console.error("[ERROR] Error seeding teacher:", error.message);
     process.exit(1);
   }
 };

@@ -22,7 +22,7 @@ export default function TeacherFormModal({
 }) {
   if (!isOpen) return null;
 
-  const renderDocumentUploadCard = (label, urlKey, nameKey, helpText, icon = "📄") => {
+  const renderDocumentUploadCard = (label, urlKey, nameKey, helpText, icon = "DOC") => {
     const fileUrl = formData[urlKey];
     const fileName = formData[nameKey];
     const isUploading = uploadingDoc[urlKey];
@@ -81,7 +81,7 @@ export default function TeacherFormModal({
                 onClick={() => handleRemoveDocument(urlKey, nameKey)}
                 title="Remove attached document"
               >
-                🗑️
+                Remove
               </button>
             </div>
           </div>
@@ -98,7 +98,7 @@ export default function TeacherFormModal({
               disabled={isUploading}
             />
             <div className="upload-icon-circle" style={{ width: "36px", height: "36px", fontSize: "16px" }}>
-              {isUploading ? "⏳" : icon}
+              {isUploading ? "..." : icon}
             </div>
             <p className="upload-prompt-text" style={{ fontSize: "13px" }}>
               {isUploading ? "Uploading file..." : `Click to browse & upload ${label}`}
@@ -151,7 +151,7 @@ export default function TeacherFormModal({
             }`}
             onClick={() => setActiveModalTab("general")}
           >
-            <span>👤</span> Faculty Cadre Details
+            Faculty Cadre Details
           </button>
           <button
             type="button"
@@ -160,7 +160,7 @@ export default function TeacherFormModal({
             }`}
             onClick={() => setActiveModalTab("idProofs")}
           >
-            <span>🛡️</span> Statutory ID Proofs
+            Statutory ID Proofs
           </button>
           <button
             type="button"
@@ -169,7 +169,7 @@ export default function TeacherFormModal({
             }`}
             onClick={() => setActiveModalTab("qualifications")}
           >
-            <span>🎓</span> Academic &amp; Qualification Certificates
+            Academic &amp; Qualification Certificates
           </button>
         </div>
 
@@ -308,7 +308,7 @@ export default function TeacherFormModal({
                               }}
                               title={check.message}
                             >
-                              {check.valid ? `✓ ${check.badge || `Age: ${check.age} yrs`}` : `⚠ ${check.badge || check.message}`}
+                              {check.valid ? `✓ ${check.badge || `Age: ${check.age} yrs`}` : `${check.badge || check.message}`}
                             </span>
                           );
                         })()
@@ -391,7 +391,7 @@ export default function TeacherFormModal({
                       "aadharDocUrl",
                       "aadharDocFileName",
                       "Upload Aadhaar front & back copy (PDF or Image)",
-                      "🪪"
+                      "ID"
                     )}
                   </div>
                 </div>
@@ -417,7 +417,7 @@ export default function TeacherFormModal({
                       "panDocUrl",
                       "panDocFileName",
                       "Upload clear copy of PAN Card (PDF or Image)",
-                      "💳"
+                      "PAN"
                     )}
                   </div>
                 </div>
@@ -429,7 +429,7 @@ export default function TeacherFormModal({
                     "penAllotmentDocUrl",
                     "penAllotmentDocFileName",
                     "Official appointment memo / PEN allotment order issued by Director of General Education (PDF / Image)",
-                    "📜"
+                    "DOC"
                   )}
                 </div>
               </div>
@@ -463,7 +463,7 @@ export default function TeacherFormModal({
                       "bedCertificateUrl",
                       "bedCertificateFileName",
                       "Upload B.Ed Degree certificate or mark list (PDF/Image)",
-                      "🎓"
+                      "DEG"
                     )}
                   </div>
                 </div>
@@ -486,7 +486,7 @@ export default function TeacherFormModal({
                       "pgCertificateUrl",
                       "pgCertificateFileName",
                       "Upload Master's Degree certificate (PDF/Image)",
-                      "📜"
+                      "DOC"
                     )}
                   </div>
                 </div>
@@ -509,7 +509,7 @@ export default function TeacherFormModal({
                       "ugCertificateUrl",
                       "ugCertificateFileName",
                       "Upload Bachelor's Degree certificate (PDF/Image)",
-                      "📑"
+                      "DOC"
                     )}
                   </div>
                 </div>
@@ -532,7 +532,7 @@ export default function TeacherFormModal({
                       "eligibilityCertificateUrl",
                       "eligibilityCertificateFileName",
                       "Upload SET, KTET, or NET pass certificate (PDF/Image)",
-                      "🏅"
+                      "CERT"
                     )}
                   </div>
                 </div>
@@ -544,7 +544,7 @@ export default function TeacherFormModal({
                     "experienceCertificateUrl",
                     "experienceCertificateFileName",
                     "Prior government or aided school service records (PDF/Image)",
-                    "📋"
+                    "DOC"
                   )}
                 </div>
 

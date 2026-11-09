@@ -65,7 +65,7 @@ export default function StudentFormModal({
             }`}
             onClick={() => setActiveModalTab("personal")}
           >
-            <span>👤</span> Academic &amp; Personal
+            Academic &amp; Personal
           </button>
           <button
             type="button"
@@ -74,7 +74,7 @@ export default function StudentFormModal({
             }`}
             onClick={() => setActiveModalTab("idproofs")}
           >
-            <span>🛡️</span> ID Proofs &amp; KYC
+            ID Proofs &amp; KYC
           </button>
           <button
             type="button"
@@ -83,7 +83,7 @@ export default function StudentFormModal({
             }`}
             onClick={() => setActiveModalTab("family")}
           >
-            <span>👨‍👩‍👧</span> Parents &amp; Contacts
+            Parents &amp; Contacts
           </button>
           <button
             type="button"
@@ -92,7 +92,7 @@ export default function StudentFormModal({
             }`}
             onClick={() => setActiveModalTab("address")}
           >
-            <span>📍</span> Residence &amp; TC
+            Residence &amp; TC
           </button>
         </div>
 
@@ -220,7 +220,7 @@ export default function StudentFormModal({
                                 borderRadius: "4px",
                               }}
                             >
-                              {check.valid ? `✓ ${check.message}` : `⚠ ${check.message}`}
+                              {check.valid ? `✓ ${check.message}` : `${check.message}`}
                             </span>
                           );
                         })()
@@ -313,7 +313,7 @@ export default function StudentFormModal({
             {activeModalTab === "idproofs" && (
               <div>
                 <div className="form-section-header">
-                  <span>🛡️</span> Government Identity Documents &amp; Upload
+                  Government Identity Documents &amp; Upload
                 </div>
 
                 {/* Aadhaar Number Field */}
@@ -394,7 +394,7 @@ export default function StudentFormModal({
                       onClick={() => fileInputRef.current?.click()}
                     >
                       <div className="upload-icon-circle">
-                        {uploadingIdProof ? "⏳" : "📤"}
+                        {uploadingIdProof ? "..." : "Upload"}
                       </div>
                       <p className="upload-prompt-text">
                         {uploadingIdProof
@@ -474,7 +474,7 @@ export default function StudentFormModal({
                       onClick={() => bcFileInputRef.current?.click()}
                     >
                       <div className="upload-icon-circle" style={{ background: "#f0fdf4", color: "#16a34a" }}>
-                        {uploadingBcProof ? "⏳" : "📋"}
+                        {uploadingBcProof ? "..." : "Upload"}
                       </div>
                       <p className="upload-prompt-text">
                         {uploadingBcProof
@@ -508,7 +508,7 @@ export default function StudentFormModal({
             {activeModalTab === "family" && (
               <div>
                 <div className="form-section-header">
-                  <span>👨‍👩‍👧</span> Parent &amp; Guardian Information
+                  Parent &amp; Guardian Information
                 </div>
 
                 <div className="form-row-grid-2">
@@ -591,7 +591,7 @@ export default function StudentFormModal({
             {activeModalTab === "address" && (
               <div>
                 <div className="form-section-header">
-                  <span>📍</span> Permanent Residential Address
+                  Permanent Residential Address
                 </div>
 
                 <div className="form-row-grid-2">
@@ -667,7 +667,7 @@ export default function StudentFormModal({
                 </div>
 
                 <div className="form-section-header">
-                  <span>🏫</span> Previous Education &amp; Transfer
+                  Previous Education &amp; Transfer
                   Certificate
                 </div>
 

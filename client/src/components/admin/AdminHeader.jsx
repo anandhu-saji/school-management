@@ -6,7 +6,7 @@ export default function AdminHeader() {
         <strong>Sampoorna Admin Console</strong> • School Code: 06042
       </span>
       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-        <span className="badge-sync">🟢 AY 2025–2026</span>
+        <span className="badge-sync">AY 2025–2026</span>
         <button
           style={{
             width: "32px",
@@ -22,7 +22,7 @@ export default function AdminHeader() {
           }}
           aria-label="Admin Profile"
         >
-          👤
+          A
         </button>
       </div>
     </header>

@@ -144,7 +144,7 @@ export default function AdminOverview() {
             <div className="badge-row">
               <span className="badge-governance">HEADMASTER GOVERNANCE DECK</span>
               <span className="badge-sync">
-                🟢 Sampoorna Core 2.0 Live Synchronized
+                Sampoorna Core 2.0 Live Synchronized
               </span>
             </div>
             <h1>Good morning, Headmaster Madhavan</h1>
@@ -207,7 +207,7 @@ export default function AdminOverview() {
                 className="section-att-all-muster-btn"
                 onClick={() => navigate("/admin/attendance")}
               >
-                View Full Division Muster Register 📋
+                View Full Division Muster Register
               </button>
             </div>
 
@@ -427,7 +427,7 @@ export default function AdminOverview() {
                       <td>{c.mentor}</td>
                       <td>
                         <span style={{ color: "#64748b", fontSize: "12.5px" }}>
-                          📍 {c.room}
+                          {c.room}
                         </span>
                       </td>
                       <td>
@@ -446,7 +446,7 @@ export default function AdminOverview() {
                           }
                           title={`Open ${c.name} in Division Attendance`}
                         >
-                          Muster 📖
+                          Muster
                         </button>
                       </td>
                     </tr>
@@ -473,7 +473,7 @@ export default function AdminOverview() {
                 style={{ background: "#2563eb", color: "#ffffff", borderColor: "#2563eb" }}
                 onClick={() => navigate("/admin/payments")}
               >
-                💳 Open Fee & Payments Console
+                Open Fee & Payments Console
               </button>
             </div>
 
@@ -482,7 +482,7 @@ export default function AdminOverview() {
                 <div className="section-att-title-group">
                   <div className="section-att-title-row">
                     <span className="section-att-icon-badge" style={{ background: "#eff6ff" }}>
-                      💳
+                      
                     </span>
                     <h3 className="section-att-title">Central Fee & Accounts Summary</h3>
                   </div>
@@ -495,7 +495,7 @@ export default function AdminOverview() {
                   className="section-att-btn-muster"
                   onClick={() => navigate("/admin/payments")}
                 >
-                  View Full Fee Register ↗
+                  View Full Fee Register
                 </button>
               </div>
 

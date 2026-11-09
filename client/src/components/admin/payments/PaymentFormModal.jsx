@@ -135,13 +135,13 @@ export default function PaymentFormModal({
                   value={paymentForm.feeCategory}
                   onChange={(e) => setPaymentForm({ ...paymentForm, feeCategory: e.target.value })}
                 >
-                  <option value="Bus Fee">🚌 Bus Fee (School Transport)</option>
-                  <option value="Annual Fee">📚 Annual Composite Tuition</option>
-                  <option value="PTA Fund">🤝 PTA Welfare &amp; Development</option>
-                  <option value="Lab &amp; Computer Fee">💻 IT Lab &amp; Science Practicals</option>
-                  <option value="Special / Exam Fee">📝 Special / Examination Fee</option>
-                  <option value="Sports &amp; Library">⚽ Sports &amp; Library Club</option>
-                  <option value="Uniform &amp; Books">🎒 Uniform &amp; Textbooks</option>
+                  <option value="Bus Fee">Bus Fee (School Transport)</option>
+                  <option value="Annual Fee">Annual Composite Tuition</option>
+                  <option value="PTA Fund">PTA Welfare &amp; Development</option>
+                  <option value="Lab &amp; Computer Fee">IT Lab &amp; Science Practicals</option>
+                  <option value="Special / Exam Fee">Special / Examination Fee</option>
+                  <option value="Sports &amp; Library">Sports &amp; Library Club</option>
+                  <option value="Uniform &amp; Books">Uniform &amp; Textbooks</option>
                 </select>
               </div>
             </div>
@@ -200,12 +200,12 @@ export default function PaymentFormModal({
                   onChange={(e) => setPaymentForm({ ...paymentForm, paymentMode: e.target.value })}
                 >
                   <option value="UPI / Online (Google Pay / PhonePe)">
-                    📱 UPI / Online (Google Pay / PhonePe)
+                    UPI / Online (Google Pay / PhonePe)
                   </option>
-                  <option value="Net Banking">🌐 Net Banking / IMPS</option>
-                  <option value="Cash at School Counter">💵 Cash at School Counter</option>
-                  <option value="Bank Challan (SBT/SBI)">🏛 Bank Challan (SBI/SBT)</option>
-                  <option value="Demand Draft">📜 Demand Draft (DD)</option>
+                  <option value="Net Banking">Net Banking / IMPS</option>
+                  <option value="Cash at School Counter">Cash at School Counter</option>
+                  <option value="Bank Challan (SBT/SBI)">Bank Challan (SBI/SBT)</option>
+                  <option value="Demand Draft">Demand Draft (DD)</option>
                 </select>
               </div>
 
@@ -268,7 +268,7 @@ export default function PaymentFormModal({
               Cancel
             </button>
             <button type="submit" className="btn-modal-save" disabled={formSubmitting}>
-              {formSubmitting ? "Saving to DB..." : editingPayment ? "💾 Update Payment" : "💾 Record Payment"}
+              {formSubmitting ? "Saving to DB..." : editingPayment ? "Update Payment" : "Record Payment"}
             </button>
           </div>
         </form>

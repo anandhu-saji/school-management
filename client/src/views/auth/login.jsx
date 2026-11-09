@@ -117,7 +117,7 @@ function Login() {
     <div className="login-page">
       <div className="login-header">
         <div className="university-logo">
-          <div className="shield">🏛️</div>
+          <div className="shield"></div>
           <span className="verified">✓</span>
         </div>
         <p className="university-name">GOVT. OF KERALA • GENERAL EDUCATION DEPT.</p>
@@ -138,7 +138,7 @@ function Login() {
               setPassword("Admin@12345");
             }}
           >
-            👑 Admin (HM)
+            Admin (HM)
           </button>
           <button
             type="button"
@@ -148,7 +148,7 @@ function Login() {
               setPassword("Teacher@123");
             }}
           >
-            👩‍🏫 Teacher (Mentor)
+            Teacher (Mentor)
           </button>
           <button
             type="button"
@@ -158,7 +158,7 @@ function Login() {
               setPassword("Student@123");
             }}
           >
-            🎓 Student
+            Student
           </button>
         </div>
       </div>
@@ -167,7 +167,7 @@ function Login() {
         <form onSubmit={handleSignIn}>
           <label htmlFor="email">Email Address</label>
           <div className="input-box">
-            <span className="input-icon">✉</span>
+            <span className="input-icon">@</span>
             <input
               id="email"
               type="email"
@@ -295,7 +295,7 @@ function Login() {
                 margin: "0 auto 14px",
               }}
             >
-              🔒
+              !
             </div>
             <h3 style={{ margin: "0 0 10px", color: "#bf2600", fontSize: "18px" }}>
               Access Blocked

@@ -488,7 +488,7 @@ export default function TeachersRecords() {
           {/* Action Header Banner */}
           <section className="student-header-banner">
             <div className="registry-title-left">
-              <div className="registry-icon-badge">🗂</div>
+              <div className="registry-icon-badge"></div>
               <div className="registry-title-text">
                 <h1>Faculty Directory &amp; Department Roster</h1>
                 <p>
@@ -501,7 +501,7 @@ export default function TeachersRecords() {
             <div className="registry-controls-right">
               {/* Search Box */}
               <div className="search-input-wrapper">
-                <span className="search-input-icon">🔍</span>
+                <span className="search-input-icon"></span>
                 <input
                   type="text"
                   placeholder="Search teacher by name, PEN, Aadhaar..."
@@ -548,7 +548,7 @@ export default function TeachersRecords() {
                 className="btn-new-admission"
                 onClick={openAddTeacherModal}
               >
-                <span>👤+</span> Add Teacher
+                <span>+</span> Add Teacher
               </button>
             </div>
           </section>
@@ -649,7 +649,7 @@ export default function TeachersRecords() {
                       <div className="teacher-meta-row">
                         <span className="teacher-meta-label">Official Mail ID</span>
                         <span className="teacher-meta-value" style={{ fontSize: "12px", color: "#2563eb", wordBreak: "break-all" }}>
-                          {t.email ? "✉ " + t.email : "Not registered"}
+                          {t.email ? t.email : "Not registered"}
                         </span>
                       </div>
                       <div className="teacher-meta-row">
@@ -672,7 +672,7 @@ export default function TeachersRecords() {
                             ? "✓ Aadhaar & B.Ed Attached"
                             : hasAadhaar || hasBed
                             ? "✓ Partial Dossier Attached"
-                            : "🛡️ KYC & SPARK Seeded"}
+                            : "KYC & SPARK Seeded"}
                         </span>
                       </div>
                     </div>
@@ -694,7 +694,7 @@ export default function TeachersRecords() {
                         onClick={() => setDossierTeacher(t)}
                         title="Inspect Submitted ID Proofs &amp; Qualification Certificates"
                       >
-                        Dossier 📁
+                        Dossier
                       </button>
                       <button
                         type="button"

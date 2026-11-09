@@ -20,7 +20,7 @@ export default function PaymentReceiptModal({
             onClick={() => window.print()}
             style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
           >
-            🖨 Print Official Receipt
+            Print Official Receipt
           </button>
           <button
             type="button"

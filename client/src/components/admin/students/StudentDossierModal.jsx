@@ -105,7 +105,7 @@ export default function StudentDossierModal({ student, onClose, onEdit }) {
             {/* Statutory ID Proofs */}
             <div className="dossier-card">
               <h4>
-                <span>🛡️</span> Statutory ID Proofs &amp; Files
+                Statutory ID Proofs &amp; Files
               </h4>
               <div className="dossier-field-row">
                 <span className="label">Aadhaar (UID):</span>
@@ -115,7 +115,7 @@ export default function StudentDossierModal({ student, onClose, onEdit }) {
                       ✓ {student.aadhaarNumber}
                     </span>
                   ) : (
-                    <span style={{ color: "#b45309" }}>⚠ Not Linked</span>
+                    <span style={{ color: "#b45309" }}>Not Linked</span>
                   )}
                 </span>
               </div>
@@ -125,7 +125,7 @@ export default function StudentDossierModal({ student, onClose, onEdit }) {
                 <div className="dossier-doc-preview-box">
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <span style={{ fontSize: "16px" }}>
-                      {student.idProofFileType === "pdf" ? "📕" : "🖼️"}
+                      {student.idProofFileType === "pdf" ? "PDF" : "IMG"}
                     </span>
                     <div>
                       <strong style={{ fontSize: "12px", display: "block", color: "#0f172a" }}>
@@ -158,7 +158,7 @@ export default function StudentDossierModal({ student, onClose, onEdit }) {
               {student.birthCertificateUrl ? (
                 <div className="dossier-doc-preview-box">
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ fontSize: "16px" }}>📋</span>
+                    <span style={{ fontSize: "16px" }}></span>
                     <div>
                       <strong style={{ fontSize: "12px", display: "block", color: "#0f172a" }}>
                         {student.birthCertificateFileName || "Birth_Certificate.pdf"}
@@ -198,7 +198,7 @@ export default function StudentDossierModal({ student, onClose, onEdit }) {
             {/* Family & Guardians */}
             <div className="dossier-card">
               <h4>
-                <span>👨‍👩‍👧</span> Family &amp; Guardians
+                Family &amp; Guardians
               </h4>
               <div className="dossier-field-row">
                 <span className="label">Father's Name:</span>
@@ -230,7 +230,7 @@ export default function StudentDossierModal({ student, onClose, onEdit }) {
                       href={"mailto:" + student.email}
                       style={{ color: "#2563eb", textDecoration: "none", fontWeight: "600" }}
                     >
-                      ✉ {student.email}
+                      {student.email}
                     </a>
                   ) : (
                     <span style={{ color: "#94a3b8" }}>Not registered</span>
@@ -246,7 +246,7 @@ export default function StudentDossierModal({ student, onClose, onEdit }) {
             {/* Residential Address */}
             <div className="dossier-card">
               <h4>
-                <span>📍</span> Residential Address
+                Residential Address
               </h4>
               <div className="dossier-field-row">
                 <span className="label">Full Address:</span>
@@ -282,7 +282,7 @@ export default function StudentDossierModal({ student, onClose, onEdit }) {
             {/* Academic & Categorization */}
             <div className="dossier-card">
               <h4>
-                <span>🎓</span> Academic &amp; Social Profile
+                Academic &amp; Social Profile
               </h4>
               <div className="dossier-field-row">
                 <span className="label">Social Category:</span>
@@ -329,7 +329,7 @@ export default function StudentDossierModal({ student, onClose, onEdit }) {
             onClick={() => window.print()}
             style={{ background: "#f1f5f9", color: "#334155" }}
           >
-            🖨️ Print Dossier
+            Print Dossier
           </button>
           {onEdit && (
             <button
@@ -341,7 +341,7 @@ export default function StudentDossierModal({ student, onClose, onEdit }) {
                 onEdit(target);
               }}
             >
-              ✏️ Edit Records
+              Edit Records
             </button>
           )}
         </div>

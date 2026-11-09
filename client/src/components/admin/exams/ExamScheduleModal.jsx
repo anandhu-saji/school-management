@@ -223,9 +223,9 @@ export default function ExamScheduleModal({
                   }}
                 >
                   {isPastDate ? (
-                    <>⚠️ {dateValidation}</>
+                    <>{dateValidation}</>
                   ) : (
-                    <>📅 {formData.date}</>
+                    <>{formData.date}</>
                   )}
                 </div>
               )}
@@ -321,7 +321,7 @@ export default function ExamScheduleModal({
                 <option value="Sri. Radhakrishnan N." />
               </datalist>
               <span style={{ fontSize: "11px", color: "#64748b", marginTop: "3px", display: "block" }}>
-                💡 Assigned faculty will immediately see this session in their Invigilation Duties roster.
+                Assigned faculty will immediately see this session in their Invigilation Duties roster.
               </span>
             </div>
 

@@ -360,7 +360,7 @@ export default function PaymentConsole() {
             </div>
             <div className="header-actions-group" style={{ display: "flex", gap: "10px" }}>
               <button className="btn-secondary-action" onClick={handleExportCSV}>
-                📥 Export Ledger CSV
+                Export Ledger CSV
               </button>
               <button className="btn-primary-action" onClick={() => handleOpenRecordModal()}>
                 + Record Student Payment
@@ -372,7 +372,7 @@ export default function PaymentConsole() {
           <section className="headmaster-hero-card" style={{ marginBottom: "22px" }}>
             <div className="badge-row">
               <span className="badge-governance">TREASURY &amp; FEE MANAGEMENT DECK</span>
-              <span className="badge-sync">🟢 Kerala Pareeksha Bhavan Integrated</span>
+              <span className="badge-sync">Kerala Pareeksha Bhavan Integrated</span>
             </div>
             <h1>Student Fee &amp; Payment Console</h1>
             <p>
@@ -423,7 +423,7 @@ export default function PaymentConsole() {
           <div className="payment-controls-card">
             {/* Search Input */}
             <div className="search-field-box">
-              <span className="search-icon">🔍</span>
+              <span className="search-icon"></span>
               <input
                 type="text"
                 placeholder="Search by Student Name, Admission No, Receipt #, or UPI ref..."
@@ -470,12 +470,12 @@ export default function PaymentConsole() {
                 }}
               >
                 <option value="All">All Categories</option>
-                <option value="Bus Fee">🚌 Bus Fee (School Transport)</option>
-                <option value="Annual Fee">📚 Annual Composite Tuition</option>
-                <option value="PTA Fund">🤝 PTA Welfare &amp; Development</option>
-                <option value="Lab &amp; Computer Fee">💻 IT Lab &amp; Science Practicals</option>
-                <option value="Special / Exam Fee">📝 Special / Examination Fee</option>
-                <option value="Sports &amp; Library">⚽ Sports &amp; Library Club</option>
+                <option value="Bus Fee">Bus Fee (School Transport)</option>
+                <option value="Annual Fee">Annual Composite Tuition</option>
+                <option value="PTA Fund">PTA Welfare &amp; Development</option>
+                <option value="Lab &amp; Computer Fee">IT Lab &amp; Science Practicals</option>
+                <option value="Special / Exam Fee">Special / Examination Fee</option>
+                <option value="Sports &amp; Library">Sports &amp; Library Club</option>
               </select>
             </div>
 
@@ -549,7 +549,7 @@ export default function PaymentConsole() {
                 ) : payments.length === 0 ? (
                   <tr>
                     <td colSpan="10" style={{ textAlign: "center", padding: "48px" }}>
-                      <div style={{ fontSize: "32px", marginBottom: "8px" }}>💳</div>
+                      <div style={{ fontSize: "32px", marginBottom: "8px" }}></div>
                       <h4 style={{ color: "#0f172a", marginBottom: "4px" }}>No Payment Records Found</h4>
                       <p style={{ color: "#64748b", fontSize: "13px" }}>
                         No fee payments match your current search and filter criteria.
@@ -630,7 +630,7 @@ export default function PaymentConsole() {
                               title="View Official Kerala Govt Fee Receipt"
                               onClick={() => handleOpenReceiptModal(p)}
                             >
-                              📄
+                              Receipt
                             </button>
                             <button
                               type="button"
@@ -638,7 +638,7 @@ export default function PaymentConsole() {
                               title="Edit / Record Balance Payment"
                               onClick={() => handleOpenRecordModal(p)}
                             >
-                              ✏️
+                              Edit
                             </button>
                             <button
                               type="button"
@@ -646,7 +646,7 @@ export default function PaymentConsole() {
                               title="Delete Record"
                               onClick={() => handleDeletePayment(p._id, p.receiptNumber)}
                             >
-                              🗑️
+                              Delete
                             </button>
                           </div>
                         </td>

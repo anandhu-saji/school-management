@@ -174,7 +174,7 @@ export default function EmailOtpVerification({
                   gap: "6px",
                 }}
               >
-                {loading ? "Sending OTP..." : "✉️ Verify Email with OTP"}
+                {loading ? "Sending OTP..." : "Verify Email with OTP"}
               </button>
               <span style={{ fontSize: "11.5px", color: "#64748b" }}>
                 Required before creating account
@@ -243,7 +243,7 @@ export default function EmailOtpVerification({
                   {timeLeft > 240 ? `Resend in ${formatTime(timeLeft)}` : "Resend OTP"}
                 </button>
                 <span style={{ fontSize: "11px", color: timeLeft < 60 ? "#dc2626" : "#64748b", fontWeight: "600" }}>
-                  ⏳ {formatTime(timeLeft)}
+                  {formatTime(timeLeft)}
                 </span>
               </div>
             </div>
@@ -258,7 +258,7 @@ export default function EmailOtpVerification({
                 fontWeight: "600",
               }}
             >
-              {feedback.type === "error" ? "⚠️ " : "✓ "}
+              {feedback.type === "error" ? "" : "✓ "}
               {feedback.message}
             </p>
           )}

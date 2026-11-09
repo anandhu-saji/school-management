@@ -115,7 +115,7 @@ export default function TeacherHeader({
           }}
           title="Print official report"
         >
-          🖨️ <span>Print View</span>
+          <span>Print View</span>
         </button>
       </div>
     </header>

@@ -41,7 +41,7 @@ export const errorHandler = (err, req, res, next) => {
   const message = error.message || "Internal server error occurred.";
 
   if (statusCode >= 500) {
-    console.error("🔥 [Internal Server Error]:", err.stack || err);
+    console.error("[Internal Server Error]:", err.stack || err);
   }
 
   return res.status(statusCode).json({

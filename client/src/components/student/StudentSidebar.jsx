@@ -32,7 +32,7 @@ export default function StudentSidebar({
           title="Sign Out"
           aria-label="Sign Out"
         >
-          🚪
+          ⇥
         </button>
       </div>
 
@@ -89,7 +89,7 @@ export default function StudentSidebar({
                 setMobileOpen(false);
               }}
             >
-              <span>💳</span> Fee Ledger &amp; Receipts
+              <span>•</span> Fee Ledger &amp; Receipts
             </button>
           </nav>
         </div>
@@ -105,7 +105,7 @@ export default function StudentSidebar({
             title="Click to view My ID &amp; Documents Dossier"
           >
             <div className="profile-avatar-circle" style={{ background: "#7c3aed" }}>
-              <span>🪪</span>
+              <span>ID</span>
             </div>
             <div className="profile-details-column">
               <div className="profile-name-row">
@@ -124,7 +124,7 @@ export default function StudentSidebar({
             title="Sign Out"
             aria-label="Sign Out"
           >
-            🚪
+            ⇥
           </button>
         </div>
       </aside>

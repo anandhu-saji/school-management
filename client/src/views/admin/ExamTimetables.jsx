@@ -335,7 +335,7 @@ export default function ExamTimetables() {
           {/* Action Header Banner */}
           <section className="student-header-banner">
             <div className="registry-title-left">
-              <div className="registry-icon-badge">📅</div>
+              <div className="registry-icon-badge"></div>
               <div className="registry-title-text">
                 <h1>Examination Timetable &amp; Seating Registry</h1>
                 <p>
@@ -349,7 +349,7 @@ export default function ExamTimetables() {
             <div className="registry-controls-right">
               {/* Search Box */}
               <div className="search-input-wrapper">
-                <span className="search-input-icon">🔍</span>
+                <span className="search-input-icon"></span>
                 <input
                   type="text"
                   placeholder="Search subject, QP code, hall..."
@@ -423,7 +423,7 @@ export default function ExamTimetables() {
                 className="btn-new-admission"
                 onClick={openAddExamModal}
               >
-                <span>📅+</span> Schedule Exam
+                <span>+</span> Schedule Exam
               </button>
             </div>
           </section>
@@ -525,7 +525,7 @@ export default function ExamTimetables() {
                         <td>
                           <div className="exam-hall-primary">{exam.hall}</div>
                           <div className="exam-candidates-meta">
-                            👥 {exam.totalCandidates} Candidates
+                            {exam.totalCandidates} Candidates
                           </div>
                         </td>
 

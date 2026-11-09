@@ -7,7 +7,7 @@ export default function TeacherProfileTab({ teacherProfile }) {
       <section className="headmaster-hero-card" style={{ marginBottom: "20px" }}>
         <div className="badge-row">
           <span className="badge-governance">GOVERNMENT OF KERALA • GENERAL EDUCATION DEPARTMENT</span>
-          <span className="badge-sync">🟢 SPARK ID &amp; SAMPOORNA LINKED</span>
+          <span className="badge-sync">SPARK ID &amp; SAMPOORNA LINKED</span>
         </div>
         <h1>{profile.name || "Mrs. Indu B Nair"}</h1>
         <p>
@@ -45,7 +45,7 @@ export default function TeacherProfileTab({ teacherProfile }) {
               paddingBottom: "10px",
             }}
           >
-            <span style={{ fontSize: "20px" }}>🏛️</span>
+            <span style={{ fontSize: "20px" }}></span>
             <h3 style={{ fontSize: "15px", fontWeight: "800", color: "#0f172a", margin: 0 }}>
               Government Cadre &amp; Designation
             </h3>
@@ -116,7 +116,7 @@ export default function TeacherProfileTab({ teacherProfile }) {
               paddingBottom: "10px",
             }}
           >
-            <span style={{ fontSize: "20px" }}>📜</span>
+            <span style={{ fontSize: "20px" }}></span>
             <h3 style={{ fontSize: "15px", fontWeight: "800", color: "#0f172a", margin: 0 }}>
               Statutory Qualifications &amp; Service
             </h3>

@@ -44,7 +44,7 @@ export default function StudentHeader({
             border: "1px solid #bbf7d0",
           }}
         >
-          🟢 SCERT Active
+          SCERT Active
         </span>
 
         {/* Profile Avatar Trigger in Header */}
@@ -58,7 +58,7 @@ export default function StudentHeader({
           </div>
           <div className="topbar-profile-info">
             <span className="topbar-profile-name">{displayName.split(" ")[0]}</span>
-            <span className="topbar-profile-badge">🪪 My ID</span>
+            <span className="topbar-profile-badge">My ID</span>
           </div>
         </button>
       </div>

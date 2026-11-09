@@ -67,7 +67,7 @@ export default function TeacherAttendanceTab({
       <section className="headmaster-hero-card" style={{ marginBottom: "20px" }}>
         <div className="badge-row">
           <span className="badge-governance">CLASS MENTOR ATTENDANCE TERMINAL</span>
-          <span className="badge-sync">🟢 Kerala Pareeksha Bhavan Integrated</span>
+          <span className="badge-sync">Kerala Pareeksha Bhavan Integrated</span>
         </div>
         <h1>Good day, {teacherProfile.name || "Mrs. Indu B Nair"}</h1>
         <p>
@@ -91,7 +91,7 @@ export default function TeacherAttendanceTab({
             color: "#92400e",
           }}
         >
-          <span style={{ fontSize: "20px" }}>⚠️</span>
+          <span style={{ fontSize: "20px" }}></span>
           <div>
             <strong>KER Sunday Weekly Holiday:</strong> Attendance cannot be marked or locked for Sundays in statutory registers per Kerala Education Rules Chapter VII.
           </div>
@@ -181,7 +181,7 @@ export default function TeacherAttendanceTab({
             disabled={saving || isSunday}
             onClick={onSaveAttendance}
           >
-            {saving ? "Saving..." : "💾 Save Register"}
+            {saving ? "Saving..." : "Save Register"}
           </button>
         </div>
       </div>

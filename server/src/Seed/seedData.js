@@ -28,7 +28,7 @@ const seedDatabase = async () => {
       const userIndexes = await usersColl.indexes();
       if (userIndexes.some((idx) => idx.name === "username_1")) {
         await usersColl.dropIndex("username_1");
-        console.log("ℹ️ Dropped legacy index: username_1 from users.");
+        console.log("[INFO] Dropped legacy index: username_1 from users.");
       }
     } catch (e) {
       // index does not exist or already dropped
@@ -40,7 +40,7 @@ const seedDatabase = async () => {
       for (const idx of studentIndexes) {
         if (idx.name === "email_1") {
           await studentsColl.dropIndex("email_1");
-          console.log("ℹ️ Dropped non-sparse email_1 from students.");
+          console.log("[INFO] Dropped non-sparse email_1 from students.");
         }
       }
       await studentsColl.createIndex({ email: 1 }, { unique: true, sparse: true });
@@ -60,7 +60,7 @@ const seedDatabase = async () => {
           (idx.name === "pen_1" && !idx.sparse)
         ) {
           await teachersColl.dropIndex(idx.name);
-          console.log(`ℹ️ Dropped index: ${idx.name} from teachers.`);
+          console.log(`[INFO] Dropped index: ${idx.name} from teachers.`);
         }
       }
       await teachersColl.createIndex({ userId: 1 }, { unique: true, sparse: true });
@@ -84,7 +84,7 @@ const seedDatabase = async () => {
         role: "admin",
         isActive: true,
       });
-      console.log("✅ Created Admin User: admin@ghss.edu");
+      console.log("[OK] Created Admin User: admin@ghss.edu");
     }
 
     // 1b. Teacher User (Mrs. Indu B Nair)
@@ -98,7 +98,7 @@ const seedDatabase = async () => {
         role: "teacher",
         isActive: true,
       });
-      console.log("✅ Created Teacher User: kathalanx@gmail.com");
+      console.log("[OK] Created Teacher User: kathalanx@gmail.com");
     }
 
     // 1c. Student User (Anandhu Saji)
@@ -118,7 +118,7 @@ const seedDatabase = async () => {
         role: "student",
         isActive: true,
       });
-      console.log("✅ Created Student User: student@ghss.edu");
+      console.log("[OK] Created Student User: student@ghss.edu");
     }
 
     // -------------------------------------------------------------
@@ -674,14 +674,14 @@ const seedDatabase = async () => {
         { upsert: true, returnDocument: "after" }
       );
     }
-    console.log(`✅ Upserted ${fullFacultyCadre.length} faculty mentors across all 26 classes in MongoDB.`);
+    console.log(`[OK] Upserted ${fullFacultyCadre.length} faculty mentors across all 26 classes in MongoDB.`);
 
     // -------------------------------------------------------------
     // 3. SEED STUDENTS FOR ALL 26 ACADEMIC DIVISIONS
     // -------------------------------------------------------------
     // Delete existing students to ensure a fresh, calibrated roll
     await Student.deleteMany({});
-    console.log("ℹ️ Cleared existing student collection for fresh multi-wing seed.");
+    console.log("[INFO] Cleared existing student collection for fresh multi-wing seed.");
 
     const sampleKeralaNames = [
       { name: "Aaditya S. Kumar", g: "Male", cat: "General", dob: "14/05/2010", p: "Santhosh Kumar K." },
@@ -767,7 +767,7 @@ const seedDatabase = async () => {
     });
 
     const insertedStudents = await Student.insertMany(allStudentsToInsert);
-    console.log(`✅ Seeded ${insertedStudents.length} students across all 26 classes in MongoDB!`);
+    console.log(`[OK] Seeded ${insertedStudents.length} students across all 26 classes in MongoDB!`);
 
     // -------------------------------------------------------------
     // 4. SEED DAILY MUSTER ATTENDANCE FOR ALL 26 CLASSES FOR TODAY
@@ -803,7 +803,7 @@ const seedDatabase = async () => {
     });
 
     await Attendance.insertMany(attendanceDocsToInsert);
-    console.log(`✅ Seeded ${attendanceDocsToInsert.length} daily attendance registers in MongoDB for ${todayStr}.`);
+    console.log(`[OK] Seeded ${attendanceDocsToInsert.length} daily attendance registers in MongoDB for ${todayStr}.`);
 
     // -------------------------------------------------------------
     // 5. SEED EXAM TIMETABLES & SEATING PLANS ACROSS ALL WINGS
@@ -1123,7 +1123,7 @@ const seedDatabase = async () => {
     ];
 
     await Exam.insertMany(examTimetables);
-    console.log(`✅ Seeded ${examTimetables.length} exam schedules across all standards in MongoDB!`);
+    console.log(`[OK] Seeded ${examTimetables.length} exam schedules across all standards in MongoDB!`);
 
     // -------------------------------------------------------------
     // 6. SEED OFFICIAL FEE PAYMENTS ACROSS DIVISIONS
@@ -1199,7 +1199,7 @@ const seedDatabase = async () => {
     });
 
     await FeePayment.insertMany(feeDocsToInsert);
-    console.log(`✅ Seeded ${feeDocsToInsert.length} fee transaction records in MongoDB!`);
+    console.log(`[OK] Seeded ${feeDocsToInsert.length} fee transaction records in MongoDB!`);
 
     // -------------------------------------------------------------
     // 7. SEED CONTINUOUS EVALUATION (CE) & INTERNAL MARKS
@@ -1379,11 +1379,11 @@ const seedDatabase = async () => {
 
     if (internalMarksToInsert.length > 0) {
       await InternalMark.insertMany(internalMarksToInsert);
-      console.log(`✅ Seeded ${internalMarksToInsert.length} internal evaluation mark registers in MongoDB!`);
+      console.log(`[OK] Seeded ${internalMarksToInsert.length} internal evaluation mark registers in MongoDB!`);
     }
 
     console.log("\n========================================================");
-    console.log("       🎉 MASTER SEEDING COMPLETED SUCCESSFULLY!        ");
+    console.log("       [SUCCESS] MASTER SEEDING COMPLETED SUCCESSFULLY!        ");
     console.log("========================================================");
     console.log("  TOTAL ACADEMIC WINGS       : 4 Wings (LP, UP, HS, HSS)");
     console.log("  TOTAL ACADEMIC DIVISIONS   : 26 Divisions");
@@ -1402,7 +1402,7 @@ const seedDatabase = async () => {
 
     process.exit(0);
   } catch (error) {
-    console.error("❌ Master Seeding failed:", error);
+    console.error("[ERROR] Master Seeding failed:", error);
     process.exit(1);
   }
 };

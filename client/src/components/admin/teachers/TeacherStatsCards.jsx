@@ -5,7 +5,7 @@ export default function TeacherStatsCards({ stats }) {
       <div className="overview-stat-card">
         <div className="stat-card-header">
           <span className="card-label">TOTAL FACULTY</span>
-          <div className="stat-icon-circle blue">👥</div>
+          <div className="stat-icon-circle blue"></div>
         </div>
         <div className="overview-number">
           {stats.totalFaculty} Cadre
@@ -17,7 +17,7 @@ export default function TeacherStatsCards({ stats }) {
       <div className="overview-stat-card">
         <div className="stat-card-header">
           <span className="card-label">PERMANENT HSST/HST</span>
-          <div className="stat-icon-circle emerald">🛡️</div>
+          <div className="stat-icon-circle emerald"></div>
         </div>
         <div className="overview-number stat-number-emerald">
           {stats.permanentPosts} Posts
@@ -29,7 +29,7 @@ export default function TeacherStatsCards({ stats }) {
       <div className="overview-stat-card">
         <div className="stat-card-header">
           <span className="card-label">ON DUTY / DEPUTATION</span>
-          <div className="stat-icon-circle purple">💼</div>
+          <div className="stat-icon-circle purple"></div>
         </div>
         <div className="overview-number">
           {stats.onDutyStaff} Staff
@@ -41,7 +41,7 @@ export default function TeacherStatsCards({ stats }) {
       <div className="overview-stat-card">
         <div className="stat-card-header">
           <span className="card-label">VACANT SANCTIONED</span>
-          <div className="stat-icon-circle blue">👤+</div>
+          <div className="stat-icon-circle blue">+</div>
         </div>
         <div className="overview-number stat-number-blue">
           {stats.vacantPosts} Posts

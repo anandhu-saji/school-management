@@ -33,7 +33,7 @@ export default function TeacherSidebar({
                 setSidebarOpen(false);
               }}
             >
-              <span>📅</span> Mark Daily Attendance
+              <span>•</span> Mark Daily Attendance
             </button>
             <button
               className={`console-nav-item ${activeTab === "academics" ? "active" : ""}`}
@@ -42,7 +42,7 @@ export default function TeacherSidebar({
                 setSidebarOpen(false);
               }}
             >
-              <span>👥</span> Class Students &amp; KYC
+              <span>•</span> Class Students &amp; KYC
             </button>
             <button
               className={`console-nav-item ${activeTab === "marks" ? "active" : ""}`}
@@ -51,7 +51,7 @@ export default function TeacherSidebar({
                 setSidebarOpen(false);
               }}
             >
-              <span>📝</span> Internal &amp; CE Marks
+              <span>•</span> Internal &amp; CE Marks
             </button>
             <button
               className={`console-nav-item ${activeTab === "timetable" ? "active" : ""}`}
@@ -60,7 +60,7 @@ export default function TeacherSidebar({
                 setSidebarOpen(false);
               }}
             >
-              <span>🗓️</span> Timetable &amp; Exam Duties
+              <span>•</span> Timetable &amp; Exam Duties
             </button>
             <button
               className={`console-nav-item ${activeTab === "profile" ? "active" : ""}`}
@@ -69,7 +69,7 @@ export default function TeacherSidebar({
                 setSidebarOpen(false);
               }}
             >
-              <span>👤</span> My SPARK Profile
+              <span>•</span> My SPARK Profile
             </button>
           </nav>
         </div>
@@ -77,7 +77,7 @@ export default function TeacherSidebar({
         {/* Bottom Profile Card */}
         <div className="sidebar-bottom-profile">
           <div className="profile-avatar-circle" style={{ background: "#2563eb" }}>
-            <span>👩‍🏫</span>
+            <span>T</span>
           </div>
           <div className="profile-details-column">
             <div className="profile-name-row">
@@ -99,7 +99,7 @@ export default function TeacherSidebar({
             title="Sign Out"
             aria-label="Sign Out"
           >
-            🚪
+            ⇥
           </button>
         </div>
       </aside>

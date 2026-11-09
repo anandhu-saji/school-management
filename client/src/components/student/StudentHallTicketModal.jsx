@@ -70,7 +70,7 @@ export default function StudentHallTicketModal({
             </div>
 
             <div className="candidate-photo-box">
-              <div style={{ fontSize: "28px" }}>🎓</div>
+              <div style={{ fontSize: "28px" }}></div>
               <div>Affix Attested Photo</div>
             </div>
           </div>
@@ -135,7 +135,7 @@ export default function StudentHallTicketModal({
             Close
           </button>
           <button className="primary-button" onClick={() => window.print()}>
-            🖨️ Print Hall Ticket
+            Print Hall Ticket
           </button>
         </div>
       </div>

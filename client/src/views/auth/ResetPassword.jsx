@@ -66,7 +66,7 @@ function ResetPassword() {
     <div className="login-page">
       <div className="login-header">
         <div className="university-logo">
-          <div className="shield">🏛️</div>
+          <div className="shield"></div>
           <span className="verified">✓</span>
         </div>
         <p className="university-name">GOVT. OF KERALA • GENERAL EDUCATION DEPT.</p>

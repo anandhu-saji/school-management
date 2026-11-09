@@ -192,7 +192,7 @@ export default function StudentReceiptModal({ receipt, onClose }) {
             Close
           </button>
           <button className="primary-button" onClick={() => window.print()}>
-            🖨️ Print Receipt
+            Print Receipt
           </button>
         </div>
       </div>

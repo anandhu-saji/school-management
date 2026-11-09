@@ -5,7 +5,7 @@ export default function ExamStatsCards({ stats }) {
       <div className="overview-stat-card">
         <div className="stat-card-header">
           <span className="card-label">TOTAL SCHEDULES</span>
-          <div className="stat-icon-circle blue">📅</div>
+          <div className="stat-icon-circle blue"></div>
         </div>
         <div className="overview-number">
           {stats.totalSchedules} Sessions
@@ -29,7 +29,7 @@ export default function ExamStatsCards({ stats }) {
       <div className="overview-stat-card">
         <div className="stat-card-header">
           <span className="card-label">EXAMINATION HALLS</span>
-          <div className="stat-icon-circle purple">🏛️</div>
+          <div className="stat-icon-circle purple"></div>
         </div>
         <div className="overview-number">
           {stats.hallsAllocated} Halls
@@ -41,7 +41,7 @@ export default function ExamStatsCards({ stats }) {
       <div className="overview-stat-card">
         <div className="stat-card-header">
           <span className="card-label">INVIGILATION CADRE</span>
-          <div className="stat-icon-circle blue">👥</div>
+          <div className="stat-icon-circle blue"></div>
         </div>
         <div className="overview-number stat-number-blue">
           {stats.invigilatorCadre} Staff

@@ -91,7 +91,7 @@ export default function StudentAttendanceTab({
             color: "#0f172a",
           }}
         >
-          📅 Month-by-Month Attendance Register
+          Month-by-Month Attendance Register
         </div>
 
         <table className="student-data-table">
@@ -144,7 +144,7 @@ export default function StudentAttendanceTab({
       <div className="dossier-card">
         <div className="dossier-card-header">
           <div className="dossier-card-title">
-            <span className="icon">📝</span>
+            <span className="icon"></span>
             Recorded Absence Dates &amp; Leave Notices
           </div>
         </div>
@@ -166,7 +166,7 @@ export default function StudentAttendanceTab({
                   gap: "8px",
                 }}
               >
-                <span>⚠️</span>
+                <span></span>
                 <strong>Date of Absence:</strong> {dateStr}
               </div>
             ))

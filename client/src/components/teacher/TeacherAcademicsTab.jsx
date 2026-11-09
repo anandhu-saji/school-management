@@ -245,7 +245,7 @@ export default function TeacherAcademicsTab({
                           gap: "4px",
                         }}
                       >
-                        <span>📞</span> {std.parentContact}
+                        {std.parentContact}
                       </a>
                     ) : (
                       <span style={{ color: "#94a3b8", fontSize: "12px" }}>N/A</span>
@@ -294,7 +294,7 @@ export default function TeacherAcademicsTab({
                         e.currentTarget.style.borderColor = "#cbd5e1";
                       }}
                     >
-                      <span>🛡️</span> View Dossier
+                      View Dossier
                     </button>
                   </td>
                 </tr>

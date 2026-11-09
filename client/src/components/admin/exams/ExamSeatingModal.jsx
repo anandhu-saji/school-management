@@ -105,7 +105,7 @@ export default function ExamSeatingModal({
                     {hall.hallNumber}
                   </span>
                   <span className="seating-candidate-count">
-                    👥 {hall.candidateCount} Candidates
+                    {hall.candidateCount} Candidates
                   </span>
                 </div>
 
@@ -170,7 +170,7 @@ export default function ExamSeatingModal({
               className="btn-submit"
               onClick={() => window.print()}
             >
-              🖨️ Print Seating Chart
+              Print Seating Chart
             </button>
           </div>
         </div>

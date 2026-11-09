@@ -250,7 +250,7 @@ export default function TeacherInternalMarksTab({
                 cursor: "pointer",
               }}
             >
-              🖨️ Export Marksheet
+              Export Marksheet
             </button>
             <button
               type="button"
@@ -258,7 +258,7 @@ export default function TeacherInternalMarksTab({
               disabled={saving || loading}
               onClick={handleSaveMarks}
             >
-              {saving ? "Saving Marks..." : "💾 Save & Lock Marks"}
+              {saving ? "Saving Marks..." : " Save & Lock Marks"}
             </button>
           </div>
         </div>

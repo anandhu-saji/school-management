@@ -181,7 +181,7 @@ export default function ForgotPassword() {
   return (
     <div className="auth-page-container">
       <div className="auth-header">
-        <div className="auth-logo-badge">🏛️</div>
+        <div className="auth-logo-badge"></div>
         <p className="auth-subtitle">GOVT. OF KERALA • GENERAL EDUCATION DEPT.</p>
         <div className="school-code-badge" style={{ display: "inline-block", background: "#eff6ff", color: "#1d4ed8", padding: "3px 10px", borderRadius: "6px", fontSize: "11px", fontWeight: "700", marginBottom: "8px" }}>
           School Code: 06042 • GHSS Rajakkad
@@ -200,7 +200,7 @@ export default function ForgotPassword() {
             <div className="form-group">
               <label className="form-label">Email Address</label>
               <div className="input-wrapper">
-                <span className="input-icon">✉️</span>
+                <span className="input-icon">@</span>
                 <input
                   type="email"
                   required

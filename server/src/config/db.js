@@ -7,7 +7,7 @@ const connectDB = async () => {
     console.log(` MongoDB connected successfully: ${conn.connection.host}`);
   } catch (error) {
     if (mongoUri.includes("replicaSet")) {
-      console.warn("⚠️ Replica set connection failed, retrying without replicaSet parameter...");
+      console.warn("[WARN] Replica set connection failed, retrying without replicaSet parameter...");
       try {
         const fallbackUri = mongoUri.split("?")[0];
         const conn = await mongoose.connect(fallbackUri);

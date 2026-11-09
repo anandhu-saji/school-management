@@ -23,7 +23,7 @@ export default function StudentTimetableTab({
               title="Refresh latest published examination timetables"
               style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
             >
-              🔄 {loadingExams ? "Refreshing..." : "Refresh Timetable"}
+              {loadingExams ? "Refreshing..." : "Refresh Timetable"}
             </button>
           )}
           <button
@@ -31,7 +31,7 @@ export default function StudentTimetableTab({
             className="primary-button"
             onClick={onViewHallTicket}
           >
-            🖨️ View &amp; Print Hall Ticket
+            View &amp; Print Hall Ticket
           </button>
         </div>
       </div>
@@ -61,12 +61,12 @@ export default function StudentTimetableTab({
             </div>
 
             <div className="exam-meta-row">
-              <span className="exam-meta-pill">📅 {exam.date}</span>
+              <span className="exam-meta-pill">{exam.date}</span>
               <span className="exam-meta-pill">
-                ⏰ {exam.startTime} - {exam.endTime} ({exam.duration})
+                {exam.startTime} - {exam.endTime} ({exam.duration})
               </span>
-              <span className="exam-meta-pill">🏷️ QP Code: {exam.qpCode}</span>
-              <span className="exam-meta-pill">🏛️ Hall: {exam.hall}</span>
+              <span className="exam-meta-pill">QP Code: {exam.qpCode}</span>
+              <span className="exam-meta-pill">Hall: {exam.hall}</span>
               <span>
                 Max: <strong>{exam.maxMarks}</strong> / Pass:{" "}
                 <strong>{exam.passMarks}</strong>
@@ -85,7 +85,7 @@ export default function StudentTimetableTab({
                   color: "#475569",
                 }}
               >
-                📌 <strong>Instructions:</strong> {exam.instructions}
+                <strong>Instructions:</strong> {exam.instructions}
               </div>
             )}
           </div>
@@ -98,7 +98,7 @@ export default function StudentTimetableTab({
         style={{ marginTop: "20px", background: "#f8fafc" }}
       >
         <h4 style={{ margin: "0 0 8px", fontSize: "14px", color: "#0f172a" }}>
-          📋 Mandatory Kerala Pareeksha Bhavan Exam Guidelines:
+          Mandatory Kerala Pareeksha Bhavan Exam Guidelines:
         </h4>
         <ul
           style={{

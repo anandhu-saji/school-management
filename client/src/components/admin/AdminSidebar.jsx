@@ -13,11 +13,11 @@ export default function AdminSidebar({ activeNav }) {
 
   const navItems = [
     { id: "overview", path: "/admin/dashboard", icon: "▦", label: "Overview and Dashboard" },
-    { id: "attendance", path: "/admin/attendance", icon: "👥", label: "Division wise Attendance" },
-    { id: "teachers", path: "/admin/teachers", icon: "🗂", label: "Teachers Records" },
-    { id: "students", path: "/admin/students", icon: "🎓", label: "Students Records" },
-    { id: "exams", path: "/admin/exams", icon: "📅", label: "Exam Timetables" },
-    { id: "payments", path: "/admin/payments", icon: "💳", label: "Fee & Payments Console" },
+    { id: "attendance", path: "/admin/attendance", icon: "•", label: "Division wise Attendance" },
+    { id: "teachers", path: "/admin/teachers", icon: "•", label: "Teachers Records" },
+    { id: "students", path: "/admin/students", icon: "•", label: "Students Records" },
+    { id: "exams", path: "/admin/exams", icon: "•", label: "Exam Timetables" },
+    { id: "payments", path: "/admin/payments", icon: "•", label: "Fee & Payments Console" },
   ];
 
   return (
@@ -84,7 +84,7 @@ export default function AdminSidebar({ activeNav }) {
         {/* Bottom Profile Card */}
         <div className="sidebar-bottom-profile">
           <div className="profile-avatar-circle">
-            <span>🛡</span>
+            <span>ADM</span>
           </div>
           <div className="profile-details-column">
             <div className="profile-name-row">

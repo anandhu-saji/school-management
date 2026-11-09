@@ -13,9 +13,9 @@ const transporter = nodemailer.createTransport({
 
 transporter.verify((error) => {
   if (error) {
-    console.error("❌ Email Transporter configuration error:", error.message);
+    console.error("[Error] Email Transporter configuration error:", error.message);
   } else {
-    console.log("✅ Email Transporter is ready and connected to Gmail!");
+    console.log("[OK] Email Transporter is ready and connected to Gmail!");
   }
 });
 
@@ -44,7 +44,7 @@ export class EmailService {
       `,
     };
 
-    console.log(`[EmailService] 🔑 Password Reset OTP for ${toEmail}: ${otp}`);
+    console.log(`[EmailService] Password Reset OTP for ${toEmail}: ${otp}`);
 
     if (!emailUser || !emailPass) {
       console.warn("[EmailService] EMAIL_USER/EMAIL_PASS not configured. OTP logged to console.");
@@ -93,7 +93,7 @@ export class EmailService {
       `,
     };
 
-    console.log(`[EmailService] 🔑 Registration OTP for ${toEmail} (${purpose}): ${otp}`);
+    console.log(`[EmailService] Registration OTP for ${toEmail} (${purpose}): ${otp}`);
 
     if (!emailUser || !emailPass) {
       console.warn("[EmailService] EMAIL_USER/EMAIL_PASS not configured. OTP logged to console.");
