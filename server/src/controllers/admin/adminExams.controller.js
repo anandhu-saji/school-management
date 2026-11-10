@@ -47,6 +47,18 @@ export const deleteExam = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Controller: Purge all examination schedules permanently
+ * Route: DELETE /api/admin/exams/purge/all
+ */
+export const purgeAllExams = asyncHandler(async (req, res) => {
+  const result = await ExamService.purgeAllExams();
+  return ApiResponse.ok(res, {
+    message: `All examination timetables permanently removed (${result.deletedExams} records).`,
+    ...result,
+  });
+});
+
+/**
  * Controller: Get hall seating plan for an exam
  * Route: GET /api/admin/exams/:id/seating
  */

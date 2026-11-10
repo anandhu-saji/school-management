@@ -2,28 +2,46 @@ import crypto from "crypto";
 import Razorpay from "razorpay";
 import { ApiError } from "../utils/ApiError.js";
 
-const keyId = process.env.RAZORPAY_KEY_ID || "rzp_test_school_gateway_2026";
-const keySecret = process.env.RAZORPAY_KEY_SECRET || "rzp_test_secret_key_2026";
-
-// Initialize Razorpay SDK client if credentials are configured
-let razorpayClient = null;
-try {
-  if (keyId && keySecret && !keyId.includes("dummy") && !keyId.includes("your_")) {
-    razorpayClient = new Razorpay({
-      key_id: keyId,
-      key_secret: keySecret,
-    });
-  }
-} catch (err) {
-  console.warn("[RazorpayService] SDK initialization fallback to standard crypto mode:", err.message);
-}
-
 export class RazorpayService {
+  /**
+   * Dynamically instantiates and returns the official Razorpay SDK client
+   */
+  static getClient() {
+    const key = process.env.RAZORPAY_KEY_ID || "";
+    const secret = process.env.RAZORPAY_KEY_SECRET || "";
+    if (this.isLiveConfigured()) {
+      try {
+        return new Razorpay({
+          key_id: key,
+          key_secret: secret,
+        });
+      } catch (err) {
+        console.warn("[RazorpayService] SDK initialization error:", err.message);
+      }
+    }
+    return null;
+  }
+
   /**
    * Returns the active public Key ID for client-side Razorpay Checkout
    */
   static getKeyId() {
     return process.env.RAZORPAY_KEY_ID || "rzp_test_school_gateway_2026";
+  }
+
+  /**
+   * Checks whether real Razorpay production/test credentials have been provided
+   */
+  static isLiveConfigured() {
+    const key = process.env.RAZORPAY_KEY_ID || "";
+    const secret = process.env.RAZORPAY_KEY_SECRET || "";
+    return (
+      Boolean(key && secret) &&
+      !key.startsWith("rzp_test_school_gateway") &&
+      !key.includes("dummy") &&
+      !key.includes("your_") &&
+      !secret.includes("secret_key_2026")
+    );
   }
 
   /**
@@ -44,15 +62,16 @@ export class RazorpayService {
     const amountInPaise = Math.round(numAmount * 100);
 
     // If live/real Razorpay client is connected, call Razorpay API
-    if (razorpayClient && !keyId.includes("dummy")) {
+    const client = this.getClient();
+    if (client) {
       try {
-        const order = await razorpayClient.orders.create({
+        const order = await client.orders.create({
           amount: amountInPaise,
           currency: "INR",
           receipt: String(receipt || `rec_${Date.now()}`),
           notes,
         });
-        return order;
+        return { ...order, isSimulated: false };
       } catch (err) {
         console.warn("[RazorpayService] Live API call failed, falling back to simulated order:", err.message);
       }
@@ -72,7 +91,19 @@ export class RazorpayService {
       attempts: 0,
       notes,
       created_at: Math.floor(Date.now() / 1000),
+      isSimulated: true,
     };
+  }
+
+  /**
+   * Generates a valid HMAC SHA256 signature for test/simulation orders
+   */
+  static generateMockSignature(orderId, paymentId) {
+    const secret = process.env.RAZORPAY_KEY_SECRET || "rzp_test_secret_key_2026";
+    return crypto
+      .createHmac("sha256", secret)
+      .update(`${orderId}|${paymentId}`)
+      .digest("hex");
   }
 
   /**
@@ -83,24 +114,16 @@ export class RazorpayService {
    * @param {string} params.signature - razorpay_signature
    * @returns {boolean} True if authentic, throws ApiError if invalid
    */
-    /**
-   * Generates a valid HMAC SHA256 signature for test/simulation orders
-   */
-  static generateMockSignature(orderId, paymentId) {
-    return crypto
-      .createHmac("sha256", keySecret)
-      .update(`${orderId}|${paymentId}`)
-      .digest("hex");
-  }
-
   static verifyPaymentSignature({ orderId, paymentId, signature }) {
     if (!orderId || !paymentId) {
       throw ApiError.badRequest("Razorpay Order ID and Payment ID are required for verification.");
     }
 
+    const secret = process.env.RAZORPAY_KEY_SECRET || "rzp_test_secret_key_2026";
+
     // Compute expected HMAC SHA256 digest
     const expectedSignature = crypto
-      .createHmac("sha256", keySecret)
+      .createHmac("sha256", secret)
       .update(`${orderId}|${paymentId}`)
       .digest("hex");
 

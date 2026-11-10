@@ -43,163 +43,6 @@ export class ExamService {
    */
   static async getExamTimetables() {
     let count = await Exam.countDocuments();
-    if (count === 0) {
-      const defaultExams = [
-        {
-          term: "SSLC Board Examination March 2027",
-          standard: "Standard 10 (SSLC)",
-          date: "12 March 2027, Fri",
-          examDate: new Date("2027-03-12T04:00:00.000Z"),
-          startTime: "09:30 AM",
-          endTime: "11:45 AM",
-          duration: "2 hrs 15 mins",
-          subject: "First Language – Malayalam Part I",
-          qpCode: "MAL-101",
-          hall: "Halls 01, 02, 03, 04",
-          totalCandidates: 242,
-          invigilator: "Mrs. Indu B Nair, Sri. George K.",
-          invigilatorName: "Mrs. Indu B Nair",
-          invigilatorPen: "849201",
-          maxMarks: 40,
-          passMarks: 12,
-          status: "Approved & Published",
-          instructions:
-            "15 minutes cool-off time provided (09:30 AM – 09:45 AM). Writing starts at 09:45 AM. Electronic devices strictly prohibited.",
-          seatingPlan: [
-            {
-              hallNumber: "Hall 01",
-              roomName: "Room 101 - Main Academic Block",
-              rollRange: "ADM-14920 to ADM-14960",
-              candidateCount: 40,
-              invigilatorName: "Mrs. Indu B Nair",
-              invigilatorPen: "849201",
-            },
-            {
-              hallNumber: "Hall 02",
-              roomName: "Room 102 - Main Academic Block",
-              rollRange: "ADM-14961 to ADM-15000",
-              candidateCount: 40,
-              invigilatorName: "Sri. George K.",
-              invigilatorPen: "849202",
-            },
-            {
-              hallNumber: "Hall 03",
-              roomName: "Room 201 - Science Wing First Floor",
-              rollRange: "ADM-15001 to ADM-15080",
-              candidateCount: 80,
-              invigilatorName: "Smt. Bindu S.",
-              invigilatorPen: "849205",
-            },
-            {
-              hallNumber: "Hall 04",
-              roomName: "Room 202 - Science Wing First Floor",
-              rollRange: "ADM-15081 to ADM-15162",
-              candidateCount: 82,
-              invigilatorName: "Sri. Thomas Joseph",
-              invigilatorPen: "849210",
-            },
-          ],
-        },
-        {
-          term: "SSLC Board Examination March 2027",
-          standard: "Standard 10 (SSLC)",
-          date: "16 March 2027, Tue",
-          examDate: new Date("2027-03-16T04:00:00.000Z"),
-          startTime: "09:30 AM",
-          endTime: "12:15 PM",
-          duration: "2 hrs 45 mins",
-          subject: "Second Language – English",
-          qpCode: "ENG-102",
-          hall: "Halls 01, 02, 03, 04",
-          totalCandidates: 242,
-          invigilator: "Sri. Thomas Joseph, Smt. Radhakrishnan N.",
-          invigilatorName: "Sri. Thomas Joseph",
-          invigilatorPen: "849210",
-          maxMarks: 80,
-          passMarks: 24,
-          status: "Approved & Published",
-          instructions:
-            "15 minutes mandatory cool-off period. Candidates must present official Sampoorna photo hall tickets.",
-          seatingPlan: [
-            {
-              hallNumber: "Hall 01",
-              roomName: "Room 101 - Main Academic Block",
-              rollRange: "ADM-14920 to ADM-14960",
-              candidateCount: 40,
-              invigilatorName: "Sri. Thomas Joseph",
-              invigilatorPen: "849210",
-            },
-            {
-              hallNumber: "Hall 02",
-              roomName: "Room 102 - Main Academic Block",
-              rollRange: "ADM-14961 to ADM-15000",
-              candidateCount: 40,
-              invigilatorName: "Smt. Radhakrishnan N.",
-              invigilatorPen: "849214",
-            },
-            {
-              hallNumber: "Hall 03",
-              roomName: "Room 201 - Science Wing First Floor",
-              rollRange: "ADM-15001 to ADM-15080",
-              candidateCount: 80,
-              invigilatorName: "Mrs. Indu B Nair",
-              invigilatorPen: "849201",
-            },
-            {
-              hallNumber: "Hall 04",
-              roomName: "Room 202 - Science Wing First Floor",
-              rollRange: "ADM-15081 to ADM-15162",
-              candidateCount: 82,
-              invigilatorName: "Sri. George K.",
-              invigilatorPen: "849202",
-            },
-          ],
-        },
-        {
-          term: "SSLC Board Examination March 2027",
-          standard: "Standard 10 (SSLC)",
-          date: "19 March 2027, Fri",
-          examDate: new Date("2027-03-19T04:00:00.000Z"),
-          startTime: "09:30 AM",
-          endTime: "12:15 PM",
-          duration: "2 hrs 45 mins",
-          subject: "Mathematics",
-          qpCode: "MAT-104",
-          hall: "Halls 01, 02, 03, 04",
-          totalCandidates: 242,
-          invigilator: "Mrs. Indu B Nair, Sri. Manoj V.",
-          invigilatorName: "Mrs. Indu B Nair",
-          invigilatorPen: "849201",
-          maxMarks: 80,
-          passMarks: 24,
-          status: "Approved & Published",
-          instructions:
-            "Log tables & drawing instruments authorized. Graph sheets will be provided by Pareeksha Bhavan center.",
-        },
-        {
-          term: "SSLC Board Examination March 2027",
-          standard: "Standard 10 (SSLC)",
-          date: "23 March 2027, Tue",
-          examDate: new Date("2027-03-23T04:00:00.000Z"),
-          startTime: "09:30 AM",
-          endTime: "11:45 AM",
-          duration: "2 hrs 15 mins",
-          subject: "Physical Science (Physics)",
-          qpCode: "PHY-105",
-          hall: "Halls 01, 02, 03, 04",
-          totalCandidates: 242,
-          invigilator: "Smt. Bindu S., Sri. George K.",
-          invigilatorName: "Smt. Bindu S.",
-          invigilatorPen: "849205",
-          maxMarks: 40,
-          passMarks: 12,
-          status: "Approved & Published",
-          instructions:
-            "Standard mathematical tables allowed. Calculator use strictly forbidden.",
-        },
-      ];
-      await Exam.insertMany(defaultExams);
-    }
 
     const exams = await Exam.find({}).sort({ examDate: 1, date: 1, startTime: 1 }).lean();
     const totalSchedules = exams.length;
@@ -210,9 +53,9 @@ export class ExamService {
       if (e.hall) e.hall.split(",").forEach((h) => allHalls.add(h.trim()));
       if (e.seatingPlan) e.seatingPlan.forEach((sp) => sp.hallNumber && allHalls.add(sp.hallNumber.trim()));
     });
-    const hallsAllocated = allHalls.size > 0 ? allHalls.size : 12;
+    const hallsAllocated = allHalls.size > 0 ? allHalls.size : 0;
     const teacherCount = await Teacher.countDocuments();
-    const invigilatorCadre = teacherCount > 0 ? teacherCount : 26;
+    const invigilatorCadre = totalSchedules > 0 ? (teacherCount > 0 ? teacherCount : 0) : 0;
 
     return {
       exams,
@@ -369,6 +212,16 @@ export class ExamService {
       throw ApiError.notFound("Exam schedule record not found.");
     }
     return deleted;
+  }
+
+  /**
+   * Purge all exam schedules permanently
+   */
+  static async purgeAllExams() {
+    const res = await Exam.deleteMany({});
+    return {
+      deletedExams: res.deletedCount,
+    };
   }
 
   /**

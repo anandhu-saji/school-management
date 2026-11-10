@@ -77,3 +77,60 @@ export const ALL_CLASSES = ACADEMIC_WINGS.flatMap((w) =>
     sectionLabel: w.wingShort,
   }))
 );
+
+/**
+ * Normalizes any class/division input string to canonical Kerala 2.0 Academic Division
+ * Examples: "12 science", "Class 12 science", "12-Science" -> { id: "12-Science", name: "Class 12-Science" }
+ */
+export const normalizeClassDivision = (input) => {
+  if (!input || typeof input !== "string") return null;
+  const raw = input.trim();
+  if (!raw) return null;
+
+  // Direct match by name or id
+  const direct = ALL_CLASSES.find(
+    (c) => c.name.toLowerCase() === raw.toLowerCase() || c.id.toLowerCase() === raw.toLowerCase()
+  );
+  if (direct) {
+    return {
+      id: direct.id,
+      name: direct.name,
+      standard: direct.standard,
+      stream: direct.stream,
+    };
+  }
+
+  // Alphanumeric clean match (removing spaces, hyphens, and trailing suffixes like Mentor, In-charge, etc.)
+  const clean = raw
+    .replace(/\s*(Mentor|Class Teacher|In-charge|Teacher|Cadre)\s*$/i, "")
+    .replace(/[\s-]/g, "")
+    .toLowerCase();
+
+  const match = ALL_CLASSES.find((c) => {
+    const cClean = c.name.replace(/[\s-]/g, "").toLowerCase();
+    const idClean = c.id.replace(/[\s-]/g, "").toLowerCase();
+    return cClean === clean || idClean === clean;
+  });
+
+  if (match) {
+    return {
+      id: match.id,
+      name: match.name,
+      standard: match.standard,
+      stream: match.stream,
+    };
+  }
+
+  // Fallback for custom division string
+  const cleanId = raw
+    .replace(/^Class\s*/i, "")
+    .replace(/\s*(Mentor|Class Teacher|In-charge|Teacher)\s*$/i, "")
+    .trim();
+
+  return {
+    id: cleanId,
+    name: raw.startsWith("Class ") ? raw : `Class ${raw}`,
+    standard: `Class ${cleanId.split("-")[0] || cleanId}`,
+    stream: "General",
+  };
+};

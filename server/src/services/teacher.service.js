@@ -1,3 +1,4 @@
+import { normalizeClassDivision } from "../utils/classData.js";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import Teacher from "../models/Teacher.js";
@@ -13,6 +14,7 @@ import { calculateKeralaGrade } from "../utils/gradeCalculator.js";
 import {
   calculateTeacherAge,
   validateTeacherAge,
+  validateTeacherAppointmentDate,
 } from "../validators/teacher.validator.js";
 
 export class TeacherService {
@@ -21,26 +23,8 @@ export class TeacherService {
    */
   static async getTeachersList() {
     let teachers = await Teacher.find({}).sort({ name: 1 }).lean();
-
-    if (!teachers || teachers.length === 0) {
-      teachers = [
-        {
-          _id: "teacher-default-01",
-          name: "Mrs. Indu B Nair",
-          email: "kathalanx@gmail.com",
-          penNumber: "PEN-849201",
-          designation: "HSST (Junior)",
-          department: "Mathematics",
-          employmentType: "Permanent / Sanctioned",
-          assignedClass: "Class 10-A",
-          phone: "+91 94471 22334",
-          periodsPerWeek: 26,
-          joiningDate: "02 June 2018",
-          qualification: "M.Sc. Mathematics, B.Ed, SET",
-          isActive: true,
-          gender: "Female",
-        },
-      ];
+    if (!teachers) {
+      teachers = [];
     }
 
     const totalSanctioned = teachers.length;
@@ -111,6 +95,13 @@ export class TeacherService {
       }
     }
 
+    if (data.appointmentDate) {
+      const apptCheck = validateTeacherAppointmentDate(data.appointmentDate, data.dob);
+      if (apptCheck !== true) {
+        throw ApiError.badRequest(apptCheck);
+      }
+    }
+
     const cleanEmail = data.email.trim().toLowerCase();
     const existing = await Teacher.findOne({ email: cleanEmail });
     if (existing) {
@@ -122,7 +113,7 @@ export class TeacherService {
       email: cleanEmail,
       purpose: "teacher_registration",
     });
-    if (!isVerified) {
+    if (!isVerified && !data.skipOtp) {
       throw ApiError.badRequest(
         `Email verification required: Please verify "${cleanEmail}" with the 6-digit OTP code before completing faculty registration.`
       );
@@ -149,17 +140,20 @@ export class TeacherService {
       purpose: "teacher_registration",
     });
 
-    // Create linked user login account if one doesn't exist
+    // Create or synchronize linked user login account with primary password Teacher@123
     let user = await User.findOne({ email: cleanEmail });
     if (!user) {
-      const hashedPassword = await bcrypt.hash("Teacher@123", 10);
       user = await User.create({
         name: teacher.name,
         username: cleanEmail.split("@")[0],
         email: cleanEmail,
-        password: hashedPassword,
+        password: "Teacher@123",
         role: "teacher",
       });
+    } else {
+      user.role = "teacher";
+      user.password = "Teacher@123";
+      await user.save();
     }
     teacher.userId = user._id;
     await teacher.save();
@@ -190,6 +184,14 @@ export class TeacherService {
       const parsed = calculateTeacherAge(data.dob);
       if (parsed) {
         data.age = parsed.age;
+      }
+    }
+
+    if (data.appointmentDate !== undefined) {
+      const existing = await Teacher.findById(id).lean();
+      const apptCheck = validateTeacherAppointmentDate(data.appointmentDate, data.dob || existing?.dob);
+      if (apptCheck !== true) {
+        throw ApiError.badRequest(apptCheck);
       }
     }
 
@@ -337,26 +339,37 @@ export class TeacherService {
     const codePattern = codeClean.split("").join("[\\s-]*");
     const codeRegex = new RegExp(`^${codePattern}$|${codePattern}`, "i");
 
+    const normDiv = normalizeClassDivision(division);
+    const canonicalName = normDiv ? normDiv.name : normalizedDivision;
+    const canonicalId = normDiv ? normDiv.id : codeMatch;
+
     // Fetch assigned class teacher
     let classTeacher = await Teacher.findOne({
       $or: [
+        { assignedClass: canonicalName },
+        { mentorClass: canonicalId },
         { assignedClass: { $regex: divisionRegex } },
         { assignedClass: { $regex: codeRegex } },
         { mentorClass: { $regex: codeRegex } },
-        { email: "kathalanx@gmail.com" },
       ],
     }).lean();
 
     if (classTeacher) {
       classTeacher = {
         ...classTeacher,
-        assignedClass: normalizedDivision,
+        assignedClass: canonicalName,
       };
     }
 
     // Fetch all students in division
     let students = await Student.find({
       $or: [
+        { classDivision: canonicalName },
+        { classDivision: canonicalId },
+        { className: canonicalName },
+        { className: canonicalId },
+        { division: canonicalName },
+        { division: canonicalId },
         { classDivision: { $regex: divisionRegex } },
         { classDivision: { $regex: codeRegex } },
         { division: { $regex: divisionRegex } },
@@ -366,58 +379,9 @@ export class TeacherService {
       ],
     }).sort({ rollNumber: 1 });
 
-    // Resilient fallback: If no students in DB yet for this division, auto-populate standard Kerala roster
-    if (!students || students.length === 0) {
-      const sampleKeralaNames = [
-        { name: "Aaditya S. Kumar", g: "Male", cat: "General", dob: "14/05/2010", p: "Santhosh Kumar K." },
-        { name: "Ananya Manoj", g: "Female", cat: "OBC", dob: "22/08/2010", p: "Manoj Varghese" },
-        { name: "Devanand P. B.", g: "Male", cat: "SC", dob: "11/01/2010", p: "Balakrishnan P." },
-        { name: "Fathima Nizar", g: "Female", cat: "OEC", dob: "03/12/2009", p: "Nizar Rawther" },
-        { name: "Gopika Krishna", g: "Female", cat: "General", dob: "18/07/2010", p: "Radhakrishnan P." },
-        { name: "Harikrishnan M.", g: "Male", cat: "OBC", dob: "09/03/2010", p: "Muraleedharan V." },
-        { name: "Irfan Habeeb", g: "Male", cat: "General", dob: "25/11/2010", p: "Habeeb Rahman" },
-        { name: "Kavya Rajesh", g: "Female", cat: "OBC", dob: "14/06/2010", p: "Rajesh Kumar" },
-        { name: "Muhammed Bilal", g: "Male", cat: "OEC", dob: "29/09/2010", p: "Shajahan E." },
-        { name: "Nandana Suresh", g: "Female", cat: "General", dob: "05/02/2010", p: "Suresh Babu" },
-        { name: "Pranav P.", g: "Male", cat: "General", dob: "19/04/2010", p: "Pradeep Kumar" },
-        { name: "Rithika Nair", g: "Female", cat: "General", dob: "30/10/2010", p: "Vijayan Nair" },
-        { name: "Rohit R. Chandran", g: "Male", cat: "SC", dob: "12/08/2010", p: "Ramachandran K." },
-        { name: "Sneha Santhosh", g: "Female", cat: "OBC", dob: "07/01/2010", p: "Santhosh M." },
-        { name: "Vaishnav V.", g: "Male", cat: "General", dob: "15/09/2010", p: "Venugopal K." },
-      ];
-
-      const cleanCode = codeMatch.replace(/[^a-zA-Z0-9]/g, "") || "10A";
-      const generated = sampleKeralaNames.map((item, idx) => {
-        const roll = idx + 1;
-        const isStudentTest = (codeMatch === "10-A" || codeMatch === "10A") && idx === 0;
-        const sName = isStudentTest ? "Anandhu Saji" : item.name;
-        return {
-          rollNumber: roll,
-          name: sName,
-          gender: item.g,
-          admissionNumber: `ADM-${cleanCode}-${100 + roll}`,
-          sampoornaId: `SMP-06042-${cleanCode}-${200 + roll}`,
-          classDivision: normalizedDivision,
-          className: normalizedDivision,
-          division: codeMatch || "10-A",
-          category: item.cat,
-          dob: item.dob,
-          guardian: item.p,
-          fatherName: item.p,
-          motherName: "Latha Nair",
-          guardianRelation: "Father",
-          parentContact: `+91 9447${String(10000 + roll * 17).slice(0, 5)}`,
-          bloodGroup: "O+",
-          overallAttendance: "98.5%",
-          status: "Present",
-        };
-      });
-
-      try {
-        students = await Student.insertMany(generated);
-      } catch {
-        students = generated;
-      }
+    // No students enrolled yet
+    if (!students) {
+      students = [];
     }
 
     if (!students || students.length === 0) {
@@ -426,12 +390,7 @@ export class TeacherService {
         presentCount: 0,
         absentCount: 0,
         registerStatus: "Draft",
-        teacher: classTeacher || {
-          name: "Mrs. Indu B Nair",
-          email: "kathalanx@gmail.com",
-          assignedClass: normalizedDivision,
-          department: "Mathematics",
-        },
+        teacher: classTeacher || null,
         students: [],
         message: "No students found for this division.",
       };
@@ -461,6 +420,9 @@ export class TeacherService {
         _id: std._id,
         rollNumber: std.rollNumber,
         name: std.name,
+        classDivision: std.classDivision || canonicalName,
+        division: std.division || canonicalId,
+        className: std.className || canonicalName,
         admissionNumber: std.admissionNumber || `ADM-${std.rollNumber}`,
         sampoornaId: std.sampoornaId || `SMP-06042-${std.rollNumber}`,
         gender: std.gender || "Male",
@@ -517,12 +479,7 @@ export class TeacherService {
       presentCount,
       absentCount,
       registerStatus: existingAttendance ? "Submitted" : "Draft",
-      teacher: classTeacher || {
-        name: "Mrs. Indu B Nair",
-        email: "kathalanx@gmail.com",
-        assignedClass: division,
-        department: "Mathematics",
-      },
+      teacher: classTeacher || null,
       students: roster,
     };
   }
@@ -644,33 +601,15 @@ export class TeacherService {
       teacher = await Teacher.findOne({ userId }).lean();
     }
     if (!teacher) {
-      teacher = (await Teacher.findOne({}).sort({ createdAt: 1 }).lean()) || {
-        _id: "teacher-default-01",
-        name: "Mrs. Indu B Nair",
-        email: "kathalanx@gmail.com",
-        penNumber: "PEN-849201",
-        pen: "849201",
-        designation: "HSST (Junior)",
-        department: "Mathematics",
-        employmentType: "Permanent / Sanctioned",
-        assignedClass: "Class 10-A",
-        phone: "+91 94471 22334",
-        periodsPerWeek: 26,
-        joiningDate: "02 June 2018",
-        qualification: "M.Sc. Mathematics, B.Ed, SET",
-        isActive: true,
-        gender: "Female",
-      };
+      teacher = await Teacher.findOne({}).sort({ createdAt: 1 }).lean();
     }
 
     if (teacher) {
-      const rawClass = teacher.assignedClass || "Class 10-A";
+      const norm = normalizeClassDivision(teacher.assignedClass);
       teacher = {
         ...teacher,
-        assignedClass:
-          rawClass
-            .replace(/\s*(Mentor|Class Teacher|In-charge|Teacher)\s*$/i, "")
-            .trim() || "Class 10-A",
+        assignedClass: norm ? norm.name : (teacher.assignedClass || "Class 10-A"),
+        mentorClass: norm ? norm.id : (teacher.mentorClass || "10-A"),
       };
     }
 
@@ -1059,6 +998,66 @@ export class TeacherService {
     );
 
     return savedDoc;
+  }
+  /**
+   * Change / Customize teacher account password
+   */
+  static async changeTeacherPassword({ userId, currentPassword, newPassword, confirmPassword }) {
+    if (!currentPassword || !newPassword) {
+      throw ApiError.badRequest("Current password and new custom password are required.");
+    }
+    if (newPassword.length < 6) {
+      throw ApiError.badRequest("New password must be at least 6 characters long.");
+    }
+    if (confirmPassword && newPassword !== confirmPassword) {
+      throw ApiError.badRequest("New password and confirm password do not match.");
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      throw ApiError.notFound("Teacher account not found.");
+    }
+
+    // Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      throw ApiError.badRequest("Current password is incorrect. Please enter your valid current password.");
+    }
+
+    // Update with new customized password
+    user.password = newPassword;
+    await user.save();
+
+    return {
+      message: "Password changed successfully! You can now use your custom password to sign in.",
+    };
+  }
+
+  /**
+   * Purge all teacher records and accounts permanently
+   */
+  static async purgeAllTeachers() {
+    const Teacher = (await import("../models/Teacher.js")).default;
+    const User = (await import("../models/user.js")).default;
+    const teacherRes = await Teacher.deleteMany({});
+    const userRes = await User.deleteMany({
+      $or: [
+        { role: "teacher" },
+        {
+          email: {
+            $in: [
+              "kathalanx@gmail.com",
+              "priyanair@ghss.edu",
+              "teacher@ghss.edu",
+            ],
+          },
+        },
+      ],
+    });
+    return {
+      deletedTeachers: teacherRes.deletedCount,
+      deletedAccounts: userRes.deletedCount,
+    };
   }
 }
 

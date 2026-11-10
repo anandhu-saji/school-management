@@ -8,15 +8,18 @@ import {
   createTeacher,
   updateTeacher,
   deleteTeacher,
+  purgeAllTeachers,
   getTeacherAllotment,
   getStudentsRecords,
   createStudent,
   updateStudent,
   deleteStudent,
+  purgeAllStudents,
   getExamTimetables,
   createExam,
   updateExam,
   deleteExam,
+  purgeAllExams,
   getExamSeatingPlan,
   getFeePayments,
   getPaymentSummary,
@@ -47,6 +50,7 @@ router.post("/attendance/register", validate(saveAttendanceSchema), saveDivision
 
 // Teachers Endpoints
 router.get("/teachers", getTeachersRecords);
+router.delete("/teachers/purge/all", purgeAllTeachers);
 router.post("/teachers", validate(createTeacherSchema), createTeacher);
 router.put("/teachers/:id", validate(updateTeacherSchema), updateTeacher);
 router.delete("/teachers/:id", deleteTeacher);
@@ -54,12 +58,14 @@ router.get("/teachers/:id/allotment", getTeacherAllotment);
 
 // Students Endpoints
 router.get("/students", getStudentsRecords);
+router.delete("/students/purge/all", purgeAllStudents);
 router.post("/students", validate(createStudentSchema), createStudent);
 router.put("/students/:id", validate(updateStudentSchema), updateStudent);
 router.delete("/students/:id", deleteStudent);
 
 // Exam Timetables
 router.get("/exams", getExamTimetables);
+router.delete("/exams/purge/all", purgeAllExams);
 router.post("/exams", validate(createExamSchema), createExam);
 router.put("/exams/:id", validate(updateExamSchema), updateExam);
 router.delete("/exams/:id", deleteExam);

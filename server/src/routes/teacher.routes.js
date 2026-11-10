@@ -6,6 +6,7 @@ import {
   getInternalMarks,
   saveInternalMarks,
   getTeacherProfile,
+  changeTeacherPassword,
 } from "../controllers/teacher.controller.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 import { requireTeacher } from "../middleware/role.middleware.js";
@@ -23,5 +24,6 @@ router.get("/timetable", getTeacherSchedule);
 router.get("/internal-marks", getInternalMarks);
 router.post("/internal-marks", saveInternalMarks);
 router.get("/profile", getTeacherProfile);
+router.put("/change-password", changeTeacherPassword);
 
 export default router;

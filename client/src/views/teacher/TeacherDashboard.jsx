@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import api from "../../api/axiosclient";
 import { clearAuthSession } from "../../utils/auth";
+import { normalizeClassDivision } from "../../utils/classData";
 import "../../Styles/AdminDash.css";
 import "../../Styles/TeacherDash.css";
 
@@ -13,6 +14,7 @@ import TeacherInternalMarksTab from "../../components/teacher/TeacherInternalMar
 import TeacherTimetableTab from "../../components/teacher/TeacherTimetableTab";
 import TeacherProfileTab from "../../components/teacher/TeacherProfileTab";
 import StudentDossierModal from "../../components/admin/students/StudentDossierModal";
+import TeacherChangePasswordModal from "../../components/teacher/TeacherChangePasswordModal";
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
@@ -48,17 +50,7 @@ export default function TeacherDashboard() {
   const [selectedDivision, setSelectedDivision] = useState("Class 10-A");
 
   const [teacherProfile, setTeacherProfile] = useState({
-    name: "Mrs. Indu B Nair",
-    email: "kathalanx@gmail.com",
-    assignedClass: "Class 10-A",
-    department: "Mathematics",
-    pen: "849201",
-    penNumber: "PEN-849201",
-    designation: "HSST (Junior)",
-    employmentType: "Permanent / Sanctioned",
-    periodsPerWeek: 26,
-    joiningDate: "02 June 2018",
-    qualification: "M.Sc. Mathematics, B.Ed, SET",
+    name: "Teacher", email: "", assignedClass: "Class 10-A", department: "General", pen: "", penNumber: "", designation: "Teacher", employmentType: "", periodsPerWeek: 0, joiningDate: "", qualification: "",
   });
 
   const [students, setStudents] = useState([]);
@@ -68,6 +60,7 @@ export default function TeacherDashboard() {
 
   // Modal State for Viewing Student KYC Dossier
   const [dossierStudent, setDossierStudent] = useState(null);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   // Sync tab with URL
   const handleTabChange = (newTab) => {
@@ -215,6 +208,7 @@ export default function TeacherDashboard() {
         teacherProfile={teacherProfile}
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
+        onChangePassword={() => setIsChangePasswordOpen(true)}
         onLogout={handleLogout}
       />
 
@@ -231,6 +225,7 @@ export default function TeacherDashboard() {
           }}
           selectedDate={selectedDate}
           onDateChange={setSelectedDate}
+          onChangePassword={() => setIsChangePasswordOpen(true)}
         />
 
         <main className="teacher-content">
@@ -269,10 +264,16 @@ export default function TeacherDashboard() {
           )}
 
           {activeTab === "profile" && (
-            <TeacherProfileTab teacherProfile={teacherProfile} />
+            <TeacherProfileTab teacherProfile={teacherProfile} onChangePassword={() => setIsChangePasswordOpen(true)} />
           )}
         </main>
       </div>
+
+      {/* Teacher Password Customization Modal */}
+      <TeacherChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+      />
 
       {/* Student KYC Dossier Popup Modal */}
       {dossierStudent && (

@@ -9,118 +9,7 @@ export class PaymentService {
    * Auto-seed initial fee payments if ledger is empty
    */
   static async autoSeedInitialPayments() {
-    try {
-      const existing = await FeePayment.countDocuments();
-      if (existing > 0) return;
-
-      let students = await Student.find().limit(35).lean();
-      if (!students || students.length === 0) {
-        students = [
-          { name: "Anandhu Saji", admissionNumber: "ADM-14920", classDivision: "Class 10-A", rollNumber: 1 },
-          { name: "Aparna M. Nair", admissionNumber: "ADM-14921", classDivision: "Class 10-A", rollNumber: 2 },
-          { name: "Gokul Krishna", admissionNumber: "ADM-14922", classDivision: "Class 10-A", rollNumber: 3 },
-          { name: "Fathima Nizar", admissionNumber: "ADM-14923", classDivision: "Class 10-B", rollNumber: 4 },
-          { name: "Alan Varghese", admissionNumber: "ADM-14924", classDivision: "Class 9-A", rollNumber: 5 },
-          { name: "Devika S. Kumar", admissionNumber: "ADM-14925", classDivision: "Class 8-A", rollNumber: 6 },
-          { name: "Muhammed Razi", admissionNumber: "ADM-14926", classDivision: "Class 7-A", rollNumber: 7 },
-          { name: "Aiswarya Raj", admissionNumber: "ADM-14927", classDivision: "Class 6-A", rollNumber: 8 },
-          { name: "Niranjan P.", admissionNumber: "ADM-14928", classDivision: "Class 5-A", rollNumber: 9 },
-          { name: "Diya Mariam", admissionNumber: "ADM-14929", classDivision: "Class 4-A", rollNumber: 10 },
-          { name: "Kiran Joy", admissionNumber: "ADM-14930", classDivision: "Class 1-A", rollNumber: 11 },
-          { name: "Lakshmi Priya", admissionNumber: "ADM-14931", classDivision: "Class 12-Science-A", rollNumber: 12 },
-          { name: "Midhun Mohan", admissionNumber: "ADM-14932", classDivision: "Class 12-Commerce", rollNumber: 13 },
-          { name: "Sneha Babu", admissionNumber: "ADM-14933", classDivision: "Class 11-Science-B", rollNumber: 14 },
-        ];
-      }
-
-      const feeTemplates = [
-        { feeCategory: "Bus Fee", totalAmount: 4500, term: "Monthly Bus Pass", remarks: "School Bus Route 03 - Rajakkad Town to Kallar" },
-        { feeCategory: "Annual Fee", totalAmount: 6800, term: "Annual", remarks: "Composite Academic & Amenities Fee 2026-27" },
-        { feeCategory: "PTA Fund", totalAmount: 1500, term: "Annual", remarks: "Parent-Teacher Association Development Fund" },
-        { feeCategory: "Bus Fee", totalAmount: 4800, term: "Monthly Bus Pass", remarks: "School Bus Route 01 - Ponmudi & Bisonvalley" },
-        { feeCategory: "Lab & Computer Fee", totalAmount: 2200, term: "Term 1", remarks: "High-Tech Computer Lab & Smart Classroom Charge" },
-        { feeCategory: "Special / Exam Fee", totalAmount: 1200, term: "Term 1", remarks: "SCERT Model & Onam Examination Fee" },
-        { feeCategory: "Sports & Library", totalAmount: 850, term: "Annual", remarks: "Sports Equipment & Library Lending Card" },
-        { feeCategory: "PTA Fund", totalAmount: 1500, term: "Annual", remarks: "General Education Protection Mission Support" },
-      ];
-
-      const paymentModes = [
-        "UPI / Online (Google Pay / PhonePe)",
-        "Net Banking",
-        "Cash at School Counter",
-        "Bank Challan (SBT/SBI)",
-      ];
-
-      const samplePayments = [];
-      let receiptCounter = 1042;
-
-      students.forEach((s, idx) => {
-        const template1 = feeTemplates[idx % feeTemplates.length];
-        const template2 = feeTemplates[(idx + 2) % feeTemplates.length];
-        const items = [template1, template2];
-
-        items.forEach((tmpl, subIdx) => {
-          receiptCounter++;
-          const recNum = `REC-2026-${receiptCounter}`;
-          const isPaidFull = (idx + subIdx) % 3 !== 0;
-          const isPartial = (idx + subIdx) % 3 === 0 && idx % 2 === 0;
-
-          let amountPaid = tmpl.totalAmount;
-          let status = "Paid";
-          if (isPartial) {
-            amountPaid = Math.round(tmpl.totalAmount * 0.5);
-            status = "Partial";
-          } else if (!isPaidFull) {
-            amountPaid = 0;
-            status = "Pending";
-          }
-
-          const dueAmount = tmpl.totalAmount - amountPaid;
-          const mode = paymentModes[(idx + subIdx) % paymentModes.length];
-          const day = 5 + ((idx * 3 + subIdx * 7) % 24);
-          const dateStr = `2026-10-${day < 10 ? "0" + day : day}`;
-
-          let wing = "High School";
-          const c = s.classDivision || "";
-          if (c.includes("11") || c.includes("12") || c.includes("+1") || c.includes("+2")) wing = "Higher Secondary";
-          else if (c.includes("8") || c.includes("9") || c.includes("10")) wing = "High School";
-          else if (c.includes("5") || c.includes("6") || c.includes("7")) wing = "UP School";
-          else wing = "LP School";
-
-          samplePayments.push({
-            receiptNumber: recNum,
-            studentId: s._id || null,
-            studentName: s.name,
-            admissionNumber: s.admissionNumber || `ADM-2026-${1000 + idx}`,
-            rollNumber: s.rollNumber || idx + 1,
-            classDivision: s.classDivision || "Class 10-A",
-            wing,
-            feeCategory: tmpl.feeCategory,
-            academicYear: "2026-2027",
-            term: tmpl.term,
-            totalAmount: tmpl.totalAmount,
-            amountPaid,
-            dueAmount,
-            status,
-            paymentDate: dateStr,
-            paymentMode: mode,
-            transactionReference:
-              status !== "Pending"
-                ? mode.includes("UPI")
-                  ? `UPI/62904${receiptCounter}`
-                  : `CHALLAN-${receiptCounter}`
-                : "",
-            dueDate: "2026-11-20",
-            remarks: tmpl.remarks,
-            collectedBy: "Accounts Desk / Sri. R. Krishnan",
-          });
-        });
-      });
-
-      await FeePayment.insertMany(samplePayments);
-    } catch (err) {
-      console.error("Auto-seed payments error:", err);
-    }
+    return;
   }
 
   /**
@@ -206,10 +95,7 @@ export class PaymentService {
     page = 1,
     limit = 10,
   }) {
-    const existingCount = await FeePayment.countDocuments();
-    if (existingCount === 0) {
-      await PaymentService.autoSeedInitialPayments();
-    }
+    // Auto-seed disabled
 
     const query = {};
 

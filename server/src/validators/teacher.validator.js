@@ -73,6 +73,67 @@ export const validateTeacherAge = (dob) => {
   return true;
 };
 
+
+/**
+ * Validates teacher date of appointment
+ * - Must be a valid date in DD/MM/YYYY, DD-MM-YYYY, or YYYY-MM-DD
+ * - Cannot be in the future (e.g. 2030)
+ * - Cannot be before 1970
+ * - Cannot be before Date of Birth (must be at least 21 years of age on appointment date)
+ */
+export const validateTeacherAppointmentDate = (appointmentDate, dob) => {
+  if (!appointmentDate || typeof appointmentDate !== "string" || !appointmentDate.trim()) {
+    return true;
+  }
+
+  const trimmed = appointmentDate.trim();
+  let apptDate;
+  if (/^\d{1,2}[/-]\d{1,2}[/-]\d{4}$/.test(trimmed)) {
+    const [d, m, y] = trimmed.split(/[/-]/).map(Number);
+    if (m < 1 || m > 12 || d < 1 || d > 31) {
+      return "Invalid Date of Appointment format. Please use DD/MM/YYYY.";
+    }
+    apptDate = new Date(y, m - 1, d);
+    if (isNaN(apptDate.getTime()) || apptDate.getMonth() !== m - 1 || apptDate.getDate() !== d) {
+      return "Invalid calendar date for Date of Appointment. Please use DD/MM/YYYY.";
+    }
+  } else {
+    apptDate = new Date(trimmed);
+  }
+
+  if (isNaN(apptDate.getTime())) {
+    return "Invalid Date of Appointment format. Please use DD/MM/YYYY (e.g., 01/06/2018).";
+  }
+
+  const today = new Date();
+  if (apptDate > today) {
+    return `Date of appointment cannot be in the future (${appointmentDate}).`;
+  }
+
+  if (apptDate.getFullYear() < 1970) {
+    return `Date of appointment cannot be before 1970 (${appointmentDate}).`;
+  }
+
+  if (dob) {
+    const parsedDob = calculateTeacherAge(dob);
+    if (parsedDob && parsedDob.birthDate) {
+      if (apptDate <= parsedDob.birthDate) {
+        return "Date of appointment cannot be on or before Date of Birth.";
+      }
+      let ageAtAppt = apptDate.getFullYear() - parsedDob.birthDate.getFullYear();
+      const mDiff = apptDate.getMonth() - parsedDob.birthDate.getMonth();
+      if (mDiff < 0 || (mDiff === 0 && apptDate.getDate() < parsedDob.birthDate.getDate())) {
+        ageAtAppt--;
+      }
+      if (ageAtAppt < 21) {
+        return `Faculty candidate was ${ageAtAppt} years old on appointment date. Minimum entry age under Kerala Education Rules is 21 years.`;
+      }
+    }
+  }
+
+  return true;
+};
+
 export const createTeacherSchema = {
   body: {
     name: {
@@ -87,6 +148,9 @@ export const createTeacherSchema = {
     dob: {
       required: true,
       custom: (val) => validateTeacherAge(val),
+    },
+    appointmentDate: {
+      custom: (val, body) => validateTeacherAppointmentDate(val, body?.dob || body?.body?.dob),
     },
   },
 };
@@ -107,6 +171,9 @@ export const updateTeacherSchema = {
         if (!val) return true; // optional during update if not modified
         return validateTeacherAge(val);
       },
+    },
+    appointmentDate: {
+      custom: (val, body) => validateTeacherAppointmentDate(val, body?.dob || body?.body?.dob),
     },
   },
 };

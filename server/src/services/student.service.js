@@ -6,7 +6,7 @@ import { StudentAdminService } from "./student/studentAdmin.service.js";
 /**
  * Unified Student Service Facade
  * Delegates domain operations to modular sub-services:
- * - StudentMetricsService: Student portal metrics, attendance tracking, dossier
+ * - StudentMetricsService: Student portal metrics, attendance tracking, dossier, security
  * - StudentExamsService: Published exam timetables, hall passes
  * - StudentFeesService: Student fee ledger, transaction receipts, dues calculation
  * - StudentAdminService: Administrative census query, student CRUD & KYC registration
@@ -18,6 +18,7 @@ export class StudentService {
   static getStudentFees = StudentFeesService.getStudentFees;
   static createOnlineFeeOrder = StudentFeesService.createOnlineFeeOrder;
   static verifyAndProcessPayment = StudentFeesService.verifyAndProcessPayment;
+  static changeStudentPassword = StudentMetricsService.changeStudentPassword;
 
   // Administrative Operations
   static getStudentsRecords = StudentAdminService.getStudentsRecords;
@@ -25,6 +26,7 @@ export class StudentService {
   static createStudent = StudentAdminService.createStudent;
   static updateStudent = StudentAdminService.updateStudent;
   static deleteStudent = StudentAdminService.deleteStudent;
+  static purgeAllStudents = StudentAdminService.purgeAllStudents;
 }
 
 export {

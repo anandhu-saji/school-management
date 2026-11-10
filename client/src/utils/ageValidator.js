@@ -147,3 +147,94 @@ export const checkTeacherAgeEligibility = (dobString) => {
     badge: `Age: ${age} yrs (Eligible)`,
   };
 };
+
+/**
+ * Validates teacher date of appointment
+ * - Must be a valid date in DD/MM/YYYY, DD-MM-YYYY, or YYYY-MM-DD
+ * - Cannot be in the future (e.g. 2030)
+ * - Cannot be before 1970
+ * - Cannot be before Date of Birth (must be at least 21 years of age on appointment date)
+ */
+export const checkTeacherAppointmentDate = (appointmentDateString, dobString) => {
+  if (!appointmentDateString || !appointmentDateString.trim()) {
+    return { valid: true, optional: true, badge: "Optional" };
+  }
+
+  const trimmed = appointmentDateString.trim();
+  let apptDate;
+  if (/^\d{1,2}[/-]\d{1,2}[/-]\d{4}$/.test(trimmed)) {
+    const [d, m, y] = trimmed.split(/[/-]/).map(Number);
+    if (m < 1 || m > 12 || d < 1 || d > 31) {
+      return { valid: false, message: "Invalid date format. Use DD/MM/YYYY.", badge: "Invalid Date" };
+    }
+    apptDate = new Date(y, m - 1, d);
+    if (isNaN(apptDate.getTime()) || apptDate.getMonth() !== m - 1 || apptDate.getDate() !== d) {
+      return { valid: false, message: "Invalid calendar date. Use DD/MM/YYYY.", badge: "Invalid Date" };
+    }
+  } else {
+    apptDate = new Date(trimmed);
+  }
+
+  if (isNaN(apptDate.getTime())) {
+    return {
+      valid: false,
+      message: "Invalid date format. Please use DD/MM/YYYY (e.g. 01/06/2018).",
+      badge: "Format: DD/MM/YYYY",
+    };
+  }
+
+  const today = new Date();
+  if (apptDate > today) {
+    return {
+      valid: false,
+      isFuture: true,
+      message: "Date of appointment cannot be in the future.",
+      badge: "Future date invalid",
+    };
+  }
+
+  const apptYear = apptDate.getFullYear();
+  if (apptYear < 1970) {
+    return {
+      valid: false,
+      message: "Date of appointment cannot be before 1970.",
+      badge: "Year < 1970 invalid",
+    };
+  }
+
+  // Cross-check with Date of Birth if available
+  if (dobString && dobString.trim()) {
+    const dobParsed = calculateAgeFromDob(dobString);
+    if (dobParsed && dobParsed.birthDate) {
+      const birthDate = dobParsed.birthDate;
+      if (apptDate <= birthDate) {
+        return {
+          valid: false,
+          message: "Date of appointment cannot be on or before Date of Birth.",
+          badge: "Must be after DOB",
+        };
+      }
+
+      // Check age at appointment
+      let ageAtAppt = apptDate.getFullYear() - birthDate.getFullYear();
+      const mDiff = apptDate.getMonth() - birthDate.getMonth();
+      if (mDiff < 0 || (mDiff === 0 && apptDate.getDate() < birthDate.getDate())) {
+        ageAtAppt--;
+      }
+
+      if (ageAtAppt < 21) {
+        return {
+          valid: false,
+          message: `Faculty was only ${ageAtAppt} yrs old on appointment date. Minimum entry age under K.E.R. is 21 years.`,
+          badge: `Age at appt: ${ageAtAppt} yrs (Min 21)`,
+        };
+      }
+    }
+  }
+
+  return {
+    valid: true,
+    message: "Valid appointment date",
+    badge: "✓ Verified",
+  };
+};

@@ -64,7 +64,7 @@ export default function PaymentConsole() {
     totalAmount: 4500,
     amountPaid: 4500,
     paymentDate: new Date().toISOString().split("T")[0],
-    paymentMode: "UPI / Online (Google Pay / PhonePe)",
+    paymentMode: "Razorpay / Online",
     transactionReference: "",
     dueDate: "2026-11-20",
     remarks: "",

@@ -147,7 +147,14 @@ export default function AdminOverview() {
                 Sampoorna Core 2.0 Live Synchronized
               </span>
             </div>
-            <h1>Good morning, Headmaster Madhavan</h1>
+            <h1>Good morning, {(() => {
+              try {
+                const u = JSON.parse(localStorage.getItem("user") || "{}");
+                return u?.name || "Headmaster";
+              } catch {
+                return "Headmaster";
+              }
+            })()}</h1>
             <p>
               G.H.S.S Rajakkad • Institutional Governance, Staff Muster &amp;
               SCERT Repository Control Terminal.

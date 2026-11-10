@@ -13,6 +13,7 @@ import StudentFeesTab from "../../components/student/StudentFeesTab";
 import StudentDossierModal from "../../components/student/StudentDossierModal";
 import StudentHallTicketModal from "../../components/student/StudentHallTicketModal";
 import StudentReceiptModal from "../../components/student/StudentReceiptModal";
+import StudentChangePasswordModal from "../../components/student/StudentChangePasswordModal";
 
 const lessons = [
   {
@@ -99,6 +100,7 @@ export default function StudentDashboard() {
   // Modals state
   const [isDossierModalOpen, setIsDossierModalOpen] = useState(false);
   const [viewingReceipt, setViewingReceipt] = useState(null);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [viewingHallTicket, setViewingHallTicket] = useState(false);
   const [, setCopiedField] = useState("");
 
@@ -236,6 +238,7 @@ export default function StudentDashboard() {
         displayClass={displayClass}
         studentProfile={studentProfile}
         onOpenDossier={() => setIsDossierModalOpen(true)}
+        onChangePassword={() => setIsChangePasswordOpen(true)}
         handleLogout={handleLogout}
       />
 
@@ -246,6 +249,7 @@ export default function StudentDashboard() {
           displayClass={displayClass}
           displayName={displayName}
           onOpenDossier={() => setIsDossierModalOpen(true)}
+          onChangePassword={() => setIsChangePasswordOpen(true)}
           getInitials={getInitials}
         />
 
@@ -266,6 +270,7 @@ export default function StudentDashboard() {
               notices={notices}
               onOpenDossier={() => setIsDossierModalOpen(true)}
               onOpenHallTicket={() => setViewingHallTicket(true)}
+              onChangePassword={() => setIsChangePasswordOpen(true)}
               setActiveTab={setActiveTab}
               getInitials={getInitials}
             />
@@ -320,6 +325,7 @@ export default function StudentDashboard() {
           student={studentProfile}
           displayName={displayName}
           displayClass={displayClass}
+          onChangePassword={() => setIsChangePasswordOpen(true)}
           onCopy={(_, fieldName) => {
             setCopiedField(fieldName);
             setTimeout(() => setCopiedField(""), 2000);
@@ -335,6 +341,12 @@ export default function StudentDashboard() {
         displayClass={displayClass}
         studentProfile={studentProfile}
         exams={exams}
+      />
+
+      {/* Change Password Modal */}
+      <StudentChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
       />
 
       {/* Receipt Modal */}

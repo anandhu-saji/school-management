@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { validateHumanName } from "../utils/nameValidator.js";
+import { normalizeClassDivision } from "../utils/classData.js";
 
 const studentSchema = new mongoose.Schema(
   {
@@ -212,7 +213,15 @@ const studentSchema = new mongoose.Schema(
 
 // Synchronize aliases so both className/classDivision and studentId/admissionNumber always work
 studentSchema.pre("validate", function () {
-  if (this.className && !this.classDivision) {
+  const targetClass = this.classDivision || this.className || this.division;
+  if (targetClass) {
+    const norm = normalizeClassDivision(targetClass);
+    if (norm) {
+      this.classDivision = norm.name;
+      this.className = norm.name;
+      this.division = norm.id;
+    }
+  } else if (this.className && !this.classDivision) {
     this.classDivision = this.className;
   } else if (this.classDivision && !this.className) {
     this.className = this.classDivision;

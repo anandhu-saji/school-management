@@ -82,17 +82,39 @@ export default function AdminSidebar({ activeNav }) {
         </div>
 
         {/* Bottom Profile Card */}
+        {/* Bottom Profile Card */}
         <div className="sidebar-bottom-profile">
           <div className="profile-avatar-circle">
-            <span>ADM</span>
+            <span>{(() => {
+              try {
+                const u = JSON.parse(localStorage.getItem("user") || "{}");
+                return (u?.name || "HM").slice(0, 3).toUpperCase();
+              } catch {
+                return "HM";
+              }
+            })()}</span>
           </div>
           <div className="profile-details-column">
             <div className="profile-name-row">
-              <span>Sri. K. R. Madhavan</span>
+              <span>{(() => {
+                try {
+                  const u = JSON.parse(localStorage.getItem("user") || "{}");
+                  return u?.name || "Headmaster";
+                } catch {
+                  return "Headmaster";
+                }
+              })()}</span>
               <span className="verified-badge-icon">✓</span>
             </div>
             <p className="profile-role-subtext">Headmaster / Chief Admin</p>
-            <p className="profile-id-code">ADM-GHSS-01</p>
+            <p className="profile-id-code">{(() => {
+              try {
+                const u = JSON.parse(localStorage.getItem("user") || "{}");
+                return u?.email || "anandhusaji043@gmail.com";
+              } catch {
+                return "anandhusaji043@gmail.com";
+              }
+            })()}</p>
           </div>
           <button
             className="logout-icon-btn"

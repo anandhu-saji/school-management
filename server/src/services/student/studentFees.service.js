@@ -32,44 +32,7 @@ export class StudentFeesService {
     }
 
     if (!payments || payments.length === 0) {
-      payments = [
-        {
-          _id: "pay-seed-01",
-          receiptNumber: "REC-2026-1043",
-          studentName: studentName || "Anandhu Saji",
-          admissionNumber: admissionNumber || "ADM-14920",
-          classDivision: "Class 10-A",
-          feeCategory: "Bus Fee",
-          term: "Monthly Bus Pass",
-          totalAmount: 1800,
-          amountPaid: 1800,
-          dueAmount: 0,
-          paymentDate: "2026-10-15",
-          paymentMode: "UPI / Online (Google Pay / PhonePe)",
-          transactionReference: "UPI/629041043",
-          status: "Paid",
-          collectedBy: "Accounts Desk / Sri. R. Krishnan",
-          remarks: "School Bus Route 03 - Rajakkad to Kallar • Month of October",
-        },
-        {
-          _id: "pay-seed-02",
-          receiptNumber: "REC-2026-1044",
-          studentName: studentName || "Anandhu Saji",
-          admissionNumber: admissionNumber || "ADM-14920",
-          classDivision: "Class 10-A",
-          feeCategory: "Special / Exam Fee",
-          term: "Term 1",
-          totalAmount: 1000,
-          amountPaid: 500,
-          dueAmount: 500,
-          paymentDate: "2026-10-18",
-          paymentMode: "Cash at School Counter",
-          transactionReference: "COUNTER-CASH",
-          status: "Partial",
-          collectedBy: "Accounts Desk / Sri. R. Krishnan",
-          remarks: "First installment for Model Exam fee clearance",
-        },
-      ];
+      payments = [];
     }
 
     let totalBilled = 0;
@@ -127,6 +90,7 @@ export class StudentFeesService {
     return {
       order,
       keyId: RazorpayService.getKeyId(),
+      isSimulated: Boolean(order.isSimulated || !RazorpayService.isLiveConfigured()),
       amount: numAmount,
       currency: "INR",
       receiptTag,

@@ -69,7 +69,7 @@ export default function TeacherAttendanceTab({
           <span className="badge-governance">CLASS MENTOR ATTENDANCE TERMINAL</span>
           <span className="badge-sync">Kerala Pareeksha Bhavan Integrated</span>
         </div>
-        <h1>Good day, {teacherProfile.name || "Mrs. Indu B Nair"}</h1>
+        <h1>Good day, {teacherProfile.name || "Teacher"}</h1>
         <p>
           GHSS Rajakkad • {displayDivision} Daily Attendance Register for{" "}
           <strong>{selectedDate}</strong>. Record roll-call attendance per Kerala Education Rules (KER).

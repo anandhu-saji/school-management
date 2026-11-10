@@ -7,6 +7,7 @@ export default function StudentSidebar({
   displayClass,
   studentProfile,
   onOpenDossier,
+  onChangePassword,
   handleLogout,
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -91,6 +92,19 @@ export default function StudentSidebar({
             >
               <span>•</span> Fee Ledger &amp; Receipts
             </button>
+            {onChangePassword && (
+              <button
+                className="console-nav-item"
+                onClick={() => {
+                  onChangePassword();
+                  setMobileOpen(false);
+                }}
+                style={{ color: "#4f46e5" }}
+                title="Customize Password"
+              >
+                <span>🔑</span> Customize Password
+              </button>
+            )}
           </nav>
         </div>
 

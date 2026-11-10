@@ -52,7 +52,7 @@ export const ACADEMIC_WINGS = [
       { id: "8-B", name: "Class 8-B", standard: "Class 8", section: "B", stream: "General", mentor: "Sri. Radhakrishnan N. (HST)", room: "Room 11" },
       { id: "9-A", name: "Class 9-A", standard: "Class 9", section: "A", stream: "General", mentor: "Sri. George K. (HST)", room: "Room 12" },
       { id: "9-B", name: "Class 9-B", standard: "Class 9", section: "B", stream: "General", mentor: "Smt. Sunitha R. (HST)", room: "Room 13" },
-      { id: "10-A", name: "Class 10-A", standard: "Class 10", section: "A", stream: "General (SSLC Cadre)", mentor: "Mrs. Indu B Nair (HST)", room: "Room 14 (Lab Wing)" },
+      { id: "10-A", name: "Class 10-A", standard: "Class 10", section: "A", stream: "General (SSLC Cadre)", mentor: "Assigned Class Mentor (HST)", room: "Room 14 (Lab Wing)" },
       { id: "10-B", name: "Class 10-B", standard: "Class 10", section: "B", stream: "General (SSLC Cadre)", mentor: "Sri. George K. (HST)", room: "Room 15" },
     ],
   },
@@ -102,4 +102,61 @@ export const getClassDetailsById = (classId) => {
       wingShort: "General",
     }
   );
+};
+
+/**
+ * Normalizes any class/division input string to canonical Kerala 2.0 Academic Division
+ * Examples: "12 science", "Class 12 science", "12-Science" -> { id: "12-Science", name: "Class 12-Science" }
+ */
+export const normalizeClassDivision = (input) => {
+  if (!input || typeof input !== "string") return null;
+  const raw = input.trim();
+  if (!raw) return null;
+
+  // Direct match by name or id
+  const direct = ALL_CLASSES.find(
+    (c) => c.name.toLowerCase() === raw.toLowerCase() || c.id.toLowerCase() === raw.toLowerCase()
+  );
+  if (direct) {
+    return {
+      id: direct.id,
+      name: direct.name,
+      standard: direct.standard,
+      stream: direct.stream,
+    };
+  }
+
+  // Alphanumeric clean match (removing spaces, hyphens, and trailing suffixes like Mentor, In-charge, etc.)
+  const clean = raw
+    .replace(/\s*(Mentor|Class Teacher|In-charge|Teacher|Cadre)\s*$/i, "")
+    .replace(/[\s-]/g, "")
+    .toLowerCase();
+
+  const match = ALL_CLASSES.find((c) => {
+    const cClean = c.name.replace(/[\s-]/g, "").toLowerCase();
+    const idClean = c.id.replace(/[\s-]/g, "").toLowerCase();
+    return cClean === clean || idClean === clean;
+  });
+
+  if (match) {
+    return {
+      id: match.id,
+      name: match.name,
+      standard: match.standard,
+      stream: match.stream,
+    };
+  }
+
+  // Fallback for custom division string
+  const cleanId = raw
+    .replace(/^Class\s*/i, "")
+    .replace(/\s*(Mentor|Class Teacher|In-charge|Teacher)\s*$/i, "")
+    .trim();
+
+  return {
+    id: cleanId,
+    name: raw.startsWith("Class ") ? raw : `Class ${raw}`,
+    standard: `Class ${cleanId.split("-")[0] || cleanId}`,
+    stream: "General",
+  };
 };

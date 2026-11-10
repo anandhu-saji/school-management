@@ -2,6 +2,8 @@ import Student from "../../models/Student.js";
 import User from "../../models/user.js";
 import Attendance from "../../models/Attendance.js";
 import Teacher from "../../models/Teacher.js";
+import bcrypt from "bcryptjs";
+import { ApiError } from "../../utils/ApiError.js";
 
 export class StudentMetricsService {
   /**
@@ -196,6 +198,39 @@ export class StudentMetricsService {
         absentDates,
         monthlyBreakdown,
       },
+    };
+  }
+  /**
+   * Change / Customize student account password
+   */
+  static async changeStudentPassword({ userId, currentPassword, newPassword, confirmPassword }) {
+    if (!currentPassword || !newPassword) {
+      throw ApiError.badRequest("Current password and new custom password are required.");
+    }
+    if (newPassword.length < 6) {
+      throw ApiError.badRequest("New password must be at least 6 characters long.");
+    }
+    if (confirmPassword && newPassword !== confirmPassword) {
+      throw ApiError.badRequest("New password and confirm password do not match.");
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      throw ApiError.notFound("Student account not found.");
+    }
+
+    // Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      throw ApiError.badRequest("Current password is incorrect. Please enter your valid current password.");
+    }
+
+    // Update with new customized password
+    user.password = newPassword;
+    await user.save();
+
+    return {
+      message: "Password changed successfully! You can now use your custom password to sign in.",
     };
   }
 }

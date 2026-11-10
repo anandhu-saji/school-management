@@ -127,3 +127,21 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
 
   return ApiResponse.ok(res, result);
 });
+
+/**
+ * Controller: Change / Customize student account password
+ * Route: PUT /api/student/change-password
+ */
+export const changeStudentPassword = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const { currentPassword, newPassword, confirmPassword } = req.body;
+
+  const result = await StudentService.changeStudentPassword({
+    userId,
+    currentPassword,
+    newPassword,
+    confirmPassword,
+  });
+
+  return ApiResponse.ok(res, result);
+});

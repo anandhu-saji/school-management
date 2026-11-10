@@ -7,7 +7,7 @@ import TeacherStatsCards from "../../components/admin/teachers/TeacherStatsCards
 import TeacherAllotmentModal from "../../components/admin/teachers/TeacherAllotmentModal";
 import TeacherDossierModal from "../../components/admin/teachers/TeacherDossierModal";
 import TeacherFormModal from "../../components/admin/teachers/TeacherFormModal";
-import { checkTeacherAgeEligibility } from "../../utils/ageValidator";
+import { checkTeacherAgeEligibility, checkTeacherAppointmentDate } from "../../utils/ageValidator";
 import { validateHumanName } from "../../utils/nameValidator";
 
 export default function TeachersRecords() {
@@ -45,7 +45,7 @@ export default function TeachersRecords() {
     pen: "",
     department: "HSST Malayalam",
     designation: "HSST",
-    assignedClass: "Class 10-A Mentor",
+    assignedClass: "Class 10-A",
     phone: "+91 94471 23450",
     email: "",
     periods: "24 hrs / Week",
@@ -324,6 +324,18 @@ export default function TeachersRecords() {
         message: ageCheck.message,
       });
       return;
+    }
+
+    if (formData.appointmentDate && formData.appointmentDate.trim()) {
+      const apptCheck = checkTeacherAppointmentDate(formData.appointmentDate, formData.dob);
+      if (!apptCheck.valid) {
+        setActiveModalTab("general");
+        setFeedback({
+          type: "error",
+          message: apptCheck.message,
+        });
+        return;
+      }
     }
 
     if (!editingTeacher) {

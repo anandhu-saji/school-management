@@ -3,6 +3,7 @@ export default function StudentHeader({
   displayClass,
   displayName,
   onOpenDossier,
+  onChangePassword,
   getInitials,
 }) {
   return (
@@ -46,6 +47,31 @@ export default function StudentHeader({
         >
           SCERT Active
         </span>
+
+        {onChangePassword && (
+          <button
+            className="topbar-password-btn"
+            onClick={onChangePassword}
+            title="Customize your login password"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              background: "#eff6ff",
+              color: "#1d4ed8",
+              border: "1px solid #bfdbfe",
+              padding: "5px 12px",
+              borderRadius: "20px",
+              fontSize: "12px",
+              fontWeight: "600",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+            }}
+          >
+            <span>🔑</span>
+            <span>Password</span>
+          </button>
+        )}
 
         {/* Profile Avatar Trigger in Header */}
         <button

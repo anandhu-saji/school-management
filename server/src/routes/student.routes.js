@@ -5,6 +5,7 @@ import {
   getStudentFeesData,
   createRazorpayOrder,
   verifyRazorpayPayment,
+  changeStudentPassword,
 } from "../controllers/student.controller.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 import { requireStudent } from "../middleware/role.middleware.js";
@@ -26,5 +27,8 @@ router.get("/fees", getStudentFeesData);
 // Razorpay Online Payment Endpoints
 router.post("/create-razorpay-order", createRazorpayOrder);
 router.post("/verify-razorpay-payment", verifyRazorpayPayment);
+
+// PUT /api/student/change-password
+router.put("/change-password", changeStudentPassword);
 
 export default router;

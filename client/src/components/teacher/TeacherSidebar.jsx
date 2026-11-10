@@ -4,6 +4,7 @@ export default function TeacherSidebar({
   teacherProfile,
   sidebarOpen,
   setSidebarOpen,
+  onChangePassword,
   onLogout,
 }) {
   return (
@@ -71,6 +72,19 @@ export default function TeacherSidebar({
             >
               <span>•</span> My SPARK Profile
             </button>
+  {onChangePassword && (
+              <button
+                className="console-nav-item"
+                onClick={() => {
+                  onChangePassword();
+                  setSidebarOpen(false);
+                }}
+                style={{ color: "#2563eb", fontWeight: "600" }}
+                title="Customize faculty account password"
+              >
+                <span>🔑</span> Customize Password
+              </button>
+            )}
           </nav>
         </div>
 
@@ -82,15 +96,15 @@ export default function TeacherSidebar({
           <div className="profile-details-column">
             <div className="profile-name-row">
               <span style={{ fontWeight: "700", fontSize: "13px" }}>
-                {teacherProfile.name || "Mrs. Indu B Nair"}
+                {teacherProfile.name || "Teacher"}
               </span>
               <span className="verified-badge-icon" title="SPARK Verified">✓</span>
             </div>
             <p className="profile-role-subtext">
-              {teacherProfile.department || "HST Mathematics"}
+              {teacherProfile.department || "Faculty"}
             </p>
             <p className="profile-id-code">
-              {teacherProfile.assignedClass || "Class 10-A Mentor"} • PEN: {teacherProfile.pen || "849201"}
+              {teacherProfile.assignedClass || "Class 10-A Mentor"} • PEN: {teacherProfile.pen || "—"}
             </p>
           </div>
           <button

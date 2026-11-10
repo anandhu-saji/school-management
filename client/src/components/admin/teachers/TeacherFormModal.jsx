@@ -1,6 +1,24 @@
 import { getDocumentUrl } from "../../../utils/documentUrl";
-import { checkTeacherAgeEligibility } from "../../../utils/ageValidator";
+import { checkTeacherAgeEligibility, checkTeacherAppointmentDate } from "../../../utils/ageValidator";
+import { ACADEMIC_WINGS, ALL_CLASSES } from "../../../utils/classData";
 import EmailOtpVerification from "../../common/EmailOtpVerification";
+
+
+// Helper to normalize teacher assigned class to standard Kerala 2.0 academic division
+const resolveAssignedClass = (raw) => {
+  if (!raw) return "";
+  const directMatch = ALL_CLASSES.find((c) => c.name === raw || c.id === raw);
+  if (directMatch) return directMatch.name;
+
+  const normalized = String(raw).replace(/[\s-]/g, "").replace(/mentor$/i, "").toLowerCase();
+  const fuzzyMatch = ALL_CLASSES.find(
+    (c) =>
+      c.name.replace(/[\s-]/g, "").toLowerCase() === normalized ||
+      c.id.replace(/[\s-]/g, "").toLowerCase() === normalized
+  );
+  if (fuzzyMatch) return fuzzyMatch.name;
+  return raw;
+};
 
 export default function TeacherFormModal({
   isOpen,
@@ -21,6 +39,8 @@ export default function TeacherFormModal({
   setIsEmailVerified,
 }) {
   if (!isOpen) return null;
+
+  const currentAssignedClass = resolveAssignedClass(formData.assignedClass);
 
   const renderDocumentUploadCard = (label, urlKey, nameKey, helpText, icon = "DOC") => {
     const fileUrl = formData[urlKey];
@@ -115,8 +135,8 @@ export default function TeacherFormModal({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
-        className="modal-content-card"
-        style={{ maxWidth: "760px", maxHeight: "92vh" }}
+        className="modal-content-card modal-lg"
+        style={{ maxWidth: "780px", maxHeight: "90vh", display: "flex", flexDirection: "column" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header-row">
@@ -173,8 +193,20 @@ export default function TeacherFormModal({
           </button>
         </div>
 
-        <form onSubmit={handleFormSubmit}>
-          <div className="modal-form-body">
+        <form
+          onSubmit={handleFormSubmit}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            flex: 1,
+            minHeight: 0,
+            overflow: "hidden",
+          }}
+        >
+          <div
+            className="modal-form-body"
+            style={{ flex: 1, minHeight: 0, overflowY: "auto" }}
+          >
             {feedback.message && (
               <div
                 style={{
@@ -237,13 +269,35 @@ export default function TeacherFormModal({
                 <div className="form-row-grid-2">
                   <div className="form-field-group">
                     <label>Assigned Division / Mentorship</label>
-                    <input
-                      type="text"
+                    <select
                       name="assignedClass"
-                      placeholder="e.g. Class 10-A Mentor"
-                      value={formData.assignedClass}
+                      value={currentAssignedClass}
                       onChange={handleFormChange}
-                    />
+                    >
+                      <option value="">-- Select Assigned Division / Class --</option>
+                      <option value="General / Subject Faculty">
+                        General / Subject Faculty (No Class Mentorship)
+                      </option>
+                      {currentAssignedClass &&
+                        !ALL_CLASSES.some((c) => c.name === currentAssignedClass) &&
+                        currentAssignedClass !== "General / Subject Faculty" && (
+                          <option value={currentAssignedClass}>
+                            {currentAssignedClass} (Current)
+                          </option>
+                        )}
+                      {ACADEMIC_WINGS.map((wing) => (
+                        <optgroup key={wing.code} label={wing.wing}>
+                          {wing.classes.map((c) => (
+                            <option key={c.id} value={c.name}>
+                              {c.name} ({c.stream})
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                    <span className="helper-text">
+                      Official division mentorship or standard classroom charge.
+                    </span>
                   </div>
                   <div className="form-field-group">
                     <label>Periods / Workload Allotted</label>
@@ -284,6 +338,27 @@ export default function TeacherFormModal({
                       setIsVerified={setIsEmailVerified}
                       disabled={Boolean(editingTeacher)}
                     />
+                    {!editingTeacher && (
+                      <div
+                        style={{
+                          marginTop: "6px",
+                          padding: "6px 10px",
+                          borderRadius: "6px",
+                          background: "#eff6ff",
+                          border: "1px solid #bfdbfe",
+                          fontSize: "11.5px",
+                          color: "#1e40af",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                        }}
+                      >
+                        <span>🔑</span>
+                        <span>
+                          Primary login password: <strong>Teacher@123</strong>. Teachers can customize it anytime in their portal.
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -327,14 +402,46 @@ export default function TeacherFormModal({
                     </span>
                   </div>
                   <div className="form-field-group">
-                    <label>Date of Appointment</label>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+                      <label style={{ margin: 0, whiteSpace: "nowrap" }}>Date of Appointment</label>
+                      {formData.appointmentDate && (
+                        (() => {
+                          const check = checkTeacherAppointmentDate(formData.appointmentDate, formData.dob);
+                          return (
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                fontWeight: "700",
+                                padding: "2px 8px",
+                                borderRadius: "6px",
+                                background: check.valid ? "#dcfce7" : "#fee2e2",
+                                color: check.valid ? "#15803d" : "#b91c1c",
+                                border: `1px solid ${check.valid ? "#bbf7d0" : "#fecaca"}`,
+                              }}
+                              title={check.message}
+                            >
+                              {check.valid ? check.badge : `✕ ${check.badge || check.message}`}
+                            </span>
+                          );
+                        })()
+                      )}
+                    </div>
                     <input
                       type="text"
                       name="appointmentDate"
-                      placeholder="DD/MM/YYYY"
+                      placeholder="DD/MM/YYYY (e.g. 01/06/2018)"
                       value={formData.appointmentDate}
                       onChange={handleFormChange}
+                      style={{
+                        borderColor:
+                          formData.appointmentDate && !checkTeacherAppointmentDate(formData.appointmentDate, formData.dob).valid
+                            ? "#ef4444"
+                            : undefined,
+                      }}
                     />
+                    <span className="helper-text">
+                      Official appointment memo / joining date under K.E.R. (Cannot be future date).
+                    </span>
                   </div>
                 </div>
 
@@ -589,7 +696,7 @@ export default function TeacherFormModal({
           </div>
 
           {/* Modal Footer Controls */}
-          <div className="modal-footer-row">
+          <div className="modal-footer-row" style={{ flexShrink: 0, marginTop: "auto" }}>
             {editingTeacher && (
               <button
                 type="button"

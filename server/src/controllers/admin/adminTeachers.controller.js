@@ -54,3 +54,15 @@ export const getTeacherAllotment = asyncHandler(async (req, res) => {
   const allotment = await TeacherService.getTeacherAllotment(req.params.id);
   return ApiResponse.ok(res, { allotment });
 });
+
+/**
+ * Controller: Purge all teacher records and accounts permanently
+ * Route: DELETE /api/admin/teachers/purge/all
+ */
+export const purgeAllTeachers = asyncHandler(async (req, res) => {
+  const result = await TeacherService.purgeAllTeachers();
+  return ApiResponse.ok(res, {
+    message: "All teacher records and accounts purged successfully.",
+    ...result,
+  });
+});

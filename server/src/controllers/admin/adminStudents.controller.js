@@ -45,3 +45,15 @@ export const deleteStudent = asyncHandler(async (req, res) => {
     message: "Student record deleted successfully.",
   });
 });
+
+/**
+ * Controller: Purge all student records permanently
+ * Route: DELETE /api/admin/students/purge/all
+ */
+export const purgeAllStudents = asyncHandler(async (req, res) => {
+  const result = await StudentService.purgeAllStudents();
+  return ApiResponse.ok(res, {
+    message: `All student records and accounts permanently removed (${result.deletedStudents} students, ${result.deletedAccounts} accounts).`,
+    ...result,
+  });
+});

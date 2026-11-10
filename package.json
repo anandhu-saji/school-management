@@ -17,6 +17,9 @@
     "seed": "npm --prefix server run seed",
     "seed:admin": "npm --prefix server run seed:admin",
     "seed:teacher": "npm --prefix server run seed:teacher",
+    "purge:students": "npm --prefix server run purge:students",
+    "purge:exams": "npm --prefix server run purge:exams",
+    "purge:teachers": "npm --prefix server run purge:teachers",
     "lint": "npm --prefix client run lint",
     "check": "node --check server/src/app.js server/src/server.js"
   },

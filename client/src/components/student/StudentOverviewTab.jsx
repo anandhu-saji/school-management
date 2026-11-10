@@ -12,6 +12,7 @@ export default function StudentOverviewTab({
   notices,
   onOpenDossier,
   onOpenHallTicket,
+  onChangePassword,
   setActiveTab,
   getInitials,
 }) {
@@ -87,6 +88,15 @@ export default function StudentOverviewTab({
           >
             Hall Ticket
           </button>
+          {onChangePassword && (
+            <button
+              className="secondary-button"
+              onClick={onChangePassword}
+              title="Customize your login password (Default: Student@123)"
+            >
+              🔑 Change Password
+            </button>
+          )}
         </div>
       </section>
 

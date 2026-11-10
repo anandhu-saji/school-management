@@ -8,7 +8,10 @@
     "start": "node src/server.js",
     "seed": "node src/Seed/seedData.js",
     "seed:admin": "node src/Seed/seedAdmin.js",
-    "seed:teacher": "node src/Seed/addTeacher.js"
+    "seed:teacher": "node src/Seed/addTeacher.js",
+    "purge:students": "node purgeStudents.js",
+    "purge:exams": "node purgeExams.js",
+    "purge:teachers": "node purgeTeachers.js"
   },
   "keywords": [],
   "author": "",

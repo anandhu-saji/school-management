@@ -139,7 +139,7 @@ export default function PaymentReceiptModal({
             </div>
             <div className="receipt-signature-box">
               <div className="sig-line"></div>
-              <div className="sig-title">Sri. K. R. Madhavan</div>
+              <div className="sig-title">Headmaster</div>
               <div className="sig-role">Headmaster &amp; Accounts Officer</div>
               <div className="sig-date">GHSS Rajakkad</div>
             </div>

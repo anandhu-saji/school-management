@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { validateHumanName } from "../utils/nameValidator.js";
+import { normalizeClassDivision } from "../utils/classData.js";
 
 const teacherSchema = new mongoose.Schema(
   {
@@ -66,24 +67,21 @@ const teacherSchema = new mongoose.Schema(
       type: String,
       default: "Class 10-A",
       trim: true,
-      set: (v) =>
-        v
-          ? v
-              .replace(/\s*(Mentor|Class Teacher|In-charge|Teacher)\s*$/i, "")
-              .trim() || "Class 10-A"
-          : "Class 10-A",
+      set: (v) => {
+        if (!v) return "Class 10-A";
+        const norm = normalizeClassDivision(v);
+        return norm ? norm.name : v.trim();
+      },
     },
     mentorClass: {
       type: String,
       default: "10-A",
       trim: true,
-      set: (v) =>
-        v
-          ? v
-              .replace(/^Class\s*/i, "")
-              .replace(/\s*(Mentor|Class Teacher|In-charge|Teacher)\s*$/i, "")
-              .trim() || "10-A"
-          : "10-A",
+      set: (v) => {
+        if (!v) return "10-A";
+        const norm = normalizeClassDivision(v);
+        return norm ? norm.id : v.trim();
+      },
     },
     subject: {
       type: String,
@@ -267,9 +265,18 @@ teacherSchema.pre("save", function () {
     this.pen = num;
     this.penNumber = `PEN-${num}`;
   }
-  if (this.mentorClass && (!this.assignedClass || !this.assignedClass.includes("Mentor"))) {
-    const cleanClass = this.mentorClass.replace(/^Class\s*/i, "").trim();
-    this.assignedClass = `Class ${cleanClass} Mentor`;
+  if (this.assignedClass) {
+    const norm = normalizeClassDivision(this.assignedClass);
+    if (norm) {
+      this.assignedClass = norm.name;
+      this.mentorClass = norm.id;
+    }
+  } else if (this.mentorClass) {
+    const norm = normalizeClassDivision(this.mentorClass);
+    if (norm) {
+      this.assignedClass = norm.name;
+      this.mentorClass = norm.id;
+    }
   }
   if (!this.periods) {
     this.periods = "24 hrs / Week";

@@ -126,43 +126,6 @@ function Login() {
         <p className="login-portal-tagline">Institutional Governance &amp; Academic Management Gateway</p>
       </div>
 
-      {/* Quick Demo Fill Pills for Uniform Access */}
-      <div className="quick-demo-accounts">
-        <span className="demo-accounts-label">Quick Sign-In As:</span>
-        <div className="demo-btn-group">
-          <button
-            type="button"
-            className="demo-pill-btn"
-            onClick={() => {
-              setEmail("admin@ghss.edu");
-              setPassword("Admin@12345");
-            }}
-          >
-            Admin (HM)
-          </button>
-          <button
-            type="button"
-            className="demo-pill-btn"
-            onClick={() => {
-              setEmail("kathalanx@gmail.com");
-              setPassword("Teacher@123");
-            }}
-          >
-            Teacher (Mentor)
-          </button>
-          <button
-            type="button"
-            className="demo-pill-btn"
-            onClick={() => {
-              setEmail("student@ghss.edu");
-              setPassword("Student@123");
-            }}
-          >
-            Student
-          </button>
-        </div>
-      </div>
-
       <div className="login-card">
         <form onSubmit={handleSignIn}>
           <label htmlFor="email">Email Address</label>
@@ -171,7 +134,7 @@ function Login() {
             <input
               id="email"
               type="email"
-              placeholder="e.g. admin@ghss.edu or kathalanx@gmail.com"
+              placeholder="e.g. admin@ghss.edu"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="username"

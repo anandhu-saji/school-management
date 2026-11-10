@@ -1,4 +1,4 @@
-import { ACADEMIC_WINGS } from "../../utils/classData";
+import { ACADEMIC_WINGS, normalizeClassDivision } from "../../utils/classData";
 
 export default function TeacherHeader({
   sidebarOpen,
@@ -8,6 +8,7 @@ export default function TeacherHeader({
   onDivisionChange,
   selectedDate,
   onDateChange,
+  onChangePassword,
 }) {
   const cleanDivision = (selectedDivision || "Class 10-A")
     .replace(/\s*(Mentor|Class Teacher|In-charge|Teacher)\s*$/i, "")
@@ -94,6 +95,31 @@ export default function TeacherHeader({
               background: "#ffffff",
             }}
           />
+        )}
+
+        {onChangePassword && (
+          <button
+            type="button"
+            onClick={onChangePassword}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              background: "#eff6ff",
+              color: "#1d4ed8",
+              border: "1px solid #bfdbfe",
+              padding: "7px 14px",
+              borderRadius: "8px",
+              fontSize: "13px",
+              fontWeight: "600",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+            }}
+            title="Customize your login password"
+          >
+            <span>🔑</span>
+            <span>Password</span>
+          </button>
         )}
 
         <button

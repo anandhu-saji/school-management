@@ -406,6 +406,58 @@ export default function StudentDossierModal({
               </div>
             </div>
           </div>
+          {/* 5. Portal Login & Security Credentials */}
+          <div className="dossier-card" style={{ gridColumn: "1 / -1", background: "#f8fafc", border: "1px solid #cbd5e1" }}>
+            <div className="dossier-card-header">
+              <div className="dossier-card-title">
+                <span className="icon">🔐</span>
+                Student Portal Credentials &amp; Security
+              </div>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "12px",
+                padding: "8px 0",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "13px", color: "#1e293b", marginBottom: "4px" }}>
+                  <strong>Login Identifier:</strong>{" "}
+                  <code>{studentProfile?.email || "Generated via Admission ID"}</code>
+                </div>
+                <div style={{ fontSize: "12px", color: "#64748b" }}>
+                  Default Primary Password:{" "}
+                  <code style={{ background: "#e0e7ff", color: "#3730a3", padding: "2px 6px", borderRadius: "4px", fontWeight: "700" }}>
+                    Student@123
+                  </code>
+                  {" "}— You can customize your password at any time.
+                </div>
+              </div>
+              {onChangePassword && (
+                <button
+                  type="button"
+                  className="primary-button"
+                  style={{
+                    padding: "8px 16px",
+                    fontSize: "12.5px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                  onClick={() => {
+                    onClose();
+                    onChangePassword();
+                  }}
+                >
+                  <span>🔑</span> Customize Password
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         <div

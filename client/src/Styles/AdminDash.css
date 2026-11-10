@@ -14,13 +14,18 @@ body {
 
 .admin-layout {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
   background-color: #f8fafc;
 }
 
 /* ---------------- SIDEBAR ---------------- */
 .admin-sidebar {
   width: 260px;
+  min-width: 260px;
+  height: 100vh;
+  max-height: 100vh;
   background: #ffffff;
   border-right: 1px solid #e2e8f0;
   display: flex;
@@ -28,7 +33,29 @@ body {
   justify-content: space-between;
   padding: 24px 18px;
   flex-shrink: 0;
-  min-height: 100vh;
+  position: sticky;
+  top: 0;
+  left: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 50;
+}
+
+.admin-sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.admin-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .sidebar-header {
@@ -145,9 +172,35 @@ body {
 .admin-main-wrapper,
 .admin-main-container {
   flex: 1;
+  height: 100vh;
+  max-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   min-width: 0;
+  scroll-behavior: smooth;
+}
+
+.admin-main-wrapper::-webkit-scrollbar,
+.admin-main-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.admin-main-wrapper::-webkit-scrollbar-track,
+.admin-main-container::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+.admin-main-wrapper::-webkit-scrollbar-thumb,
+.admin-main-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.admin-main-wrapper::-webkit-scrollbar-thumb:hover,
+.admin-main-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .admin-top-header,
@@ -162,6 +215,10 @@ body {
   font-size: 12.5px;
   font-weight: 600;
   color: #475569;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  flex-shrink: 0;
 }
 
 .admin-content-area,
@@ -420,6 +477,15 @@ body {
 @media (max-width: 768px) {
   .admin-layout {
     flex-direction: column;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+  .admin-main-wrapper,
+  .admin-main-container {
+    height: auto;
+    max-height: none;
+    overflow: visible;
   }
   .admin-sidebar {
     position: fixed;
@@ -846,6 +912,7 @@ body {
   justify-content: center;
   z-index: 9999;
   padding: 20px;
+  overflow-y: auto;
 }
 
 .modal-content-card {
@@ -853,6 +920,9 @@ body {
   border-radius: 18px;
   max-width: 580px;
   width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
   overflow: hidden;
   animation: modalPopIn 0.2s ease-out;
@@ -862,6 +932,14 @@ body {
   max-width: 780px;
 }
 
+.modal-content-card form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .modal-tab-nav {
   display: flex;
   background: #f1f5f9;
@@ -869,6 +947,7 @@ body {
   padding: 4px 16px 0 16px;
   gap: 8px;
   overflow-x: auto;
+  flex-shrink: 0;
 }
 
 .modal-tab-btn {
@@ -1057,6 +1136,7 @@ body {
   align-items: center;
   justify-content: space-between;
   background: #f8fafc;
+  flex-shrink: 0;
 }
 
 .modal-header-row h3 {
@@ -1082,7 +1162,15 @@ body {
 
 .modal-form-body {
   padding: 24px 26px;
-  max-height: 75vh;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.allotment-modal-body {
+  padding: 24px 26px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 
@@ -1132,6 +1220,8 @@ body {
   justify-content: flex-end;
   gap: 12px;
   background: #f8fafc;
+  flex-shrink: 0;
+  margin-top: auto;
 }
 
 .btn-modal-cancel {

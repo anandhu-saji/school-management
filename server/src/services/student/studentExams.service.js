@@ -42,53 +42,6 @@ export class StudentExamsService {
         .lean();
     }
 
-    // Fallback only if database is completely empty
-    if (!exams || exams.length === 0) {
-      const dbTotal = await Exam.countDocuments();
-      if (dbTotal === 0) {
-        exams = [
-          {
-            _id: "exam-sslc-01",
-            term: "SSLC Board Examination March 2027",
-            standard: "Standard 10 (SSLC)",
-            date: "12 March 2027, Fri",
-            startTime: "09:30 AM",
-            endTime: "11:45 AM",
-            duration: "2 hrs 15 mins",
-            subject: "First Language - Malayalam Part I",
-            qpCode: "MAL-101",
-            hall: "Halls 01, 02, 03, 04",
-            totalCandidates: 242,
-            invigilator: "Mrs. Indu B Nair, Sri. George K.",
-            maxMarks: 40,
-            passMarks: 12,
-            status: "Approved & Published",
-            instructions:
-              "15 minutes cool-off time provided before writing starts. Candidates must be seated by 09:15 AM with valid photo hall tickets.",
-          },
-          {
-            _id: "exam-sslc-02",
-            term: "SSLC Board Examination March 2027",
-            standard: "Standard 10 (SSLC)",
-            date: "16 March 2027, Tue",
-            startTime: "09:30 AM",
-            endTime: "12:15 PM",
-            duration: "2 hrs 45 mins",
-            subject: "Second Language - English",
-            qpCode: "ENG-102",
-            hall: "Halls 01, 02, 03, 04",
-            totalCandidates: 242,
-            invigilator: "Sri. K. R. Suresh, Mrs. Deepa V.",
-            maxMarks: 80,
-            passMarks: 24,
-            status: "Approved & Published",
-            instructions:
-              "15 minutes cool-off period. Verify question paper code before writing answers.",
-          },
-        ];
-      }
-    }
-
     return exams || [];
   }
 }

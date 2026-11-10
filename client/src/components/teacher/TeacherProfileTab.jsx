@@ -1,4 +1,4 @@
-export default function TeacherProfileTab({ teacherProfile }) {
+export default function TeacherProfileTab({ teacherProfile, onChangePassword }) {
   const profile = teacherProfile || {};
 
   return (
@@ -9,10 +9,10 @@ export default function TeacherProfileTab({ teacherProfile }) {
           <span className="badge-governance">GOVERNMENT OF KERALA • GENERAL EDUCATION DEPARTMENT</span>
           <span className="badge-sync">SPARK ID &amp; SAMPOORNA LINKED</span>
         </div>
-        <h1>{profile.name || "Mrs. Indu B Nair"}</h1>
+        <h1>{profile.name || "Teacher Profile"}</h1>
         <p>
           GHSS Rajakkad (School Code: 06042) • Permanent Employee Number (PEN):{" "}
-          <strong>{profile.penNumber || profile.pen || "849201"}</strong>
+          <strong>{profile.penNumber || profile.pen || "—"}</strong>
         </p>
       </section>
 
@@ -126,20 +126,20 @@ export default function TeacherProfileTab({ teacherProfile }) {
             <div className="dossier-field-row">
               <span className="label">Institutional Email ID:</span>
               <span className="value" style={{ color: "#2563eb", fontWeight: "600" }}>
-                {profile.email || "kathalanx@gmail.com"}
+                {profile.email || ""}
               </span>
             </div>
             <div className="dossier-field-row">
               <span className="label">Official Phone Number:</span>
-              <span className="value">{profile.phone || "+91 94471 22334"}</span>
+              <span className="value">{profile.phone || ""}</span>
             </div>
             <div className="dossier-field-row">
               <span className="label">Date of Entry into Service:</span>
-              <span className="value">{profile.joiningDate || "02 June 2018"}</span>
+              <span className="value">{profile.joiningDate || ""}</span>
             </div>
             <div className="dossier-field-row">
               <span className="label">Academic Qualifications:</span>
-              <span className="value">{profile.qualification || "M.Sc. Mathematics, B.Ed, SET"}</span>
+              <span className="value">{profile.qualification || ""}</span>
             </div>
             <div className="dossier-field-row">
               <span className="label">Gender:</span>
@@ -149,6 +149,78 @@ export default function TeacherProfileTab({ teacherProfile }) {
               <span className="label">Service Verification Status:</span>
               <span className="value" style={{ color: "#16a34a", fontWeight: "700" }}>
                 ✓ Verified via SPARK / Kerala General Education
+              </span>
+            </div>
+          </div>
+        </div>
+        {/* Card 3: Account Security & Credentials */}
+        <div
+          className="dossier-card"
+          style={{
+            background: "#ffffff",
+            padding: "22px 24px",
+            borderRadius: "14px",
+            border: "1px solid #e2e8f0",
+            gridColumn: "1 / -1",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: "16px",
+              borderBottom: "1px solid #f1f5f9",
+              paddingBottom: "10px",
+              flexWrap: "wrap",
+              gap: "10px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "20px" }}>🔐</span>
+              <h3 style={{ fontSize: "15px", fontWeight: "800", color: "#0f172a", margin: 0 }}>
+                Faculty Portal Security &amp; Credentials
+              </h3>
+            </div>
+            {onChangePassword && (
+              <button
+                type="button"
+                onClick={onChangePassword}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "#2563eb",
+                  color: "#ffffff",
+                  border: "none",
+                  padding: "8px 16px",
+                  borderRadius: "8px",
+                  fontSize: "13px",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                }}
+              >
+                <span>🔑</span> Customize Password
+              </button>
+            )}
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div className="dossier-field-row">
+              <span className="label">Portal Login Username / Email:</span>
+              <span className="value" style={{ fontFamily: "monospace", fontWeight: "700", color: "#0f172a" }}>
+                {profile.email || "—"}
+              </span>
+            </div>
+            <div className="dossier-field-row">
+              <span className="label">Primary Default Password:</span>
+              <span className="value">
+                <code style={{ background: "#eff6ff", color: "#1d4ed8", padding: "2px 8px", borderRadius: "4px", fontWeight: "700" }}>
+                  Teacher@123
+                </code>
+                <span style={{ marginLeft: "8px", color: "#64748b", fontSize: "12px" }}>
+                  (You can customize this password anytime)
+                </span>
               </span>
             </div>
           </div>

@@ -22,7 +22,9 @@ export default function ExamStatsCards({ stats }) {
         <div className="overview-number stat-number-emerald">
           {stats.upcomingCount} Approved
         </div>
-        <div className="sub-text">First Paper: 12 March 2026</div>
+        <div className="sub-text">
+          {stats.upcomingCount > 0 ? "First Paper: 12 March 2026" : "No scheduled papers"}
+        </div>
       </div>
 
       {/* Card 3 */}
@@ -34,7 +36,9 @@ export default function ExamStatsCards({ stats }) {
         <div className="overview-number">
           {stats.hallsAllocated} Halls
         </div>
-        <div className="sub-text">Auditorium &amp; Main Block</div>
+        <div className="sub-text">
+          {stats.hallsAllocated > 0 ? "Auditorium & Main Block" : "No halls allocated"}
+        </div>
       </div>
 
       {/* Card 4 */}
@@ -46,7 +50,9 @@ export default function ExamStatsCards({ stats }) {
         <div className="overview-number stat-number-blue">
           {stats.invigilatorCadre} Staff
         </div>
-        <div className="sub-text">Assigned Chief &amp; Observers</div>
+        <div className="sub-text">
+          {stats.invigilatorCadre > 0 ? "Assigned Chief & Observers" : "No staff assigned"}
+        </div>
       </div>
     </div>
   );

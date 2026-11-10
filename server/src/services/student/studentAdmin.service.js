@@ -42,7 +42,7 @@ export class StudentAdminService {
     const verifiedPercent =
       totalCount > 0
         ? Math.round(((verifiedAadhaarCount > 0 ? verifiedAadhaarCount : totalCount) / totalCount) * 100)
-        : 100;
+        : 0;
 
     const stats = {
       totalEnrolled: totalCount,
@@ -131,76 +131,6 @@ export class StudentAdminService {
       };
     });
 
-    // Ensure all 26 academic divisions have represented students if querying full records
-    if (!limit) {
-      const sampleNamesPool = [
-        { name: "Aaditya S. Kumar", g: "Male", cat: "General", dob: "14/05/2010", p: "Santhosh Kumar K." },
-        { name: "Ananya Manoj", g: "Female", cat: "OBC", dob: "22/08/2010", p: "Manoj Varghese" },
-        { name: "Devanand P. B.", g: "Male", cat: "SC", dob: "11/01/2010", p: "Balakrishnan P." },
-        { name: "Fathima Nizar", g: "Female", cat: "OEC", dob: "03/12/2009", p: "Nizar Rawther" },
-        { name: "Gopika Krishna", g: "Female", cat: "General", dob: "18/07/2010", p: "Radhakrishnan P." },
-        { name: "Harikrishnan M.", g: "Male", cat: "OBC", dob: "09/03/2010", p: "Muraleedharan V." },
-        { name: "Irfan Habeeb", g: "Male", cat: "General", dob: "25/11/2010", p: "Habeeb Rahman" },
-        { name: "Kavya Rajesh", g: "Female", cat: "OBC", dob: "14/06/2010", p: "Rajesh Kumar" },
-        { name: "Muhammed Bilal", g: "Male", cat: "OEC", dob: "29/09/2010", p: "Shajahan E." },
-        { name: "Nandana Suresh", g: "Female", cat: "General", dob: "05/02/2010", p: "Suresh Babu" },
-      ];
-
-      let seedCounter = 200;
-      ALL_CLASSES.forEach((cls) => {
-        const clsDiv = cls.id;
-        const hasStudents = students.some(
-          (s) => s.division.toLowerCase() === clsDiv.toLowerCase() || s.division.toLowerCase() === cls.name.toLowerCase()
-        );
-
-        if (!hasStudents) {
-          [0, 1].forEach((k) => {
-            const sample = sampleNamesPool[(seedCounter + k) % sampleNamesPool.length];
-            const roll = k + 1;
-            const isFemale = sample.g === "Female";
-            const admNo = `ADM-${clsDiv.replace(/[^a-zA-Z0-9]/g, "")}-${100 + roll}`;
-            students.push({
-              _id: new mongoose.Types.ObjectId().toString(),
-              rollNumber: roll,
-              rollNoFormatted: `#${String(roll).padStart(2, "0")}`,
-              admissionNumber: admNo,
-              sampoornaId: `SMP-06042-${clsDiv.replace(/[^a-zA-Z0-9]/g, "")}-${200 + roll}`,
-              name: sample.name,
-              dob: sample.dob,
-              division: clsDiv,
-              guardian: sample.p,
-              parentContact: `+91 9447${(seedCounter * 3) % 90000 + 10000}`,
-              category: `${sample.cat} / ${isFemale ? "F" : "M"}`,
-              gender: sample.g,
-              attendance: `${96 + (k % 3)}.5%`,
-              aadhaarNumber: `7894 ${1000 + seedCounter} 4567`,
-              maskedAadhaar: "7894 XXXX 4567",
-              birthCertificateNumber: `KL-IDK-2024-${5000 + seedCounter}`,
-              idProofUrl: "",
-              idProofType: "Aadhaar Card",
-              idProofFileName: "",
-              idProofFileType: "",
-              birthCertificateUrl: "",
-              birthCertificateFileName: "",
-              hasIdProof: true,
-              bloodGroup: "O+",
-              religion: "Hindu",
-              caste: "General",
-              fatherName: sample.p,
-              motherName: `Smt. ${sample.p.split(" ")[0]}a`,
-              guardianRelation: "Father",
-              altContact: "",
-              fullAddress: "Rajakkad P.O, Idukki District, Kerala - 685566",
-              previousSchool: "Government Lower/Upper Primary School",
-              tcNumber: `TC-${8000 + seedCounter}`,
-              identificationMarks: "A mole on the right cheek",
-            });
-            seedCounter++;
-          });
-        }
-      });
-    }
-
     return {
       stats,
       count: students.length,
@@ -282,7 +212,7 @@ export class StudentAdminService {
     }
 
     const primaryGuardian =
-      data.guardian?.trim() || data.fatherName?.trim() || data.motherName?.trim() || "Parent/Guardian";
+      data.guardian?.trim() || data.fatherName?.trim() || data.motherName?.trim() || "Parent Guardian";
 
     let cleanEmail = undefined;
     if (data.email && data.email.trim()) {
@@ -347,28 +277,40 @@ export class StudentAdminService {
 
     const newStudent = await Student.create(studentToCreate);
 
+    // Ensure institutional user account is created for the student with primary password Student@123
+    let accountEmail = cleanEmail;
+    if (!accountEmail) {
+      const cleanAdm = (newStudent.admissionNumber || `ADM-${14920 + nextRoll}`)
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
+      accountEmail = `${cleanAdm}@student.ghss.edu`;
+      newStudent.email = accountEmail;
+    }
+
     if (cleanEmail) {
       // Consume the used verification record
       await OtpService.consumeVerification({
         email: cleanEmail,
         purpose: "student_admission",
       });
-
-      // Create linked user login account if one doesn't exist
-      let user = await User.findOne({ email: cleanEmail });
-      if (!user) {
-        const hashedPassword = await bcrypt.hash("Student@123", 10);
-        user = await User.create({
-          name: newStudent.name,
-          username: cleanEmail.split("@")[0],
-          email: cleanEmail,
-          password: hashedPassword,
-          role: "student",
-        });
-      }
-      newStudent.userId = user._id;
-      await newStudent.save();
     }
+
+    // Primary password is Student@123 as required
+    let user = await User.findOne({ email: accountEmail });
+    if (!user) {
+      user = await User.create({
+        name: newStudent.name,
+        username: accountEmail.split("@")[0],
+        email: accountEmail,
+        password: "Student@123",
+        role: "student",
+      });
+    } else {
+      user.password = "Student@123";
+      await user.save();
+    }
+    newStudent.userId = user._id;
+    await newStudent.save();
 
     return newStudent;
   }
@@ -493,5 +435,22 @@ export class StudentAdminService {
       throw ApiError.notFound("Student record not found.");
     }
     return deleted;
+  }
+
+  /**
+   * Delete / Purge all student records and related data permanently
+   */
+  static async purgeAllStudents() {
+    const studentRes = await Student.deleteMany({});
+    const userRes = await User.deleteMany({
+      $or: [
+        { role: "student" },
+        { email: { $in: ["student@ghss.edu", "hss_student@ghss.edu"] } },
+      ],
+    });
+    return {
+      deletedStudents: studentRes.deletedCount,
+      deletedAccounts: userRes.deletedCount,
+    };
   }
 }

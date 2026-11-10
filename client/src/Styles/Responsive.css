@@ -717,3 +717,89 @@ img, video, canvas, svg {
     font-size: 14px !important;
   }
 }
+
+
+/* ==========================================================================
+   DESKTOP PERMANENT NAVIGATION & INDEPENDENT CONTENT SCROLL (ALL PAGES)
+   Enforces: Left navigation control is 100% permanent/fixed and can scroll
+   internally if needed; right main viewport is the dedicated scrolling pane.
+   Window/body never scrolls, preventing any page jump.
+   ========================================================================== */
+@media (min-width: 769px) {
+  html, body {
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+  }
+
+  #root {
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+  }
+
+  /* All Portals Outer Layouts */
+  .admin-layout,
+  .portal,
+  .student-portal,
+  .teacher-layout {
+    display: flex !important;
+    flex-direction: row !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    position: relative !important;
+  }
+
+  /* All Left Navigation Sidebars */
+  .admin-sidebar,
+  .sidebar,
+  .teacher-sidebar {
+    width: 260px !important;
+    min-width: 260px !important;
+    max-width: 260px !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    flex-shrink: 0 !important;
+    position: sticky !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    transform: none !important;
+    z-index: 50 !important;
+    background-color: #ffffff !important;
+  }
+
+  /* All Dedicated Scrollable Main Viewports */
+  .admin-main-wrapper,
+  .admin-main-container,
+  .student-main-wrapper,
+  .portal-main,
+  .teacher-main-wrapper {
+    flex: 1 !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scroll-behavior: smooth !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* All Top Sticky Navigation Headers */
+  .admin-top-header,
+  .admin-header-bar,
+  .topbar,
+  .admin-header,
+  .teacher-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 40 !important;
+    flex-shrink: 0 !important;
+  }
+}

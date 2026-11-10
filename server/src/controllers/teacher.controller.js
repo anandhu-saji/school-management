@@ -109,3 +109,21 @@ export const getTeacherProfile = asyncHandler(async (req, res) => {
 
   return ApiResponse.ok(res, { teacher });
 });
+
+
+/**
+ * Controller: Change / Customize teacher account password
+ * Route: PUT /api/teacher/change-password
+ */
+export const changeTeacherPassword = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const { currentPassword, newPassword, confirmPassword } = req.body;
+  const result = await TeacherService.changeTeacherPassword({
+    userId,
+    currentPassword,
+    newPassword,
+    confirmPassword,
+  });
+
+  return ApiResponse.ok(res, result);
+});

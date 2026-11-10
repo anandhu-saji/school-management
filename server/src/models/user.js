@@ -85,6 +85,16 @@ userSchema.pre("validate", function () {
 // Hash password before saving if modified (async, no next)
 userSchema.pre("save", async function () {
   if (!this.isModified("password") || !this.password) return;
+  // Prevent double-hashing if password is already a bcrypt hash
+  if (
+    typeof this.password === "string" &&
+    (this.password.startsWith("$2a$") ||
+      this.password.startsWith("$2b$") ||
+      this.password.startsWith("$2y$")) &&
+    this.password.length === 60
+  ) {
+    return;
+  }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });

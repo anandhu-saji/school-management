@@ -56,10 +56,16 @@ export default function EmailOtpVerification({
       if (res.data.success) {
         setOtpSent(true);
         setTimeLeft(300);
-        setOtpCode("");
+        if (res.data.devOtp) {
+          setOtpCode(res.data.devOtp);
+        } else {
+          setOtpCode("");
+        }
         setFeedback({
           type: "success",
-          message: `Verification code dispatched to ${email.trim()}.`,
+          message: res.data.devOtp
+            ? `Verification code (${res.data.devOtp}) sent to ${email.trim()}.`
+            : `Verification code dispatched to ${email.trim()}.`,
         });
       }
     } catch (err) {

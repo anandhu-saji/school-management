@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { ACADEMIC_WINGS } from "../../../utils/classData";
+import { ACADEMIC_WINGS, normalizeClassDivision } from "../../../utils/classData";
 import { getDocumentUrl } from "../../../utils/documentUrl";
 import { checkStudentAgeEligibility } from "../../../utils/ageValidator";
 import EmailOtpVerification from "../../common/EmailOtpVerification";
@@ -145,7 +145,28 @@ export default function StudentFormModal({
                       isVerified={isEmailVerified}
                       setIsVerified={setIsEmailVerified}
                       disabled={Boolean(editingStudent)}
-                    /></div>
+                    />
+                    {!editingStudent && (
+                      <div
+                        style={{
+                          marginTop: "6px",
+                          padding: "6px 10px",
+                          borderRadius: "6px",
+                          background: "#eff6ff",
+                          border: "1px solid #bfdbfe",
+                          fontSize: "11.5px",
+                          color: "#1e40af",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                        }}
+                      >
+                        <span>🔑</span>
+                        <span>
+                          Primary login password: <strong>Student@123</strong>. Students can customize it in their portal.
+                        </span>
+                      </div>
+                    )}</div>
                 </div>
 
                 <div className="form-row-grid-2">
@@ -163,7 +184,7 @@ export default function StudentFormModal({
                     <label>Class &amp; Division</label>
                     <select
                       name="division"
-                      value={formData.division}
+                      value={normalizeClassDivision(formData.division)?.name || formData.division}
                       onChange={handleFormChange}
                     >
                       {ACADEMIC_WINGS.map((wing) => (

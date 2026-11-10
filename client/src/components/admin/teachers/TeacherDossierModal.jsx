@@ -7,7 +7,7 @@ export default function TeacherDossierModal({ teacher, onClose }) {
     <div className="modal-overlay" onClick={onClose}>
       <div
         className="modal-content-card modal-lg"
-        style={{ maxWidth: "820px", maxHeight: "90vh" }}
+        style={{ maxWidth: "820px", maxHeight: "90vh", display: "flex", flexDirection: "column" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header-row">
@@ -28,7 +28,7 @@ export default function TeacherDossierModal({ teacher, onClose }) {
           </button>
         </div>
 
-        <div className="allotment-modal-body" style={{ maxHeight: "72vh", overflowY: "auto" }}>
+        <div className="allotment-modal-body" style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
           {/* Profile Bar */}
           <div className="allotment-meta-summary-card">
             <div>
@@ -241,7 +241,7 @@ export default function TeacherDossierModal({ teacher, onClose }) {
           </div>
         </div>
 
-        <div className="modal-footer-row">
+        <div className="modal-footer-row" style={{ flexShrink: 0, marginTop: "auto" }}>
           <button
             type="button"
             className="btn-modal-cancel"
