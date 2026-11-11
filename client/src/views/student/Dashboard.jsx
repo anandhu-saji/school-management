@@ -222,7 +222,7 @@ export default function StudentDashboard() {
     studentProfile?.name || user?.name || user?.username || user?.email
   );
 
-  const displayClass = studentProfile?.className || "Class 10-A";
+  const displayClass = studentProfile?.classDivision || studentProfile?.className || "Class 10-A";
   const totalFeeDue = feesData?.summary?.totalDue ?? 0;
   const nextExam =
     exams.find((e) => e.status !== "Completed" && e.status !== "Postponed") ||

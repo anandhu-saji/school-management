@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import api from "../../api/axiosclient";
 import "../../Styles/AdminDash.css";
-import { ACADEMIC_WINGS } from "../../utils/classData";
+import { ACADEMIC_WINGS, normalizeClassDivision } from "../../utils/classData";
 import { getDocumentUrl } from "../../utils/documentUrl";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminHeader from "../../components/admin/AdminHeader";
@@ -50,7 +50,7 @@ export default function StudentsRecords() {
     rollNumber: "",
     admissionNumber: "",
     sampoornaId: "",
-    division: "10-A",
+    division: "Class 10-A",
     gender: "Male",
     category: "General",
     dob: "2010-05-14",
@@ -142,7 +142,7 @@ export default function StudentsRecords() {
         selectedDivision === "All" ||
         s.division.toLowerCase() === selectedDivision.toLowerCase() ||
         s.division.toLowerCase().includes(selectedDivision.toLowerCase()) ||
-        s.division.replace(/^Class\s*/i, "").toLowerCase() === selectedDivision.replace(/^Class\s*/i, "").toLowerCase();
+        s.division.replace(/^Class\s*/i, "").toLowerCase() === selectedDivision.replace(/^Class\s*/i, "").toLowerCase() || (normalizeClassDivision(s.classDivision || s.division)?.id === normalizeClassDivision(selectedDivision)?.id);
 
       return matchSearch && matchDivision;
     });
@@ -184,7 +184,10 @@ export default function StudentsRecords() {
       rollNumber: student.rollNumber || "",
       admissionNumber: student.admissionNumber || "",
       sampoornaId: student.sampoornaId || "",
-      division: student.division || "10-A",
+      division: (() => {
+        const norm = normalizeClassDivision(student.classDivision || student.division);
+        return norm ? norm.name : (student.classDivision || student.division || "Class 10-A");
+      })(),
       gender: student.gender || "Male",
       category: student.category ? student.category.split(" / ")[0] : "General",
       dob: student.dob || "2010-05-14",
@@ -369,11 +372,19 @@ export default function StudentsRecords() {
 
     try {
       setFormSubmitting(true);
+      const norm = normalizeClassDivision(formData.division);
+      const canonDiv = norm ? norm.name : (formData.division || "Class 10-A");
+      const submissionData = {
+        ...formData,
+        division: canonDiv,
+        classDivision: canonDiv,
+        className: canonDiv,
+      };
       if (editingStudent) {
         // Update existing
         const res = await api.put(
           `/admin/students/${editingStudent._id}`,
-          formData
+          submissionData
         );
         if (res.data.success) {
           setFeedback({
@@ -387,7 +398,7 @@ export default function StudentsRecords() {
         }
       } else {
         // Create new
-        const res = await api.post("/admin/students", formData);
+        const res = await api.post("/admin/students", submissionData);
         if (res.data.success) {
           setFeedback({
             type: "success",
@@ -555,7 +566,7 @@ export default function StudentsRecords() {
                 {ACADEMIC_WINGS.map((wing) => (
                   <optgroup key={wing.code} label={wing.wing}>
                     {wing.classes.map((c) => (
-                      <option key={c.id} value={c.id}>
+                      <option key={c.id} value={c.name}>
                         {c.name} ({c.stream})
                       </option>
                     ))}
