@@ -3,29 +3,34 @@ import crypto from "crypto";
 import path from "path";
 import fs from "fs";
 
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION || "ap-south-1",
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
+/**
+ * Instantiates and caches the S3 client using current environment credentials
+ */
+const getS3Client = () => {
+  return new S3Client({
+    region: process.env.AWS_REGION || "ap-south-1",
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+    },
+  });
+};
 
 /**
  * Checks if real AWS S3 credentials are configured
  */
 const isAwsConfigured = () => {
-  const key = process.env.AWS_ACCESS_KEY_ID;
-  const secret = process.env.AWS_SECRET_ACCESS_KEY;
-  const bucket = process.env.AWS_S3_BUCKET_NAME;
+  const key = process.env.AWS_ACCESS_KEY_ID?.trim();
+  const secret = process.env.AWS_SECRET_ACCESS_KEY?.trim();
+  const bucket = process.env.AWS_S3_BUCKET_NAME?.trim();
 
-  return (
+  return Boolean(
     key &&
-    key !== "your_aws_access_key" &&
+    !key.includes("your_aws") &&
     secret &&
-    secret !== "your_aws_secret_key" &&
+    !secret.includes("your_aws") &&
     bucket &&
-    bucket !== "sampoorna-portal-uploads"
+    !bucket.includes("your_s3")
   );
 };
 
@@ -50,9 +55,10 @@ export const uploadFile = async (file, folder = "documents") => {
         ContentType: file.mimetype,
       });
 
-      await s3Client.send(command);
+      await getS3Client().send(command);
 
-      return `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${randomFileName}`;
+      const region = process.env.AWS_REGION || "ap-south-1";
+      return `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${region}.amazonaws.com/${randomFileName}`;
     } catch (s3Err) {
       console.warn("AWS S3 upload failed, falling back to local file storage:", s3Err.message);
     }
@@ -109,7 +115,7 @@ export const deleteImageFromS3 = async (fileUrl) => {
         Key: key,
       });
 
-      await s3Client.send(command);
+      await getS3Client().send(command);
     }
   } catch (error) {
     console.error("Failed to delete asset:", error.message);
