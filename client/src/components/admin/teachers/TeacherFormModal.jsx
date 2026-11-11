@@ -355,7 +355,7 @@ export default function TeacherFormModal({
                       >
                         <span>🔑</span>
                         <span>
-                          Primary login password: <strong>Teacher@123</strong>. Teachers can customize it anytime in their portal.
+                          Primary login password: <strong>Teacher@123</strong>.
                         </span>
                       </div>
                     )}

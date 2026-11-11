@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import Student from "../../models/Student.js";
 import User from "../../models/user.js";
-import { ALL_CLASSES } from "../../utils/classData.js";
+import { ALL_CLASSES, normalizeClassDivision } from "../../utils/classData.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { validateStudentAgeForClass } from "../../validators/student.validator.js";
 import { validateHumanName } from "../../utils/nameValidator.js";
@@ -61,7 +61,9 @@ export class StudentAdminService {
         ? rawCategory
         : `${rawCategory} / ${isFemale ? "F" : "M"}`;
 
-      const rawDiv = (s.classDivision || s.className || "10-A").replace(/^Class\s+/i, "").trim();
+      const normDiv = normalizeClassDivision(s.classDivision || s.className || "Class 10-A");
+      const canonName = normDiv ? normDiv.name : (s.classDivision || s.className || "Class 10-A");
+      const rawDiv = normDiv ? normDiv.id : canonName.replace(/^Class\s+/i, "").trim();
       const rawAadhaar = s.aadhaarNumber || "";
       const maskedAadhaar = rawAadhaar
         ? `${rawAadhaar.slice(0, 4)} XXXX ${rawAadhaar.slice(-4)}`
@@ -75,7 +77,10 @@ export class StudentAdminService {
         sampoornaId: s.sampoornaId || `SMP-06042-${880 + roll}`,
         name: s.name,
         dob: s.dob || (roll % 2 === 0 ? "22/08/2010" : "14/05/2010"),
-        division: rawDiv,
+        division: canonName,
+        classDivision: canonName,
+        className: canonName,
+        divisionId: rawDiv,
         guardian: s.guardian || s.fatherName || `Guardian ${s.name.split(" ")[0]}`,
         parentContact: s.parentContact || `+91 94473 ${11800 + roll}`,
         category: categoryTag,
@@ -184,7 +189,8 @@ export class StudentAdminService {
 
     const count = await Student.countDocuments();
     const nextRoll = data.rollNumber ? Number(data.rollNumber) : count + 1;
-    const formattedDiv = targetDivision.startsWith("Class ") ? targetDivision : `Class ${targetDivision}`;
+    const norm = normalizeClassDivision(targetDivision);
+    const formattedDiv = norm ? norm.name : (targetDivision.startsWith("Class ") ? targetDivision : `Class ${targetDivision}`);
 
     const admNo = data.admissionNumber?.trim() || `ADM-${14920 + nextRoll}`;
     const smpId = data.sampoornaId?.trim() || `SMP-06042-${880 + nextRoll}`;
@@ -242,6 +248,7 @@ export class StudentAdminService {
       sampoornaId: smpId,
       classDivision: formattedDiv,
       className: formattedDiv,
+      division: formattedDiv,
       gender: data.gender || "Male",
       dob: data.dob || "14/05/2010",
       category: data.category || "General",
@@ -312,6 +319,33 @@ export class StudentAdminService {
     newStudent.userId = user._id;
     await newStudent.save();
 
+    // Link and sync any pre-existing fee payment records with student profile
+    try {
+      const FeePayment = (await import("../../models/FeePayment.js")).default;
+      const { getAcademicWingForClass } = await import("../../utils/classData.js");
+      const derivedWing = getAcademicWingForClass(newStudent.classDivision);
+      await FeePayment.updateMany(
+        {
+          $or: [
+            { admissionNumber: newStudent.admissionNumber },
+            { studentName: newStudent.name },
+          ],
+        },
+        {
+          $set: {
+            studentId: newStudent._id,
+            studentName: newStudent.name,
+            admissionNumber: newStudent.admissionNumber,
+            rollNumber: newStudent.rollNumber,
+            classDivision: newStudent.classDivision,
+            wing: derivedWing,
+          },
+        }
+      );
+    } catch (err) {
+      console.warn("[createStudent] FeePayment sync warning:", err);
+    }
+
     return newStudent;
   }
 
@@ -374,10 +408,13 @@ export class StudentAdminService {
       }
     }
 
-    if (updateData.division) {
-      const div = updateData.division.trim();
-      updateData.classDivision = div.startsWith("Class ") ? div : `Class ${div}`;
-      updateData.className = updateData.classDivision;
+    if (updateData.division || updateData.classDivision) {
+      const rawTarget = updateData.classDivision || updateData.division;
+      const norm = normalizeClassDivision(rawTarget);
+      const formattedDiv = norm ? norm.name : (rawTarget.trim().startsWith("Class ") ? rawTarget.trim() : `Class ${rawTarget.trim()}`);
+      updateData.classDivision = formattedDiv;
+      updateData.className = formattedDiv;
+      updateData.division = formattedDiv;
     }
 
     if (
@@ -418,6 +455,35 @@ export class StudentAdminService {
 
     if (updated.userId && updateData.email) {
       await User.findByIdAndUpdate(updated.userId, { email: updateData.email });
+    }
+
+    // Propagate student class, division, wing and details to all FeePayment records
+    try {
+      const FeePayment = (await import("../../models/FeePayment.js")).default;
+      const { getAcademicWingForClass } = await import("../../utils/classData.js");
+      const canonDiv = updated.classDivision || updated.className || "Class 10-A";
+      const derivedWing = getAcademicWingForClass(canonDiv);
+      await FeePayment.updateMany(
+        {
+          $or: [
+            { studentId: updated._id },
+            { admissionNumber: updated.admissionNumber },
+            { studentName: updated.name },
+          ],
+        },
+        {
+          $set: {
+            studentId: updated._id,
+            studentName: updated.name,
+            admissionNumber: updated.admissionNumber,
+            rollNumber: updated.rollNumber,
+            classDivision: canonDiv,
+            wing: derivedWing,
+          },
+        }
+      );
+    } catch (err) {
+      console.warn("[updateStudent] FeePayment sync warning:", err);
     }
 
     return updated;

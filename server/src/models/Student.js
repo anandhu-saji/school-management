@@ -54,6 +54,10 @@ const studentSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    division: {
+      type: String,
+      trim: true,
+    },
     gender: {
       type: String,
       enum: ["Male", "Female", "Other", "Boy", "Girl"],

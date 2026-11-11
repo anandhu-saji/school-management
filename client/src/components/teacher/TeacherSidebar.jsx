@@ -4,7 +4,6 @@ export default function TeacherSidebar({
   teacherProfile,
   sidebarOpen,
   setSidebarOpen,
-  onChangePassword,
   onLogout,
 }) {
   return (
@@ -72,19 +71,7 @@ export default function TeacherSidebar({
             >
               <span>•</span> My SPARK Profile
             </button>
-  {onChangePassword && (
-              <button
-                className="console-nav-item"
-                onClick={() => {
-                  onChangePassword();
-                  setSidebarOpen(false);
-                }}
-                style={{ color: "#2563eb", fontWeight: "600" }}
-                title="Customize faculty account password"
-              >
-                <span>🔑</span> Customize Password
-              </button>
-            )}
+  
           </nav>
         </div>
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import api from "../../api/axiosclient";
 import "../../Styles/AdminDash.css";
-import { ACADEMIC_WINGS } from "../../utils/classData";
+import { ACADEMIC_WINGS, normalizeClassDivision, getAcademicWingForClass } from "../../utils/classData";
 
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminHeader from "../../components/admin/AdminHeader";
@@ -151,17 +151,10 @@ export default function PaymentConsole() {
 
   // Handle selecting a student in modal
   const handleSelectStudent = (student) => {
-    let derivedWing;
-    const c = student.classDivision || "";
-    if (c.includes("11") || c.includes("12") || c.includes("+1") || c.includes("+2")) {
-      derivedWing = "Higher Secondary";
-    } else if (c.includes("8") || c.includes("9") || c.includes("10")) {
-      derivedWing = "High School";
-    } else if (c.includes("5") || c.includes("6") || c.includes("7")) {
-      derivedWing = "UP School";
-    } else {
-      derivedWing = "LP School";
-    }
+    const rawClass = student.classDivision || student.className || "Class 10-A";
+    const norm = normalizeClassDivision(rawClass);
+    const canonClass = norm ? norm.name : rawClass;
+    const derivedWing = getAcademicWingForClass(canonClass);
 
     setPaymentForm((prev) => ({
       ...prev,
@@ -169,7 +162,7 @@ export default function PaymentConsole() {
       studentName: student.name,
       admissionNumber: student.admissionNumber || "",
       rollNumber: student.rollNumber || "",
-      classDivision: student.classDivision || "Class 10-A",
+      classDivision: canonClass,
       wing: derivedWing,
     }));
     setStudentSearchQuery("");
@@ -575,8 +568,8 @@ export default function PaymentConsole() {
 
                         {/* Class & Division */}
                         <td>
-                          <div className="class-div-pill">{p.classDivision}</div>
-                          <div className="wing-tag-sub">{p.wing}</div>
+                          <div className="class-div-pill">{normalizeClassDivision(p.classDivision)?.name || p.classDivision}</div>
+                          <div className="wing-tag-sub">{getAcademicWingForClass(p.classDivision) || p.wing}</div>
                         </td>
 
                         {/* Fee Category */}

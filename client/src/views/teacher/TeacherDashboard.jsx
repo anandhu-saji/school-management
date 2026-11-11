@@ -14,8 +14,6 @@ import TeacherInternalMarksTab from "../../components/teacher/TeacherInternalMar
 import TeacherTimetableTab from "../../components/teacher/TeacherTimetableTab";
 import TeacherProfileTab from "../../components/teacher/TeacherProfileTab";
 import StudentDossierModal from "../../components/admin/students/StudentDossierModal";
-import TeacherChangePasswordModal from "../../components/teacher/TeacherChangePasswordModal";
-
 export default function TeacherDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -60,9 +58,7 @@ export default function TeacherDashboard() {
 
   // Modal State for Viewing Student KYC Dossier
   const [dossierStudent, setDossierStudent] = useState(null);
-  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
-
-  // Sync tab with URL
+    // Sync tab with URL
   const handleTabChange = (newTab) => {
     setActiveTab(newTab);
     setSearchParams({ tab: newTab });
@@ -208,8 +204,7 @@ export default function TeacherDashboard() {
         teacherProfile={teacherProfile}
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
-        onChangePassword={() => setIsChangePasswordOpen(true)}
-        onLogout={handleLogout}
+                onLogout={handleLogout}
       />
 
       {/* Main Content Area */}
@@ -225,8 +220,7 @@ export default function TeacherDashboard() {
           }}
           selectedDate={selectedDate}
           onDateChange={setSelectedDate}
-          onChangePassword={() => setIsChangePasswordOpen(true)}
-        />
+                  />
 
         <main className="teacher-content">
           {activeTab === "attendance" && (
@@ -264,16 +258,12 @@ export default function TeacherDashboard() {
           )}
 
           {activeTab === "profile" && (
-            <TeacherProfileTab teacherProfile={teacherProfile} onChangePassword={() => setIsChangePasswordOpen(true)} />
+            <TeacherProfileTab teacherProfile={teacherProfile}  />
           )}
         </main>
       </div>
 
-      {/* Teacher Password Customization Modal */}
-      <TeacherChangePasswordModal
-        isOpen={isChangePasswordOpen}
-        onClose={() => setIsChangePasswordOpen(false)}
-      />
+      
 
       {/* Student KYC Dossier Popup Modal */}
       {dossierStudent && (

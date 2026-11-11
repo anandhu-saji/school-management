@@ -74,9 +74,55 @@ export const ALL_CLASSES = ACADEMIC_WINGS.flatMap((w) =>
     ...c,
     standardDivision: c.name,
     section: c.code || w.code,
+    wing: w.wing,
+    wingCode: w.code,
+    wingShort: w.wingShort,
     sectionLabel: w.wingShort,
   }))
 );
+
+/**
+ * Resolves the statutory academic wing for a given class or division string
+ * Returns: "LP School" | "UP School" | "High School" | "Higher Secondary"
+ */
+export const getAcademicWingForClass = (classDivisionOrStandard) => {
+  if (!classDivisionOrStandard || typeof classDivisionOrStandard !== "string") {
+    return "High School";
+  }
+
+  const raw = classDivisionOrStandard.trim();
+  const directMatch = ALL_CLASSES.find(
+    (c) => c.name.toLowerCase() === raw.toLowerCase() || c.id.toLowerCase() === raw.toLowerCase()
+  );
+  if (directMatch && directMatch.wingShort) {
+    return directMatch.wingShort;
+  }
+
+  const norm = normalizeClassDivision(raw);
+  if (norm) {
+    const matchedClass = ALL_CLASSES.find((c) => c.id === norm.id || c.name === norm.name);
+    if (matchedClass && matchedClass.wingShort) {
+      return matchedClass.wingShort;
+    }
+  }
+
+  // Fallback by standard number extraction
+  const numMatch = raw.match(/\b(1[0-2]|[1-9])\b/);
+  if (numMatch) {
+    const num = parseInt(numMatch[1], 10);
+    if (num >= 1 && num <= 4) return "LP School";
+    if (num >= 5 && num <= 7) return "UP School";
+    if (num >= 8 && num <= 10) return "High School";
+    if (num >= 11 && num <= 12) return "Higher Secondary";
+  }
+
+  if (/plus\s*two|plus\s*one|\+1|\+2|hss/i.test(raw)) return "Higher Secondary";
+  if (/sslc|high/i.test(raw)) return "High School";
+  if (/up/i.test(raw)) return "UP School";
+  if (/lp|primary/i.test(raw)) return "LP School";
+
+  return "High School";
+};
 
 /**
  * Normalizes any class/division input string to canonical Kerala 2.0 Academic Division

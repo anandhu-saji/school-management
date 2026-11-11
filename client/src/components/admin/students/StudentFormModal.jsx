@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { ACADEMIC_WINGS, normalizeClassDivision } from "../../../utils/classData";
+import { ACADEMIC_WINGS, ALL_CLASSES, normalizeClassDivision } from "../../../utils/classData";
 import { getDocumentUrl } from "../../../utils/documentUrl";
 import { checkStudentAgeEligibility } from "../../../utils/ageValidator";
 import EmailOtpVerification from "../../common/EmailOtpVerification";
@@ -27,6 +27,9 @@ export default function StudentFormModal({
   const bcFileInputRef = useRef(null);
 
   if (!isOpen) return null;
+
+  const normalizedDiv = normalizeClassDivision(formData.division);
+  const currentDivisionName = normalizedDiv ? normalizedDiv.name : (formData.division || "Class 10-A");
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -163,7 +166,7 @@ export default function StudentFormModal({
                       >
                         <span>🔑</span>
                         <span>
-                          Primary login password: <strong>Student@123</strong>. Students can customize it in their portal.
+                          Primary login password: <strong>Student@123</strong>.
                         </span>
                       </div>
                     )}</div>
@@ -184,13 +187,20 @@ export default function StudentFormModal({
                     <label>Class &amp; Division</label>
                     <select
                       name="division"
-                      value={normalizeClassDivision(formData.division)?.name || formData.division}
+                      value={currentDivisionName}
                       onChange={handleFormChange}
                     >
+                      <option value="">-- Select Class &amp; Division --</option>
+                      {currentDivisionName &&
+                        !ALL_CLASSES.some((c) => c.name === currentDivisionName) && (
+                          <option value={currentDivisionName}>
+                            {currentDivisionName} (Current)
+                          </option>
+                        )}
                       {ACADEMIC_WINGS.map((wing) => (
                         <optgroup key={wing.code} label={wing.wing}>
                           {wing.classes.map((c) => (
-                            <option key={c.id} value={c.id}>
+                            <option key={c.id} value={c.name}>
                               {c.name} ({c.stream})
                             </option>
                           ))}

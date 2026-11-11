@@ -434,28 +434,10 @@ export default function StudentDossierModal({
                   <code style={{ background: "#e0e7ff", color: "#3730a3", padding: "2px 6px", borderRadius: "4px", fontWeight: "700" }}>
                     Student@123
                   </code>
-                  {" "}— You can customize your password at any time.
+                  
                 </div>
               </div>
-              {onChangePassword && (
-                <button
-                  type="button"
-                  className="primary-button"
-                  style={{
-                    padding: "8px 16px",
-                    fontSize: "12.5px",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "6px",
-                  }}
-                  onClick={() => {
-                    onClose();
-                    onChangePassword();
-                  }}
-                >
-                  <span>🔑</span> Customize Password
-                </button>
-              )}
+              
             </div>
           </div>
         </div>

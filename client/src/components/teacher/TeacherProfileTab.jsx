@@ -1,4 +1,4 @@
-export default function TeacherProfileTab({ teacherProfile, onChangePassword }) {
+export default function TeacherProfileTab({ teacherProfile }) {
   const profile = teacherProfile || {};
 
   return (
@@ -182,27 +182,7 @@ export default function TeacherProfileTab({ teacherProfile, onChangePassword }) 
                 Faculty Portal Security &amp; Credentials
               </h3>
             </div>
-            {onChangePassword && (
-              <button
-                type="button"
-                onClick={onChangePassword}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  background: "#2563eb",
-                  color: "#ffffff",
-                  border: "none",
-                  padding: "8px 16px",
-                  borderRadius: "8px",
-                  fontSize: "13px",
-                  fontWeight: "700",
-                  cursor: "pointer",
-                }}
-              >
-                <span>🔑</span> Customize Password
-              </button>
-            )}
+            
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -219,7 +199,7 @@ export default function TeacherProfileTab({ teacherProfile, onChangePassword }) 
                   Teacher@123
                 </code>
                 <span style={{ marginLeft: "8px", color: "#64748b", fontSize: "12px" }}>
-                  (You can customize this password anytime)
+                  
                 </span>
               </span>
             </div>
