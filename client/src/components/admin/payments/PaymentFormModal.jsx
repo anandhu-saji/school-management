@@ -1,4 +1,4 @@
-import { ALL_CLASSES } from "../../../utils/classData";
+import { ALL_CLASSES, getAcademicWingForClass, normalizeClassDivision } from "../../../utils/classData";
 
 export default function PaymentFormModal({
   isOpen,
@@ -110,14 +110,7 @@ export default function PaymentFormModal({
                   value={paymentForm.classDivision}
                   onChange={(e) => {
                     const val = e.target.value;
-                    const derivedWing =
-                      val.includes("11") || val.includes("12") || val.includes("+1") || val.includes("+2")
-                        ? "Higher Secondary"
-                        : val.includes("8") || val.includes("9") || val.includes("10")
-                        ? "High School"
-                        : val.includes("5") || val.includes("6") || val.includes("7")
-                        ? "UP School"
-                        : "LP School";
+                    const derivedWing = getAcademicWingForClass(val);
                     setPaymentForm({ ...paymentForm, classDivision: val, wing: derivedWing });
                   }}
                 >

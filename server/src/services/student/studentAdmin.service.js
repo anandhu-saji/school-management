@@ -319,6 +319,33 @@ export class StudentAdminService {
     newStudent.userId = user._id;
     await newStudent.save();
 
+    // Link and sync any pre-existing fee payment records with student profile
+    try {
+      const FeePayment = (await import("../../models/FeePayment.js")).default;
+      const { getAcademicWingForClass } = await import("../../utils/classData.js");
+      const derivedWing = getAcademicWingForClass(newStudent.classDivision);
+      await FeePayment.updateMany(
+        {
+          $or: [
+            { admissionNumber: newStudent.admissionNumber },
+            { studentName: newStudent.name },
+          ],
+        },
+        {
+          $set: {
+            studentId: newStudent._id,
+            studentName: newStudent.name,
+            admissionNumber: newStudent.admissionNumber,
+            rollNumber: newStudent.rollNumber,
+            classDivision: newStudent.classDivision,
+            wing: derivedWing,
+          },
+        }
+      );
+    } catch (err) {
+      console.warn("[createStudent] FeePayment sync warning:", err);
+    }
+
     return newStudent;
   }
 
@@ -428,6 +455,35 @@ export class StudentAdminService {
 
     if (updated.userId && updateData.email) {
       await User.findByIdAndUpdate(updated.userId, { email: updateData.email });
+    }
+
+    // Propagate student class, division, wing and details to all FeePayment records
+    try {
+      const FeePayment = (await import("../../models/FeePayment.js")).default;
+      const { getAcademicWingForClass } = await import("../../utils/classData.js");
+      const canonDiv = updated.classDivision || updated.className || "Class 10-A";
+      const derivedWing = getAcademicWingForClass(canonDiv);
+      await FeePayment.updateMany(
+        {
+          $or: [
+            { studentId: updated._id },
+            { admissionNumber: updated.admissionNumber },
+            { studentName: updated.name },
+          ],
+        },
+        {
+          $set: {
+            studentId: updated._id,
+            studentName: updated.name,
+            admissionNumber: updated.admissionNumber,
+            rollNumber: updated.rollNumber,
+            classDivision: canonDiv,
+            wing: derivedWing,
+          },
+        }
+      );
+    } catch (err) {
+      console.warn("[updateStudent] FeePayment sync warning:", err);
     }
 
     return updated;
