@@ -164,9 +164,9 @@ export default function AdminOverview() {
           {/* 4 Cards Grid - Top Summary KPI Cards */}
           <div className="overview-stats-grid">
             <div className="overview-stat-card">
-              <span className="card-label">PUPIL CENSUS</span>
+              <span className="card-label">STUDENT CENSUS</span>
               <div className="overview-number">
-                {(stats.totalPupils ?? stats.totalStudents ?? 0).toLocaleString()} Pupils
+                {(stats.totalStudents ?? stats.totalStudents ?? 0).toLocaleString()} Students
               </div>
               <div className="sub-text">
                 {stats.class10ACount || 15} in 10-A • {stats.totalDivisions || 26} Academic Divisions

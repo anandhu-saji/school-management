@@ -166,7 +166,7 @@ export default function StudentFormModal({
                       >
                         <span>🔑</span>
                         <span>
-                          Primary login password: <strong>Student@123</strong>. Students can customize it in their portal.
+                          Primary login password: <strong>Student@123</strong>.
                         </span>
                       </div>
                     )}</div>
