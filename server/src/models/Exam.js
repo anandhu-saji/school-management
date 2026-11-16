@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { softDeletePlugin } from "../plugins/softDelete.plugin.js";
 
 const seatingEntrySchema = new mongoose.Schema(
   {
@@ -136,6 +137,8 @@ const examSchema = new mongoose.Schema(
     collection: "exams",
   }
 );
+
+examSchema.plugin(softDeletePlugin);
 
 const Exam = mongoose.models.Exam || mongoose.model("Exam", examSchema);
 export default Exam;

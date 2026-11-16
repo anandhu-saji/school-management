@@ -18,6 +18,7 @@ export default function AdminSidebar({ activeNav }) {
     { id: "students", path: "/admin/students", icon: "•", label: "Students Records" },
     { id: "exams", path: "/admin/exams", icon: "•", label: "Exam Timetables" },
     { id: "payments", path: "/admin/payments", icon: "•", label: "Fee & Payments Console" },
+    { id: "trash", path: "/admin/trash", icon: "🗑", label: "Recycle Bin (Trash)" },
   ];
 
   return (

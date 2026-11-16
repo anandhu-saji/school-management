@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { softDeletePlugin } from "../plugins/softDelete.plugin.js";
 
 const studentMarkEntrySchema = new mongoose.Schema(
   {
@@ -134,6 +135,8 @@ internalMarkSchema.index(
   { classDivision: 1, examTerm: 1, subject: 1, evaluationType: 1 },
   { unique: true }
 );
+
+internalMarkSchema.plugin(softDeletePlugin);
 
 const InternalMark =
   mongoose.models.InternalMark ||

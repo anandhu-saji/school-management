@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import { UserRole } from "../constants/enums.js";
 import { validateHumanName } from "../utils/nameValidator.js";
+import { softDeletePlugin } from "../plugins/softDelete.plugin.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -104,6 +105,8 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
   if (!this.password) return false;
   return bcrypt.compare(candidatePassword, this.password);
 };
+
+userSchema.plugin(softDeletePlugin);
 
 const User = mongoose.model("User", userSchema);
 export default User;

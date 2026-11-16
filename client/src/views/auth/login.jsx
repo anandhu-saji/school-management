@@ -117,7 +117,7 @@ function Login() {
     <div className="login-page">
       <div className="login-header">
         <div className="university-logo">
-          <div className="shield"></div>
+          <img src="/logo.png" alt="GHSS Rajakkad Emblem" className="shield-logo-img" />
           <span className="verified">✓</span>
         </div>
         <p className="university-name">GOVT. OF KERALA • GENERAL EDUCATION DEPT.</p>

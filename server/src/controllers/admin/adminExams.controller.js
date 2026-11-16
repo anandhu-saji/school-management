@@ -7,7 +7,10 @@ import { ApiResponse } from "../../utils/ApiResponse.js";
  * Route: GET /api/admin/exams
  */
 export const getExamTimetables = asyncHandler(async (req, res) => {
-  const result = await ExamService.getExamTimetables();
+  const result = await ExamService.getExamTimetables({
+    includeDeleted: req.query.includeDeleted === "true",
+    deletedOnly: req.query.deletedOnly === "true" || req.query.status === "deleted",
+  });
   return ApiResponse.ok(res, result);
 });
 
@@ -36,13 +39,26 @@ export const updateExam = asyncHandler(async (req, res) => {
 });
 
 /**
- * Controller: Delete examination schedule
+ * Controller: Soft-delete examination schedule (moves to trash)
  * Route: DELETE /api/admin/exams/:id
  */
 export const deleteExam = asyncHandler(async (req, res) => {
-  await ExamService.deleteExam(req.params.id);
+  const exam = await ExamService.deleteExam(req.params.id, req.user?._id || req.user?.email);
   return ApiResponse.ok(res, {
-    message: "Exam schedule deleted successfully.",
+    message: `Exam paper ${exam.subject} moved to trash (soft-deleted).`,
+    exam,
+  });
+});
+
+/**
+ * Controller: Restore soft-deleted exam schedule from trash
+ * Route: POST /api/admin/exams/:id/restore
+ */
+export const restoreExam = asyncHandler(async (req, res) => {
+  const exam = await ExamService.restoreExam(req.params.id);
+  return ApiResponse.ok(res, {
+    message: `Exam schedule for ${exam.subject} restored successfully from trash.`,
+    exam,
   });
 });
 

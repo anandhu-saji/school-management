@@ -7,7 +7,14 @@ import { ApiResponse } from "../../utils/ApiResponse.js";
  * Route: GET /api/admin/teachers
  */
 export const getTeachersRecords = asyncHandler(async (req, res) => {
-  const result = await TeacherService.getTeachersList();
+  const result = await TeacherService.getTeachersList({
+    search: req.query.search || req.query.q || "",
+    department: req.query.department || "",
+    page: req.query.page,
+    pageSize: req.query.pageSize || req.query.limit,
+    includeDeleted: req.query.includeDeleted === "true",
+    deletedOnly: req.query.deletedOnly === "true" || req.query.status === "deleted",
+  });
   return ApiResponse.ok(res, result);
 });
 
@@ -36,13 +43,26 @@ export const updateTeacher = asyncHandler(async (req, res) => {
 });
 
 /**
- * Controller: Remove a teacher record
+ * Controller: Soft-delete a teacher record (moves to trash)
  * Route: DELETE /api/admin/teachers/:id
  */
 export const deleteTeacher = asyncHandler(async (req, res) => {
-  await TeacherService.deleteTeacher(req.params.id);
+  const teacher = await TeacherService.deleteTeacher(req.params.id, req.user?._id || req.user?.email);
   return ApiResponse.ok(res, {
-    message: "Teacher record deleted successfully.",
+    message: `Teacher ${teacher.name} moved to trash (soft-deleted).`,
+    teacher,
+  });
+});
+
+/**
+ * Controller: Restore a soft-deleted teacher record from trash
+ * Route: POST /api/admin/teachers/:id/restore
+ */
+export const restoreTeacher = asyncHandler(async (req, res) => {
+  const teacher = await TeacherService.restoreTeacher(req.params.id);
+  return ApiResponse.ok(res, {
+    message: `Teacher ${teacher.name} restored successfully from trash.`,
+    teacher,
   });
 });
 

@@ -18,10 +18,14 @@ export class AuthService {
     }
 
     const cleanEmail = email.trim().toLowerCase();
-    const user = await User.findOne({ email: cleanEmail });
+    const user = await User.findOne({ email: cleanEmail }).setOptions({ includeDeleted: true });
 
     if (!user) {
       throw ApiError.unauthorized("Invalid credentials.");
+    }
+
+    if (user.isDeleted) {
+      throw ApiError.unauthorized("Account has been deactivated or removed.");
     }
 
     // 1. Check account lockout
@@ -124,7 +128,11 @@ export class AuthService {
     const { email, name, picture } = payload;
     const cleanEmail = email.toLowerCase().trim();
 
-    let user = await User.findOne({ email: cleanEmail });
+    let user = await User.findOne({ email: cleanEmail }).setOptions({ includeDeleted: true });
+
+    if (user && user.isDeleted) {
+      throw ApiError.unauthorized("Account has been deactivated or removed.");
+    }
 
     if (!user) {
       user = await User.create({

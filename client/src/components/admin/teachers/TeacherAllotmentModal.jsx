@@ -1,3 +1,5 @@
+import "../../../Styles/AdminDash.css";
+
 export default function TeacherAllotmentModal({ teacher, onClose }) {
   if (!teacher) return null;
 

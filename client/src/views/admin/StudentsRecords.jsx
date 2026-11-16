@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import api from "../../api/axiosclient";
 import "../../Styles/AdminDash.css";
-import { ACADEMIC_WINGS, normalizeClassDivision } from "../../utils/classData";
+import { ACADEMIC_WINGS, normalizeClassDivision, fetchDynamicWings } from "../../utils/classData";
 import { getDocumentUrl } from "../../utils/documentUrl";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminHeader from "../../components/admin/AdminHeader";
@@ -27,9 +27,11 @@ export default function StudentsRecords() {
   });
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedDivision, setSelectedDivision] = useState("All");
+  const [academicWings, setAcademicWings] = useState(ACADEMIC_WINGS);
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
+  const pageSize = 2;
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -88,11 +90,28 @@ export default function StudentsRecords() {
   };
   const [formData, setFormData] = useState(initialForm);
 
-  // Fetch Students & Stats
-  const fetchStudents = async () => {
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Fetch Students & Stats via Backend Search and Filters
+  const fetchStudents = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await api.get("/admin/students");
+      const params = new URLSearchParams();
+      if (debouncedSearch.trim()) {
+        params.append("search", debouncedSearch.trim());
+      }
+      if (selectedDivision && selectedDivision !== "All") {
+        params.append("division", selectedDivision);
+      }
+
+      const res = await api.get(`/admin/students?${params.toString()}`);
       if (res.data.success) {
         setStudents(res.data.students || []);
         if (res.data.stats) {
@@ -104,49 +123,22 @@ export default function StudentsRecords() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [debouncedSearch, selectedDivision]);
 
   useEffect(() => {
-    let isMounted = true;
-    const loadStudents = async () => {
-      try {
-        setLoading(true);
-        const res = await api.get("/admin/students");
-        if (isMounted && res.data.success) {
-          setStudents(res.data.students || []);
-          if (res.data.stats) setStats(res.data.stats);
-        }
-      } catch (err) {
-        console.error("Failed to load students:", err);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-    loadStudents();
-    return () => { isMounted = false; };
+    fetchStudents();
+  }, [fetchStudents]);
+
+  useEffect(() => {
+    fetchDynamicWings(api).then((w) => {
+      if (w) setAcademicWings(w);
+    });
   }, []);
 
-  // Filter & Search Logic
+  // Filter & Search Logic (powered by backend results)
   const filteredStudents = useMemo(() => {
-    return students.filter((s) => {
-      const q = searchQuery.toLowerCase();
-      const matchSearch =
-        s.name.toLowerCase().includes(q) ||
-        String(s.rollNumber).includes(q) ||
-        (s.admissionNumber && s.admissionNumber.toLowerCase().includes(q)) ||
-        (s.sampoornaId && s.sampoornaId.toLowerCase().includes(q)) ||
-        (s.aadhaarNumber && s.aadhaarNumber.includes(q)) ||
-        (s.guardian && s.guardian.toLowerCase().includes(q));
-
-      const matchDivision =
-        selectedDivision === "All" ||
-        s.division.toLowerCase() === selectedDivision.toLowerCase() ||
-        s.division.toLowerCase().includes(selectedDivision.toLowerCase()) ||
-        s.division.replace(/^Class\s*/i, "").toLowerCase() === selectedDivision.replace(/^Class\s*/i, "").toLowerCase() || (normalizeClassDivision(s.classDivision || s.division)?.id === normalizeClassDivision(selectedDivision)?.id);
-
-      return matchSearch && matchDivision;
-    });
-  }, [students, searchQuery, selectedDivision]);
+    return students;
+  }, [students]);
 
   // Pagination Logic
   const totalStudentsCount = filteredStudents.length;
@@ -424,7 +416,7 @@ export default function StudentsRecords() {
     if (!editingStudent) return;
     if (
       !window.confirm(
-        `Are you sure you want to remove ${editingStudent.name} from records?`
+        `Are you sure you want to move ${editingStudent.name} to the Recycle Bin (soft delete)? You can restore this student anytime from the Recycle Bin.`
       )
     )
       return;
@@ -435,6 +427,12 @@ export default function StudentsRecords() {
       if (res.data.success) {
         closeModal();
         fetchStudents();
+        setFeedback({
+          type: "success",
+          message:
+            res.data.message ||
+            `Student ${editingStudent.name} moved to trash (soft-deleted). You can restore it from the Recycle Bin.`,
+        });
       }
     } catch (err) {
       setFeedback({
@@ -551,6 +549,19 @@ export default function StudentsRecords() {
                     setCurrentPage(1);
                   }}
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    className="search-clear-btn"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setCurrentPage(1);
+                    }}
+                    title="Clear search"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
 
               {/* Division Select */}
@@ -562,8 +573,8 @@ export default function StudentsRecords() {
                   setCurrentPage(1);
                 }}
               >
-                <option value="All">All Divisions (26 Academic Divisions)</option>
-                {ACADEMIC_WINGS.map((wing) => (
+                <option value="All">All Academic Divisions</option>
+                {academicWings.map((wing) => (
                   <optgroup key={wing.code} label={wing.wing}>
                     {wing.classes.map((c) => (
                       <option key={c.id} value={c.name}>

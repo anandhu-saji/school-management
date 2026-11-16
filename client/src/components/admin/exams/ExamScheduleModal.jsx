@@ -1,3 +1,4 @@
+import "../../../Styles/AdminDash.css";
 import {
   getTodayISODate,
   parseExamDate,
@@ -51,18 +52,24 @@ export default function ExamScheduleModal({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-backdrop">
+    <div className="modal-overlay" onClick={onClose}>
       <div
-        className="modal-container"
-        style={{ maxWidth: "720px", maxHeight: "90vh", overflowY: "auto" }}
+        className="modal-content-card modal-lg"
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxWidth: "740px" }}
       >
-        <div className="modal-header">
-          <h2 className="modal-title">
-            {editingExam
-              ? "Edit Examination Session"
-              : "Schedule New Examination Session"}
-          </h2>
-          <button className="modal-close-btn" onClick={onClose}>
+        <div className="modal-header-row">
+          <div>
+            <h3>
+              {editingExam
+                ? "Edit Examination Session"
+                : "Schedule New Examination Session"}
+            </h3>
+            <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "#64748b" }}>
+              Official Kerala General Education Board Examination Schedule Registry
+            </p>
+          </div>
+          <button className="modal-close-btn" onClick={onClose} aria-label="Close modal">
             ✕
           </button>
         </div>
@@ -83,8 +90,9 @@ export default function ExamScheduleModal({
           </div>
         )}
 
-        <form onSubmit={onSave} className="modal-form-body">
-          {/* Row 1: Exam Term & Standard */}
+        <form onSubmit={onSave}>
+          <div className="modal-form-body">
+            {/* Row 1: Exam Term & Standard */}
           <div className="form-row-grid">
             <div className="form-group">
               <label className="form-label">Examination Term / Board</label>
@@ -386,27 +394,28 @@ export default function ExamScheduleModal({
             <label className="form-label">Special Exam Instructions</label>
             <textarea
               className="form-input"
-              rows="2"
-              placeholder="e.g. 15 minutes cool-off time provided before writing starts..."
+              rows="3"
+              placeholder="e.g. 15 minutes cool-off time provided before writing starts. Candidates must be seated by 09:15 AM with valid photo hall tickets."
               value={formData.instructions}
               onChange={(e) =>
                 setFormData({ ...formData, instructions: e.target.value })
               }
             ></textarea>
           </div>
+        </div>
 
-          {/* Modal Footer Actions */}
-          <div className="modal-actions-row">
+        {/* Modal Footer Actions */}
+        <div className="modal-footer-row">
             <button
               type="button"
-              className="btn-cancel"
+              className="btn-modal-cancel"
               onClick={onClose}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="btn-submit"
+              className="btn-modal-save"
               disabled={formSubmitting || isPastDate}
               title={isPastDate ? "Cannot schedule exam for a past date" : ""}
             >

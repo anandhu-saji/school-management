@@ -3,6 +3,7 @@ import Attendance from "../models/Attendance.js";
 import Student from "../models/Student.js";
 import Teacher from "../models/Teacher.js";
 import { ACADEMIC_WINGS, ALL_CLASSES } from "../utils/classData.js";
+import { ClassService } from "./class.service.js";
 import { ApiError } from "../utils/ApiError.js";
 
 export class AttendanceService {
@@ -238,7 +239,22 @@ export class AttendanceService {
       }
     });
 
-    const divisions = ALL_CLASSES.map((c) => {
+    let allClassesList = ALL_CLASSES;
+    try {
+      const { classes } = await ClassService.getAllClasses();
+      if (classes && classes.length > 0) {
+        allClassesList = classes.map((c) => ({
+          ...c,
+          standardDivision: c.name,
+          section: c.wingCode || c.code || "high_school",
+          sectionLabel: c.wingShort || "General",
+        }));
+      }
+    } catch {
+      allClassesList = ALL_CLASSES;
+    }
+
+    const divisions = allClassesList.map((c) => {
       const cleanName = c.name.replace(/[\s-]/g, "");
       const matched = todayAttendances.find((a) => {
         const attDiv = (a.classDivision || a.division || "").replace(/[\s-]/g, "");

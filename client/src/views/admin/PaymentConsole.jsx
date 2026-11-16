@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import api from "../../api/axiosclient";
 import "../../Styles/AdminDash.css";
-import { ACADEMIC_WINGS, normalizeClassDivision, getAcademicWingForClass } from "../../utils/classData";
+import { ACADEMIC_WINGS, normalizeClassDivision, getAcademicWingForClass, fetchDynamicWings } from "../../utils/classData";
 
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminHeader from "../../components/admin/AdminHeader";
@@ -42,6 +42,7 @@ export default function PaymentConsole() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [academicWings, setAcademicWings] = useState(ACADEMIC_WINGS);
 
   // Modals state
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
@@ -51,6 +52,7 @@ export default function PaymentConsole() {
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [feedback, setFeedback] = useState({ type: "", message: "" });
   const [studentSearchQuery, setStudentSearchQuery] = useState("");
+  const [studentLookupResults, setStudentLookupResults] = useState([]);
 
   const initialForm = {
     studentName: "",
@@ -115,8 +117,12 @@ export default function PaymentConsole() {
     }
   }, [currentPage, debouncedSearch, selectedCategory, selectedWing, selectedDivision, selectedStatus]);
 
-  // Fetch student roster for modal autocomplete
+  // Fetch student roster for modal autocomplete & dynamic academic wings
   useEffect(() => {
+    fetchDynamicWings(api).then((w) => {
+      if (w) setAcademicWings(w);
+    });
+
     const fetchStudentsForLookup = async () => {
       try {
         const res = await api.get("/admin/students?limit=200");
@@ -135,9 +141,29 @@ export default function PaymentConsole() {
     fetchPayments();
   }, [fetchPayments]);
 
-  // Filtered students for autocomplete inside modal
+  // Real-time backend search for student lookup in modal
+  useEffect(() => {
+    if (!studentSearchQuery.trim()) {
+      setStudentLookupResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await api.get(`/admin/students?search=${encodeURIComponent(studentSearchQuery.trim())}&limit=6`);
+        if (res.data.success && res.data.students) {
+          setStudentLookupResults(res.data.students);
+        }
+      } catch (err) {
+        console.error("Backend student lookup failed:", err);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [studentSearchQuery]);
+
+  // Filtered students for autocomplete inside modal (prefer backend results)
   const filteredStudentsForLookup = useMemo(() => {
     if (!studentSearchQuery.trim()) return [];
+    if (studentLookupResults.length > 0) return studentLookupResults.slice(0, 6);
     const query = studentSearchQuery.toLowerCase();
     return studentsList
       .filter(
@@ -147,7 +173,7 @@ export default function PaymentConsole() {
           (s.classDivision && s.classDivision.toLowerCase().includes(query))
       )
       .slice(0, 6);
-  }, [studentSearchQuery, studentsList]);
+  }, [studentSearchQuery, studentLookupResults, studentsList]);
 
   // Handle selecting a student in modal
   const handleSelectStudent = (student) => {
@@ -248,14 +274,24 @@ export default function PaymentConsole() {
     }
   };
 
-  // Delete payment
+  // Delete payment (Soft Delete)
   const handleDeletePayment = async (id, receiptNo) => {
-    if (!window.confirm(`Are you sure you want to delete payment record ${receiptNo}?`)) return;
+    if (
+      !window.confirm(
+        `Are you sure you want to move payment record ${receiptNo} to the Recycle Bin (soft delete)? You can restore it anytime.`
+      )
+    )
+      return;
 
     try {
       const res = await api.delete(`/admin/payments/${id}`);
       if (res.data.success) {
-        setFeedback({ type: "success", message: `Receipt ${receiptNo} deleted from ledger.` });
+        setFeedback({
+          type: "success",
+          message:
+            res.data.message ||
+            `Receipt ${receiptNo} moved to Recycle Bin (soft-deleted). You can restore it anytime.`,
+        });
         fetchPayments();
       }
     } catch (err) {
@@ -482,8 +518,8 @@ export default function PaymentConsole() {
                   setCurrentPage(1);
                 }}
               >
-                <option value="All">All 26 Divisions</option>
-                {ACADEMIC_WINGS.map((wing) => (
+                <option value="All">All Divisions</option>
+                {academicWings.map((wing) => (
                   <optgroup key={wing.code} label={wing.wing}>
                     {wing.classes.map((c) => (
                       <option key={c.id} value={c.name}>

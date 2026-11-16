@@ -334,9 +334,15 @@ body {
   color: #64748b;
 }
 
-.text-green { color: #16a34a; font-weight: 700; }
-.text-red { color: #dc2626; font-weight: 700; }
-.text-teal { color: #0d9488; font-weight: 700; }
+.text-green { color: #16a34a !important; font-weight: 700; }
+.text-red { color: #dc2626 !important; font-weight: 700; }
+.text-teal { color: #0d9488 !important; font-weight: 700; }
+.text-blue { color: #1d4ed8 !important; font-weight: 700; }
+.text-purple { color: #7e22ce !important; font-weight: 700; }
+.text-emerald { color: #047857 !important; font-weight: 700; }
+.text-amber { color: #b45309 !important; font-weight: 700; }
+.text-muted { color: #64748b !important; }
+.font-bold { font-weight: 700 !important; }
 
 /* ---------------- DIVISION MUSTER TABLE ---------------- */
 .hero-banner {
@@ -664,6 +670,8 @@ body {
 .stat-icon-circle.green { background: #ecfdf5; color: #047857; }
 .stat-icon-circle.purple { background: #f5f3ff; color: #6d28d9; }
 .stat-icon-circle.emerald { background: #ecfdf5; color: #059669; }
+.stat-icon-circle.amber { background: #fffbeb; color: #b45309; }
+.stat-icon-circle.red { background: #fef2f2; color: #dc2626; }
 
 .stat-number-green {
   color: #047857 !important;
@@ -671,6 +679,22 @@ body {
 
 .stat-number-emerald {
   color: #059669 !important;
+}
+
+.stat-number-blue {
+  color: #1d4ed8 !important;
+}
+
+.stat-number-purple {
+  color: #6d28d9 !important;
+}
+
+.stat-number-amber {
+  color: #b45309 !important;
+}
+
+.stat-number-red {
+  color: #dc2626 !important;
 }
 
 /* Student Table Styles */
@@ -902,7 +926,8 @@ body {
 }
 
 /* ---------------- MODAL DIALOG ---------------- */
-.modal-overlay {
+.modal-overlay,
+.modal-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.55);
@@ -915,7 +940,8 @@ body {
   overflow-y: auto;
 }
 
-.modal-content-card {
+.modal-content-card,
+.modal-container {
   background: #ffffff;
   border-radius: 18px;
   max-width: 580px;
@@ -928,11 +954,13 @@ body {
   animation: modalPopIn 0.2s ease-out;
 }
 
-.modal-content-card.modal-lg {
+.modal-content-card.modal-lg,
+.modal-container.modal-lg {
   max-width: 780px;
 }
 
-.modal-content-card form {
+.modal-content-card form,
+.modal-container form {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -1129,7 +1157,8 @@ body {
   }
 }
 
-.modal-header-row {
+.modal-header-row,
+.modal-header {
   padding: 20px 26px;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
@@ -1139,28 +1168,41 @@ body {
   flex-shrink: 0;
 }
 
-.modal-header-row h3 {
+.modal-header-row h2,
+.modal-header-row h3,
+.modal-header h2,
+.modal-header h3,
+.modal-title {
   margin: 0;
   font-size: 18px;
   font-weight: 800;
   color: #0f172a;
 }
 
-.modal-close-btn {
+.modal-close-btn,
+.btn-modal-close {
   background: transparent;
   border: none;
   font-size: 20px;
   color: #94a3b8;
   cursor: pointer;
   line-height: 1;
-  padding: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
 }
 
-.modal-close-btn:hover {
+.modal-close-btn:hover,
+.btn-modal-close:hover {
   color: #0f172a;
+  background: #f1f5f9;
 }
 
-.modal-form-body {
+.modal-form-body,
+.modal-body {
   padding: 24px 26px;
   flex: 1;
   min-height: 0;
@@ -1174,20 +1216,25 @@ body {
   overflow-y: auto;
 }
 
-.form-row-grid-2 {
+.form-row-grid-2,
+.form-row-grid,
+.form-row-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   margin-bottom: 16px;
 }
 
+.form-group,
 .form-field-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
+.form-label,
+.form-group label,
 .form-field-group label {
   font-size: 12px;
   font-weight: 700;
@@ -1196,23 +1243,77 @@ body {
   letter-spacing: 0.5px;
 }
 
+.form-input,
+.form-group input,
+.form-group select,
+.form-group textarea,
 .form-field-group input,
-.form-field-group select {
-  padding: 10px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  font-size: 13.5px;
+.form-field-group select,
+.form-field-group textarea,
+input.form-input,
+select.form-input,
+textarea.form-input {
+  width: 100% !important;
+  padding: 10px 14px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  font-size: 13.5px !important;
+  font-family: inherit !important;
+  color: #0f172a !important;
+  background-color: #ffffff !important;
   outline: none;
-  color: #0f172a;
+  box-sizing: border-box !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+.form-input:focus,
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus,
 .form-field-group input:focus,
-.form-field-group select:focus {
-  border-color: #135bec;
-  box-shadow: 0 0 0 3px rgba(19, 91, 236, 0.12);
+.form-field-group select:focus,
+.form-field-group textarea:focus,
+input.form-input:focus,
+select.form-input:focus,
+textarea.form-input:focus {
+  border-color: #135bec !important;
+  box-shadow: 0 0 0 3px rgba(19, 91, 236, 0.15) !important;
+  background-color: #ffffff !important;
 }
 
-.modal-footer-row {
+.form-input::placeholder,
+.form-group input::placeholder,
+.form-group textarea::placeholder,
+.form-field-group input::placeholder,
+.form-field-group textarea::placeholder,
+input.form-input::placeholder,
+textarea.form-input::placeholder {
+  color: #94a3b8;
+}
+
+select.form-input,
+.form-group select,
+.form-field-group select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 36px !important;
+}
+
+textarea.form-input,
+.form-group textarea,
+.form-field-group textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+}
+
+.modal-footer-row,
+.modal-actions-row,
+.modal-footer {
   padding: 16px 26px;
   border-top: 1px solid #e2e8f0;
   display: flex;
@@ -1224,50 +1325,63 @@ body {
   margin-top: auto;
 }
 
-.btn-modal-cancel {
-  padding: 10px 18px;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #475569;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 13px;
+.btn-modal-cancel,
+.btn-cancel {
+  padding: 10px 18px !important;
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  color: #475569 !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.btn-modal-cancel:hover {
-  background: #f1f5f9;
+.btn-modal-cancel:hover,
+.btn-cancel:hover {
+  background: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
 }
 
-.btn-modal-save {
-  padding: 10px 22px;
-  border: none;
-  background: #135bec;
-  color: #ffffff;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 13px;
+.btn-modal-save,
+.btn-submit {
+  padding: 10px 22px !important;
+  border: none !important;
+  background: #135bec !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.btn-modal-save:hover {
-  background: #0d48be;
+.btn-modal-save:hover:not(:disabled),
+.btn-submit:hover:not(:disabled) {
+  background: #0d48be !important;
+}
+
+.btn-modal-save:disabled,
+.btn-submit:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
 }
 
 .btn-modal-delete {
-  padding: 10px 18px;
-  border: none;
-  background: #fee2e2;
-  color: #dc2626;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 13px;
+  padding: 10px 18px !important;
+  border: none !important;
+  background: #fee2e2 !important;
+  color: #dc2626 !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
   cursor: pointer;
   margin-right: auto;
 }
 
 .btn-modal-delete:hover {
-  background: #fecaca;
+  background: #fecaca !important;
 }
 
 /* ---------------- ID PROOF DOCUMENT UPLOADS ---------------- */
@@ -2919,6 +3033,16 @@ body {
   color: #64748b;
 }
 
+.pagination-info {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.pagination-info strong {
+  color: #0f172a;
+  font-weight: 700;
+}
+
 .pagination-buttons {
   display: flex;
   align-items: center;
@@ -3143,6 +3267,541 @@ body {
   }
 }
 
+
+/* ==========================================================================
+   ACADEMIC CLASS ADDITION & MODAL EXTENSIONS
+   ========================================================================== */
+.live-class-preview-card {
+  padding: 14px 18px;
+  border-radius: 10px;
+  background-color: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  margin-bottom: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wing-select-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.wing-select-btn {
+  padding: 12px;
+  text-align: left;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background-color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.wing-select-btn:hover {
+  border-color: #94a3b8;
+  background-color: #f8fafc;
+}
+
+.wing-select-btn.active {
+  border: 2px solid #135bec;
+  background-color: #eff6ff;
+}
+
+.wing-select-title {
+  font-weight: 700;
+  font-size: 13px;
+  color: #1e293b;
+}
+
+.wing-select-btn.active .wing-select-title {
+  color: #135bec;
+}
+
+.wing-select-desc {
+  color: #64748b;
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.division-letter-pill {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.division-letter-pill:hover {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.division-letter-pill.active {
+  background-color: #135bec;
+  color: #ffffff;
+  border-color: #135bec;
+}
+
+/* Modal Backwards Compatibility Aliases */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-container {
+  background: #ffffff;
+  border-radius: 18px;
+  max-width: 580px;
+  width: 100%;
+  max-height: 90vh;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalPopIn 0.2s ease-out;
+}
+
+.modal-header {
+  padding: 20px 26px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.btn-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  line-height: 1;
+}
+
+.btn-modal-close:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}
+
+.modal-body {
+  padding: 24px 26px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.modal-actions-row {
+  padding: 16px 26px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  background: #f8fafc;
+}
+
+.btn-cancel {
+  padding: 10px 18px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-cancel:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.btn-submit {
+  padding: 10px 22px;
+  border: none;
+  background: #135bec;
+  color: #ffffff;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: #0d48be;
+}
+
+.btn-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* KPI Card Accent Borders & Payment Search */
+.payment-kpi-card.total-collection { border-left: 4px solid #16a34a; }
+.payment-kpi-card.pending-dues { border-left: 4px solid #dc2626; }
+.payment-kpi-card.bus-fee { border-left: 4px solid #1d4ed8; }
+.payment-kpi-card.annual-fee { border-left: 4px solid #0d9488; }
+.payment-kpi-card.pta-fund { border-left: 4px solid #7e22ce; }
+
+.section-att-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.2px;
+}
+
+.section-att-desc {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.search-icon {
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 3px solid #e2e8f0;
+  border-radius: 50%;
+  border-top-color: #135bec;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ==========================================================================
+   PAYMENT CONSOLE & ACTION BUTTONS
+   ========================================================================== */
+.btn-primary-action {
+  background: #135bec;
+  color: #ffffff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(19, 91, 236, 0.2);
+}
+
+.btn-primary-action:hover {
+  background: #0d48be;
+  box-shadow: 0 4px 10px rgba(19, 91, 236, 0.3);
+}
+
+.btn-secondary-action {
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary-action:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.btn-action-view {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  padding: 5px 11px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-action-view:hover {
+  background: #dbeafe;
+}
+
+.btn-action-edit {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  padding: 5px 11px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-action-edit:hover {
+  background: #dcfce7;
+}
+
+.btn-action-delete {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 5px 11px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-action-delete:hover {
+  background: #fee2e2;
+}
+
+.alert-success {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.alert-error {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+.receipt-stamp-box {
+  border: 2px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 12px 18px;
+  text-align: center;
+  color: #64748b;
+  font-size: 11px;
+}
+
+/* ==========================================================================
+   EXAM TIMETABLE TABLE FOOTER & PAGINATION
+   ========================================================================== */
+.student-table-footer {
+  padding: 16px 20px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  color: #64748b;
+  border-top: 1px solid #e2e8f0;
+}
+
+.footer-count-text {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.pagination-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.page-btn-arrow,
+.page-num-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #334155;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.page-btn-arrow:hover:not(:disabled),
+.page-num-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.page-num-btn.active {
+  background: #135bec;
+  color: #ffffff;
+  border-color: #135bec;
+}
+
+.page-btn-arrow:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.export-roster-link {
+  color: #135bec;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.export-roster-link:hover {
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   RECYCLE BIN & SOFT DELETE ARCHIVE CONSOLE
+   ========================================================================== */
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-stat-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
+}
+
+.stat-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.stat-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.stat-card-body {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+
+.stat-value {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.stat-trend {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.stat-trend.neutral {
+  color: #64748b;
+}
+
+.badge-student {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.badge-teacher {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.badge-exam {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.badge-payment {
+  background: #ede9fe;
+  color: #5b21b6;
+  border: 1px solid #ddd6fe;
+}
+
+.allotment-meta-summary-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+.allotment-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
 
 /* ==========================================================================
    PRINT MEDIA STYLES (Clean receipt / voucher printing)

@@ -41,10 +41,10 @@ export const authenticate = asyncHandler(async (req, res, next) => {
     throw ApiError.unauthorized("Invalid authentication token.");
   }
 
-  // 4. Verify user exists in database
-  const user = await User.findById(decoded._id).select("-password");
-  if (!user) {
-    throw ApiError.unauthorized("User session is invalid. Account not found.");
+  // 4. Verify user exists in database and is not soft deleted
+  const user = await User.findById(decoded._id).select("-password").setOptions({ includeDeleted: true });
+  if (!user || user.isDeleted) {
+    throw ApiError.unauthorized("User session is invalid. Account not found or deactivated.");
   }
 
   // Attach user to request context

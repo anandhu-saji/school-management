@@ -10,11 +10,90 @@ import { OtpService } from "../otp.service.js";
 
 export class StudentAdminService {
   /**
-   * Fetch all student admission records for admin census table
+   * Fetch all student admission records for admin census table with backend search, filter, and pagination
    */
-  static async getStudentsRecords({ limit } = {}) {
-    let query = Student.find().sort({ rollNumber: 1 });
-    if (limit) query = query.limit(Number(limit));
+  static async getStudentsRecords({
+    limit,
+    includeDeleted = false,
+    deletedOnly = false,
+    search = "",
+    division = "",
+    page,
+    pageSize,
+  } = {}) {
+    const filter = {};
+    if (deletedOnly) {
+      filter.isDeleted = true;
+    }
+
+    const andConditions = [];
+
+    // Backend Search by name, roll number, admission number, Sampoorna ID, Aadhaar, guardian, etc.
+    if (search && search.trim() !== "") {
+      const q = search.trim();
+      const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const searchRegex = new RegExp(escaped, "i");
+      const numVal = Number(q);
+
+      const orConditions = [
+        { name: searchRegex },
+        { admissionNumber: searchRegex },
+        { sampoornaId: searchRegex },
+        { studentId: searchRegex },
+        { email: searchRegex },
+        { aadhaarNumber: searchRegex },
+        { guardian: searchRegex },
+        { fatherName: searchRegex },
+        { motherName: searchRegex },
+        { parentContact: searchRegex },
+        { phone: searchRegex },
+      ];
+
+      if (!isNaN(numVal) && Number.isInteger(numVal)) {
+        orConditions.push({ rollNumber: numVal });
+      }
+
+      andConditions.push({ $or: orConditions });
+    }
+
+    // Backend Division filter
+    if (division && division !== "All") {
+      const norm = normalizeClassDivision(division);
+      const cleanDiv = norm ? norm.id : division.replace(/^Class\s*/i, "").trim();
+      const divRegex = new RegExp(cleanDiv.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+      andConditions.push({
+        $or: [
+          { classDivision: divRegex },
+          { className: divRegex },
+          { division: divRegex },
+        ],
+      });
+    }
+
+    if (andConditions.length > 0) {
+      filter.$and = andConditions;
+    }
+
+    let query = Student.find(filter).sort({ rollNumber: 1 });
+    if (includeDeleted) {
+      query = query.setOptions({ includeDeleted: true });
+    }
+
+    let pagination = null;
+    if (page && pageSize) {
+      const pageNum = Math.max(1, Number(page));
+      const sizeNum = Math.max(1, Number(pageSize));
+      const totalFiltered = await Student.countDocuments(filter);
+      query = query.skip((pageNum - 1) * sizeNum).limit(sizeNum);
+      pagination = {
+        currentPage: pageNum,
+        pageSize: sizeNum,
+        totalRecords: totalFiltered,
+        totalPages: Math.ceil(totalFiltered / sizeNum) || 1,
+      };
+    } else if (limit) {
+      query = query.limit(Number(limit));
+    }
 
     const studentsRaw = await query.lean();
 
@@ -140,6 +219,7 @@ export class StudentAdminService {
       stats,
       count: students.length,
       students,
+      ...(pagination ? { pagination } : {}),
     };
   }
 
@@ -490,17 +570,77 @@ export class StudentAdminService {
   }
 
   /**
-   * Delete student record
+   * Soft delete student record (moves to trash, deactivates associated account)
    */
-  static async deleteStudent(id) {
+  static async deleteStudent(id, deletedBy = null) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw ApiError.badRequest("Invalid Student ID format.");
     }
-    const deleted = await Student.findByIdAndDelete(id);
-    if (!deleted) {
+    const student = await Student.findById(id);
+    if (!student) {
       throw ApiError.notFound("Student record not found.");
     }
-    return deleted;
+    await student.softDelete(deletedBy);
+
+    // Deactivate and soft-delete linked user account if exists
+    if (student.userId) {
+      const user = await User.findById(student.userId).setOptions({ includeDeleted: true });
+      if (user) {
+        user.isDeleted = true;
+        user.isActive = false;
+        user.deletedAt = new Date();
+        if (deletedBy) user.deletedBy = deletedBy;
+        await user.save();
+      }
+    } else if (student.email) {
+      const user = await User.findOne({ email: student.email.toLowerCase() }).setOptions({ includeDeleted: true });
+      if (user) {
+        user.isDeleted = true;
+        user.isActive = false;
+        user.deletedAt = new Date();
+        if (deletedBy) user.deletedBy = deletedBy;
+        await user.save();
+      }
+    }
+
+    return student;
+  }
+
+  /**
+   * Restore soft-deleted student record
+   */
+  static async restoreStudent(id) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw ApiError.badRequest("Invalid Student ID format.");
+    }
+    const student = await Student.findOne({ _id: id, isDeleted: true });
+    if (!student) {
+      throw ApiError.notFound("Deleted student record not found in trash.");
+    }
+    await student.restore();
+
+    // Re-activate and restore linked user account if exists
+    if (student.userId) {
+      const user = await User.findOne({ _id: student.userId, isDeleted: true });
+      if (user) {
+        user.isDeleted = false;
+        user.isActive = true;
+        user.deletedAt = null;
+        user.deletedBy = null;
+        await user.save();
+      }
+    } else if (student.email) {
+      const user = await User.findOne({ email: student.email.toLowerCase(), isDeleted: true });
+      if (user) {
+        user.isDeleted = false;
+        user.isActive = true;
+        user.deletedAt = null;
+        user.deletedBy = null;
+        await user.save();
+      }
+    }
+
+    return student;
   }
 
   /**

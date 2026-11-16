@@ -1,4 +1,7 @@
+import { useState, useEffect } from "react";
+import api from "../../../api/axiosclient";
 import { ALL_CLASSES, getAcademicWingForClass, normalizeClassDivision } from "../../../utils/classData";
+import "../../../Styles/AdminDash.css";
 
 export default function PaymentFormModal({
   isOpen,
@@ -14,6 +17,19 @@ export default function PaymentFormModal({
   onSelectStudent,
   formatINR,
 }) {
+  const [classList, setClassList] = useState(ALL_CLASSES);
+
+  useEffect(() => {
+    if (isOpen) {
+      api
+        .get("/admin/classes")
+        .then((res) => {
+          if (res.data.success && res.data.classes) setClassList(res.data.classes);
+        })
+        .catch(() => {});
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -114,7 +130,13 @@ export default function PaymentFormModal({
                     setPaymentForm({ ...paymentForm, classDivision: val, wing: derivedWing });
                   }}
                 >
-                  {ALL_CLASSES.map((cls) => (
+                  {paymentForm.classDivision &&
+                    !classList.some((c) => c.name === paymentForm.classDivision) && (
+                      <option value={paymentForm.classDivision}>
+                        {paymentForm.classDivision} (Current)
+                      </option>
+                    )}
+                  {classList.map((cls) => (
                     <option key={cls.id} value={cls.name}>
                       {cls.name} ({cls.stream})
                     </option>

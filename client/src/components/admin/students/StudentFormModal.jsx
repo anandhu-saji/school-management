@@ -1,8 +1,10 @@
-import { useRef } from "react";
-import { ACADEMIC_WINGS, ALL_CLASSES, normalizeClassDivision } from "../../../utils/classData";
+import { useRef, useState, useEffect } from "react";
+import api from "../../../api/axiosclient";
+import { ACADEMIC_WINGS, ALL_CLASSES, normalizeClassDivision, fetchDynamicWings } from "../../../utils/classData";
 import { getDocumentUrl } from "../../../utils/documentUrl";
 import { checkStudentAgeEligibility } from "../../../utils/ageValidator";
 import EmailOtpVerification from "../../common/EmailOtpVerification";
+import "../../../Styles/AdminDash.css";
 
 export default function StudentFormModal({
   isOpen,
@@ -25,6 +27,13 @@ export default function StudentFormModal({
 }) {
   const fileInputRef = useRef(null);
   const bcFileInputRef = useRef(null);
+  const [academicWings, setAcademicWings] = useState(ACADEMIC_WINGS);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchDynamicWings(api).then(setAcademicWings);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -197,7 +206,7 @@ export default function StudentFormModal({
                             {currentDivisionName} (Current)
                           </option>
                         )}
-                      {ACADEMIC_WINGS.map((wing) => (
+                      {academicWings.map((wing) => (
                         <optgroup key={wing.code} label={wing.wing}>
                           {wing.classes.map((c) => (
                             <option key={c.id} value={c.name}>

@@ -26,6 +26,7 @@ export class StudentService {
   static createStudent = StudentAdminService.createStudent;
   static updateStudent = StudentAdminService.updateStudent;
   static deleteStudent = StudentAdminService.deleteStudent;
+  static restoreStudent = StudentAdminService.restoreStudent;
   static purgeAllStudents = StudentAdminService.purgeAllStudents;
 }
 

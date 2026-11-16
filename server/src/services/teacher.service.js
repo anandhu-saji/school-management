@@ -19,25 +19,115 @@ import {
 
 export class TeacherService {
   /**
-   * Fetch all teachers with cadre statistics
+   * Fetch all teachers with cadre statistics and backend search/filters
    */
-  static async getTeachersList() {
-    let teachers = await Teacher.find({}).sort({ name: 1 }).lean();
+  static async getTeachersList({
+    includeDeleted = false,
+    deletedOnly = false,
+    search = "",
+    department = "",
+    page,
+    pageSize,
+  } = {}) {
+    const filter = {};
+    if (deletedOnly) {
+      filter.isDeleted = true;
+    }
+
+    const andConditions = [];
+
+    // Backend Search by name, PEN, email, phone, Aadhaar, department, etc.
+    if (search && search.trim() !== "") {
+      const q = search.trim();
+      const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const searchRegex = new RegExp(escaped, "i");
+      andConditions.push({
+        $or: [
+          { name: searchRegex },
+          { pen: searchRegex },
+          { penNumber: searchRegex },
+          { email: searchRegex },
+          { phone: searchRegex },
+          { aadhaarNumber: searchRegex },
+          { department: searchRegex },
+          { designation: searchRegex },
+          { assignedClass: searchRegex },
+          { specialization: searchRegex },
+        ],
+      });
+    }
+
+    // Backend Department filter
+    if (department && department !== "All") {
+      const selClean = department.toLowerCase();
+      let deptConditions = [];
+      if (selClean === "lower primary") {
+        deptConditions = [
+          { department: /lpsa|primary|lp/i },
+          { designation: /lpsa/i },
+        ];
+      } else if (selClean === "upper primary") {
+        deptConditions = [
+          { department: /upsa|up/i },
+          { designation: /upsa/i },
+        ];
+      } else if (selClean === "high school") {
+        deptConditions = [
+          { department: /hst|high school/i },
+          { designation: /hst/i },
+        ];
+      } else if (selClean === "higher secondary") {
+        deptConditions = [
+          { department: /hsst|higher secondary|plus two/i },
+          { designation: /hsst/i },
+        ];
+      } else {
+        const deptRegex = new RegExp(department.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+        deptConditions = [{ department: deptRegex }, { designation: deptRegex }];
+      }
+      andConditions.push({ $or: deptConditions });
+    }
+
+    if (andConditions.length > 0) {
+      filter.$and = andConditions;
+    }
+
+    let query = Teacher.find(filter).sort({ name: 1 });
+    if (includeDeleted) {
+      query = query.setOptions({ includeDeleted: true });
+    }
+
+    let pagination = null;
+    if (page && pageSize) {
+      const pageNum = Math.max(1, Number(page));
+      const sizeNum = Math.max(1, Number(pageSize));
+      const totalFiltered = await Teacher.countDocuments(filter);
+      query = query.skip((pageNum - 1) * sizeNum).limit(sizeNum);
+      pagination = {
+        currentPage: pageNum,
+        pageSize: sizeNum,
+        totalRecords: totalFiltered,
+        totalPages: Math.ceil(totalFiltered / sizeNum) || 1,
+      };
+    }
+
+    let teachers = await query.lean();
     if (!teachers) {
       teachers = [];
     }
 
-    const totalSanctioned = teachers.length;
-    const regularTeachers = teachers.filter(
+    const allTeachers = await Teacher.find(deletedOnly ? { isDeleted: true } : {}).lean();
+    const totalSanctioned = allTeachers.length;
+    const regularTeachers = allTeachers.filter(
       (t) =>
         (t.employmentType && t.employmentType.toLowerCase().includes("permanent")) ||
         ["HST", "HSST", "LPSA", "UPSA"].includes(t.designation)
     ).length;
 
-    const onDutyStaff = teachers.filter((t) => t.status === "On Duty").length;
+    const onDutyStaff = allTeachers.filter((t) => t.status === "On Duty").length;
     const vacantPosts = Math.max(0, 26 - totalSanctioned);
     const guestFaculty = Math.max(0, totalSanctioned - regularTeachers);
-    const periodsPerWeek = teachers.reduce(
+    const periodsPerWeek = allTeachers.reduce(
       (acc, t) => acc + (Number(t.periodsPerWeek) || 24),
       0
     );
@@ -54,6 +144,8 @@ export class TeacherService {
         guestFaculty,
         periodsPerWeek,
       },
+      count: teachers.length,
+      ...(pagination ? { pagination } : {}),
     };
   }
 
@@ -226,17 +318,77 @@ export class TeacherService {
   }
 
   /**
-   * Delete teacher by ID
+   * Soft delete teacher by ID (moves to trash, deactivates associated account)
    */
-  static async deleteTeacher(id) {
+  static async deleteTeacher(id, deletedBy = null) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw ApiError.badRequest("Invalid teacher ID format.");
     }
-    const deleted = await Teacher.findByIdAndDelete(id);
-    if (!deleted) {
+    const teacher = await Teacher.findById(id);
+    if (!teacher) {
       throw ApiError.notFound("Teacher record not found.");
     }
-    return deleted;
+    await teacher.softDelete(deletedBy);
+
+    // Deactivate and soft-delete linked user account if exists
+    if (teacher.userId) {
+      const user = await User.findById(teacher.userId).setOptions({ includeDeleted: true });
+      if (user) {
+        user.isDeleted = true;
+        user.isActive = false;
+        user.deletedAt = new Date();
+        if (deletedBy) user.deletedBy = deletedBy;
+        await user.save();
+      }
+    } else if (teacher.email) {
+      const user = await User.findOne({ email: teacher.email.toLowerCase() }).setOptions({ includeDeleted: true });
+      if (user) {
+        user.isDeleted = true;
+        user.isActive = false;
+        user.deletedAt = new Date();
+        if (deletedBy) user.deletedBy = deletedBy;
+        await user.save();
+      }
+    }
+
+    return teacher;
+  }
+
+  /**
+   * Restore soft-deleted teacher by ID
+   */
+  static async restoreTeacher(id) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw ApiError.badRequest("Invalid teacher ID format.");
+    }
+    const teacher = await Teacher.findOne({ _id: id, isDeleted: true });
+    if (!teacher) {
+      throw ApiError.notFound("Deleted teacher record not found in trash.");
+    }
+    await teacher.restore();
+
+    // Re-activate and restore linked user account if exists
+    if (teacher.userId) {
+      const user = await User.findOne({ _id: teacher.userId, isDeleted: true });
+      if (user) {
+        user.isDeleted = false;
+        user.isActive = true;
+        user.deletedAt = null;
+        user.deletedBy = null;
+        await user.save();
+      }
+    } else if (teacher.email) {
+      const user = await User.findOne({ email: teacher.email.toLowerCase(), isDeleted: true });
+      if (user) {
+        user.isDeleted = false;
+        user.isActive = true;
+        user.deletedAt = null;
+        user.deletedBy = null;
+        await user.save();
+      }
+    }
+
+    return teacher;
   }
 
   /**

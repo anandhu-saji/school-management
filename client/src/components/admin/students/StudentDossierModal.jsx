@@ -1,4 +1,5 @@
 import { getDocumentUrl } from "../../../utils/documentUrl";
+import "../../../Styles/AdminDash.css";
 
 export default function StudentDossierModal({ student, onClose, onEdit }) {
   if (!student) return null;

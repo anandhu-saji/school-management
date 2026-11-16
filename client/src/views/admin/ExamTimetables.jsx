@@ -240,9 +240,13 @@ export default function ExamTimetables() {
     }
   };
 
-  // Delete Exam Schedule
+  // Delete Exam Schedule (Soft Delete)
   const handleDeleteExam = async (exam) => {
-    if (!window.confirm(`Are you sure you want to delete the schedule for ${exam.subject} (${exam.qpCode})?`)) {
+    if (
+      !window.confirm(
+        `Are you sure you want to move the schedule for ${exam.subject} (${exam.qpCode}) to the Recycle Bin (soft delete)? You can restore it anytime.`
+      )
+    ) {
       return;
     }
 

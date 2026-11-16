@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { softDeletePlugin } from "../plugins/softDelete.plugin.js";
 import { validateHumanName } from "../utils/nameValidator.js";
 import { normalizeClassDivision } from "../utils/classData.js";
 
@@ -254,6 +255,8 @@ studentSchema.pre("validate", function () {
     }
   }
 });
+
+studentSchema.plugin(softDeletePlugin);
 
 const Student =
   mongoose.models.Student || mongoose.model("Student", studentSchema);

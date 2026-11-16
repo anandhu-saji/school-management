@@ -5,6 +5,7 @@ import "../../Styles/AdminDash.css";
 import { ALL_CLASSES } from "../../utils/classData";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminHeader from "../../components/admin/AdminHeader";
+import AddClassModal from "../../components/admin/classes/AddClassModal";
 
 export default function AdminOverview() {
   const navigate = useNavigate();
@@ -97,6 +98,19 @@ export default function AdminOverview() {
 
   const [selectedWingTab, setSelectedWingTab] = useState("all");
   const [paymentSummary, setPaymentSummary] = useState(null);
+  const [classList, setClassList] = useState(ALL_CLASSES);
+  const [isAddClassModalOpen, setIsAddClassModalOpen] = useState(false);
+
+  const fetchClasses = async () => {
+    try {
+      const res = await api.get("/admin/classes");
+      if (res.data.success && res.data.classes) {
+        setClassList(res.data.classes);
+      }
+    } catch {
+      // fallback
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -117,6 +131,14 @@ export default function AdminOverview() {
           }
         } catch {
           // ignore payment summary error
+        }
+        try {
+          const classRes = await api.get("/admin/classes");
+          if (isMounted && classRes.data.success && classRes.data.classes) {
+            setClassList(classRes.data.classes);
+          }
+        } catch {
+          // ignore class error
         }
       } catch (err) {
         console.error("Failed to load admin stats:", err);
@@ -332,53 +354,63 @@ export default function AdminOverview() {
             </div>
           </div>
 
-          {/* ---------------- COMPLETE 26 ACADEMIC DIVISIONS DIRECTORY ---------------- */}
+          {/* ---------------- COMPLETE ACADEMIC DIVISIONS DIRECTORY ---------------- */}
           <div className="section-attendance-wrapper" style={{ marginTop: "28px" }}>
             <div className="section-attendance-heading-bar">
               <div>
                 <h2 className="section-att-main-heading">
-                  All 26 Institutional Academic Divisions Directory
+                  All Institutional Academic Divisions Directory
                 </h2>
                 <p className="section-att-main-subtext">
-                  Complete division-wise breakdown across Lower Primary, Upper Primary, High School, and Higher Secondary wings.
+                  Complete division-wise breakdown across Lower Primary, Upper Primary, High School, and Higher Secondary wings ({classList.length} Divisions registered).
                 </p>
               </div>
-              <div className="section-filter-pills-row" style={{ margin: 0 }}>
+              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                 <button
                   type="button"
-                  className={`section-tab-pill ${selectedWingTab === "all" ? "active" : ""}`}
-                  onClick={() => setSelectedWingTab("all")}
+                  className="btn-sync"
+                  style={{ background: "#2563eb", borderColor: "#2563eb", color: "#ffffff", fontWeight: "700" }}
+                  onClick={() => setIsAddClassModalOpen(true)}
                 >
-                  All 26 Divisions
+                  + Add Class / Division
                 </button>
-                <button
-                  type="button"
-                  className={`section-tab-pill ${selectedWingTab === "lp_school" ? "active" : ""}`}
-                  onClick={() => setSelectedWingTab("lp_school")}
-                >
-                  LP (8)
-                </button>
-                <button
-                  type="button"
-                  className={`section-tab-pill ${selectedWingTab === "up_school" ? "active" : ""}`}
-                  onClick={() => setSelectedWingTab("up_school")}
-                >
-                  UP (6)
-                </button>
-                <button
-                  type="button"
-                  className={`section-tab-pill ${selectedWingTab === "high_school" ? "active" : ""}`}
-                  onClick={() => setSelectedWingTab("high_school")}
-                >
-                  High School (6)
-                </button>
-                <button
-                  type="button"
-                  className={`section-tab-pill ${selectedWingTab === "higher_secondary" ? "active" : ""}`}
-                  onClick={() => setSelectedWingTab("higher_secondary")}
-                >
-                  Higher Secondary (6)
-                </button>
+                <div className="section-filter-pills-row" style={{ margin: 0 }}>
+                  <button
+                    type="button"
+                    className={`section-tab-pill ${selectedWingTab === "all" ? "active" : ""}`}
+                    onClick={() => setSelectedWingTab("all")}
+                  >
+                    All ({classList.length})
+                  </button>
+                  <button
+                    type="button"
+                    className={`section-tab-pill ${selectedWingTab === "lp_school" ? "active" : ""}`}
+                    onClick={() => setSelectedWingTab("lp_school")}
+                  >
+                    LP ({classList.filter((c) => c.wingCode === "lp_school").length})
+                  </button>
+                  <button
+                    type="button"
+                    className={`section-tab-pill ${selectedWingTab === "up_school" ? "active" : ""}`}
+                    onClick={() => setSelectedWingTab("up_school")}
+                  >
+                    UP ({classList.filter((c) => c.wingCode === "up_school").length})
+                  </button>
+                  <button
+                    type="button"
+                    className={`section-tab-pill ${selectedWingTab === "high_school" ? "active" : ""}`}
+                    onClick={() => setSelectedWingTab("high_school")}
+                  >
+                    High School ({classList.filter((c) => c.wingCode === "high_school").length})
+                  </button>
+                  <button
+                    type="button"
+                    className={`section-tab-pill ${selectedWingTab === "higher_secondary" ? "active" : ""}`}
+                    onClick={() => setSelectedWingTab("higher_secondary")}
+                  >
+                    Higher Secondary ({classList.filter((c) => c.wingCode === "higher_secondary").length})
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -395,7 +427,7 @@ export default function AdminOverview() {
                   </tr>
                 </thead>
                 <tbody>
-                  {ALL_CLASSES.filter(
+                  {classList.filter(
                     (c) => selectedWingTab === "all" || c.wingCode === selectedWingTab
                   ).map((c) => (
                     <tr key={c.id}>
@@ -552,6 +584,15 @@ export default function AdminOverview() {
 
         </main>
       </div>
+
+      {/* ---------------- ADD CLASS & DIVISION MODAL ---------------- */}
+      <AddClassModal
+        isOpen={isAddClassModalOpen}
+        onClose={() => setIsAddClassModalOpen(false)}
+        onClassAdded={() => {
+          fetchClasses();
+        }}
+      />
     </div>
   );
 }

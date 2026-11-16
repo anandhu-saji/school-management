@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import api from "../../api/axiosclient";
 import "../../Styles/AdminDash.css";
 import AdminSidebar from "../../components/admin/AdminSidebar";
@@ -21,6 +21,7 @@ export default function TeachersRecords() {
   });
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedDept, setSelectedDept] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 6;
@@ -82,11 +83,28 @@ export default function TeachersRecords() {
   };
   const [formData, setFormData] = useState(initialForm);
 
-  // Fetch Teachers & Cadre Stats
-  const fetchTeachers = async () => {
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Fetch Teachers & Stats via Backend Search and Filters
+  const fetchTeachers = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await api.get("/admin/teachers");
+      const params = new URLSearchParams();
+      if (debouncedSearch.trim()) {
+        params.append("search", debouncedSearch.trim());
+      }
+      if (selectedDept && selectedDept !== "All") {
+        params.append("department", selectedDept);
+      }
+
+      const res = await api.get(`/admin/teachers?${params.toString()}`);
       if (res.data.success) {
         setTeachers(res.data.teachers || []);
         if (res.data.stats) {
@@ -94,64 +112,20 @@ export default function TeachersRecords() {
         }
       }
     } catch (err) {
-      console.error("Failed to load teachers records:", err);
+      console.error("Failed to load teachers:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [debouncedSearch, selectedDept]);
 
   useEffect(() => {
-    let isMounted = true;
-    const loadTeachers = async () => {
-      try {
-        setLoading(true);
-        const res = await api.get("/admin/teachers");
-        if (isMounted && res.data.success) {
-          setTeachers(res.data.teachers || []);
-          if (res.data.stats) setStats(res.data.stats);
-        }
-      } catch (err) {
-        console.error("Failed to load teachers:", err);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-    loadTeachers();
-    return () => { isMounted = false; };
-  }, []);
+    fetchTeachers();
+  }, [fetchTeachers]);
 
-  // Filter & Search Logic across 64 Cadre
+  // Filter & Search Logic (powered by backend results)
   const filteredTeachers = useMemo(() => {
-    return teachers.filter((t) => {
-      const q = searchQuery.toLowerCase();
-      const matchSearch =
-        t.name.toLowerCase().includes(q) ||
-        t.pen.includes(q) ||
-        (t.department && t.department.toLowerCase().includes(q)) ||
-        (t.assignedClass && t.assignedClass.toLowerCase().includes(q)) ||
-        (t.phone && t.phone.includes(q));
-
-      let matchDept = true;
-      if (selectedDept !== "All") {
-        const deptClean = t.department.toLowerCase();
-        const selClean = selectedDept.toLowerCase();
-
-        if (selClean === "lower primary") {
-          matchDept = deptClean.includes("lpsa") || deptClean.includes("primary") || deptClean.includes("lp");
-        } else if (selClean === "upper primary") {
-          matchDept = deptClean.includes("upsa") || deptClean.includes("up");
-        } else if (selClean === "high school") {
-          matchDept = deptClean.includes("hst") || deptClean.includes("high school");
-        } else if (selClean === "higher secondary") {
-          matchDept = deptClean.includes("hsst") || deptClean.includes("higher secondary") || deptClean.includes("plus two");
-        } else {
-          matchDept = deptClean.includes(selClean);
-        }
-      }
-
-      return matchSearch && matchDept;
-    });
-  }, [teachers, searchQuery, selectedDept]);
+    return teachers;
+  }, [teachers]);
 
   // Pagination Logic
   const totalFacultyCount = filteredTeachers.length;
@@ -401,7 +375,7 @@ export default function TeachersRecords() {
     if (!editingTeacher) return;
     if (
       !window.confirm(
-        `Are you sure you want to remove ${editingTeacher.name} (PEN: ${editingTeacher.pen}) from staff register?`
+        `Are you sure you want to move ${editingTeacher.name} (PEN: ${editingTeacher.pen}) to the Recycle Bin (soft delete)? You can restore this faculty record anytime from the Recycle Bin.`
       )
     )
       return;
@@ -412,6 +386,12 @@ export default function TeachersRecords() {
       if (res.data.success) {
         closeModal();
         fetchTeachers();
+        setFeedback({
+          type: "success",
+          message:
+            res.data.message ||
+            `Teacher ${editingTeacher.name} moved to trash (soft-deleted). You can restore it from the Recycle Bin.`,
+        });
       }
     } catch (err) {
       setFeedback({
@@ -524,6 +504,19 @@ export default function TeachersRecords() {
                     setCurrentPage(1);
                   }}
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    className="search-clear-btn"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setCurrentPage(1);
+                    }}
+                    title="Clear search"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
 
               {/* Department & Wing Filter across all 64 Cadre */}

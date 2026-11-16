@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { softDeletePlugin } from "../plugins/softDelete.plugin.js";
 import { validateHumanName } from "../utils/nameValidator.js";
 
 const feePaymentSchema = new mongoose.Schema(
@@ -151,5 +152,7 @@ feePaymentSchema.pre("save", function () {
     }
   }
 });
+
+feePaymentSchema.plugin(softDeletePlugin);
 
 export default mongoose.model("FeePayment", feePaymentSchema);

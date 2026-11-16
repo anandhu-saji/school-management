@@ -7,6 +7,7 @@ import { ALL_CLASSES } from "../../utils/classData";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminHeader from "../../components/admin/AdminHeader";
 import AttendanceRegisterModal from "../../components/admin/attendance/AttendanceRegisterModal";
+import AddClassModal from "../../components/admin/classes/AddClassModal";
 
 export default function DivisionAttendance() {
   const location = useLocation();
@@ -38,6 +39,7 @@ export default function DivisionAttendance() {
   );
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isAddClassModalOpen, setIsAddClassModalOpen] = useState(false);
 
   // Class Attendance Register Modal State
   const todayStr = new Date().toISOString().split("T")[0];
@@ -345,9 +347,19 @@ export default function DivisionAttendance() {
                 Official daily muster register across High School &amp; Higher Secondary divisions.
               </p>
             </div>
-            <button className="btn-sync" onClick={fetchMuster}>
-              Refresh Sync
-            </button>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                type="button"
+                className="btn-sync"
+                style={{ background: "#2563eb", borderColor: "#2563eb", color: "#ffffff", fontWeight: "700" }}
+                onClick={() => setIsAddClassModalOpen(true)}
+              >
+                + Add Class / Division
+              </button>
+              <button className="btn-sync" onClick={fetchMuster}>
+                Refresh Sync
+              </button>
+            </div>
           </div>
 
           <div className="muster-card">
@@ -484,6 +496,15 @@ export default function DivisionAttendance() {
         onMarkAll={handleMarkAll}
         onSaveRegister={handleSaveRegister}
         onExportCSV={handleExportCSV}
+      />
+
+      {/* ---------------- ADD CLASS & DIVISION MODAL ---------------- */}
+      <AddClassModal
+        isOpen={isAddClassModalOpen}
+        onClose={() => setIsAddClassModalOpen(false)}
+        onClassAdded={() => {
+          fetchMuster();
+        }}
       />
     </div>
   );

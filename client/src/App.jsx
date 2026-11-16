@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import "./Styles/AdminDash.css";
 import "./Styles/Responsive.css";
 import Login from "./views/auth/login.jsx";
 import ForgotPassword from "./views/auth/ForgotPassword.jsx";
@@ -9,6 +10,7 @@ import TeachersRecords from "./views/admin/TeachersRecords.jsx";
 import StudentsRecords from "./views/admin/StudentsRecords.jsx";
 import ExamTimetables from "./views/admin/ExamTimetables.jsx";
 import PaymentConsole from "./views/admin/PaymentConsole.jsx";
+import TrashBin from "./views/admin/TrashBin.jsx";
 import TeacherDashboard from "./views/teacher/TeacherDashboard.jsx";
 import Dashboard from "./views/student/Dashboard.jsx";
 import { isSessionValid, getRoleDashboardPath, clearAuthSession } from "./utils/auth";
@@ -153,6 +155,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <PaymentConsole />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/trash"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <TrashBin />
             </ProtectedRoute>
           }
         />

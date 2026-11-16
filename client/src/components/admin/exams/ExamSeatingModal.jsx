@@ -1,3 +1,5 @@
+import "../../../Styles/AdminDash.css";
+
 export default function ExamSeatingModal({
   isOpen,
   onClose,
@@ -6,31 +8,34 @@ export default function ExamSeatingModal({
   if (!isOpen || !activeSeatingExam) return null;
 
   return (
-    <div className="modal-backdrop">
+    <div className="modal-overlay" onClick={onClose}>
       <div
-        className="modal-container"
-        style={{ maxWidth: "780px", maxHeight: "90vh", overflowY: "auto" }}
+        className="modal-content-card modal-lg"
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxWidth: "780px" }}
       >
-        <div className="modal-header">
+        <div className="modal-header-row">
           <div>
-            <h2 className="modal-title">
+            <h3>
               Hall Seating &amp; Invigilation Plan
-            </h2>
-            <p style={{ fontSize: "12.5px", color: "#64748b", marginTop: "2px" }}>
+            </h3>
+            <p style={{ fontSize: "12.5px", color: "#64748b", margin: "2px 0 0" }}>
               {activeSeatingExam.subject} ({activeSeatingExam.qpCode}) •{" "}
               {activeSeatingExam.date} ({activeSeatingExam.startTime} –{" "}
               {activeSeatingExam.endTime})
             </p>
           </div>
           <button
+            type="button"
             className="modal-close-btn"
             onClick={onClose}
+            aria-label="Close modal"
           >
             ✕
           </button>
         </div>
 
-        <div style={{ padding: "20px 24px" }}>
+        <div className="modal-form-body">
           {/* Top Banner with Quick Summary */}
           <div
             style={{
@@ -148,31 +153,24 @@ export default function ExamSeatingModal({
             student candidates at 09:25 AM. Answer booklets must be signed &amp;
             numbered by the invigilator before 10:00 AM.
           </div>
+        </div>
 
-          {/* Modal Actions */}
-          <div
-            style={{
-              marginTop: "24px",
-              display: "flex",
-              justifyContent: "flex-end",
-              gap: "12px",
-            }}
+        {/* Modal Actions */}
+        <div className="modal-footer-row">
+          <button
+            type="button"
+            className="btn-modal-cancel"
+            onClick={onClose}
           >
-            <button
-              type="button"
-              className="btn-cancel"
-              onClick={onClose}
-            >
-              Close Plan
-            </button>
-            <button
-              type="button"
-              className="btn-submit"
-              onClick={() => window.print()}
-            >
-              Print Seating Chart
-            </button>
-          </div>
+            Close Plan
+          </button>
+          <button
+            type="button"
+            className="btn-modal-save"
+            onClick={() => window.print()}
+          >
+            Print Seating Chart
+          </button>
         </div>
       </div>
     </div>

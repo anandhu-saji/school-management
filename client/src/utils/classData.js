@@ -203,3 +203,53 @@ export const normalizeClassDivision = (input) => {
     stream: "General",
   };
 };
+
+/**
+ * Synchronizes and integrates dynamically created classes into the wings structure
+ */
+export const mergeDynamicClassesIntoWings = (dynamicClasses = []) => {
+  if (!dynamicClasses || dynamicClasses.length === 0) return ACADEMIC_WINGS;
+
+  const wingsCopy = JSON.parse(JSON.stringify(ACADEMIC_WINGS));
+
+  dynamicClasses.forEach((cls) => {
+    const exists = wingsCopy.some((w) =>
+      w.classes.some(
+        (c) =>
+          c.name.toLowerCase() === cls.name.toLowerCase() ||
+          c.id.toLowerCase() === cls.id.toLowerCase()
+      )
+    );
+    if (!exists) {
+      const targetWingCode = cls.wingCode || "high_school";
+      const wing = wingsCopy.find((w) => w.code === targetWingCode) || wingsCopy[2];
+      wing.classes.push({
+        id: cls.id,
+        name: cls.name,
+        standard: cls.standard,
+        section: cls.section,
+        stream: cls.stream || "General",
+        mentor: cls.mentor || "Assigned Faculty",
+        room: cls.room || `${wing.wingShort} Academic Room`,
+      });
+      wing.totalDivisions = wing.classes.length;
+    }
+  });
+
+  return wingsCopy;
+};
+
+/**
+ * Helper to fetch live dynamic wings from API
+ */
+export const fetchDynamicWings = async (apiInstance) => {
+  try {
+    const res = await apiInstance.get("/admin/classes");
+    if (res.data.success && res.data.academicWings) {
+      return res.data.academicWings;
+    }
+  } catch {
+    // fallback
+  }
+  return ACADEMIC_WINGS;
+};

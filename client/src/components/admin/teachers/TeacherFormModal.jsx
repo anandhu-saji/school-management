@@ -1,7 +1,10 @@
+import { useState, useEffect } from "react";
+import api from "../../../api/axiosclient";
 import { getDocumentUrl } from "../../../utils/documentUrl";
 import { checkTeacherAgeEligibility, checkTeacherAppointmentDate } from "../../../utils/ageValidator";
-import { ACADEMIC_WINGS, ALL_CLASSES } from "../../../utils/classData";
+import { ACADEMIC_WINGS, ALL_CLASSES, fetchDynamicWings } from "../../../utils/classData";
 import EmailOtpVerification from "../../common/EmailOtpVerification";
+import "../../../Styles/AdminDash.css";
 
 
 // Helper to normalize teacher assigned class to standard Kerala 2.0 academic division
@@ -38,6 +41,14 @@ export default function TeacherFormModal({
   isEmailVerified,
   setIsEmailVerified,
 }) {
+  const [academicWings, setAcademicWings] = useState(ACADEMIC_WINGS);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchDynamicWings(api).then(setAcademicWings);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const currentAssignedClass = resolveAssignedClass(formData.assignedClass);
@@ -285,7 +296,7 @@ export default function TeacherFormModal({
                             {currentAssignedClass} (Current)
                           </option>
                         )}
-                      {ACADEMIC_WINGS.map((wing) => (
+                      {academicWings.map((wing) => (
                         <optgroup key={wing.code} label={wing.wing}>
                           {wing.classes.map((c) => (
                             <option key={c.id} value={c.name}>

@@ -45,13 +45,26 @@ export const updateFeePayment = asyncHandler(async (req, res) => {
 });
 
 /**
- * Controller: Delete fee payment record
+ * Controller: Soft-delete fee payment record (moves to trash)
  * Route: DELETE /api/admin/payments/:id
  */
 export const deleteFeePayment = asyncHandler(async (req, res) => {
-  await PaymentService.deleteFeePayment(req.params.id);
+  const payment = await PaymentService.deleteFeePayment(req.params.id, req.user?._id || req.user?.email);
   return ApiResponse.ok(res, {
-    message: "Receipt deleted from ledger.",
+    message: `Payment receipt ${payment.receiptNumber} moved to trash (soft-deleted).`,
+    payment,
+  });
+});
+
+/**
+ * Controller: Restore soft-deleted fee payment record from trash
+ * Route: POST /api/admin/payments/:id/restore
+ */
+export const restoreFeePayment = asyncHandler(async (req, res) => {
+  const payment = await PaymentService.restoreFeePayment(req.params.id);
+  return ApiResponse.ok(res, {
+    message: `Payment receipt ${payment.receiptNumber} restored successfully from trash.`,
+    payment,
   });
 });
 

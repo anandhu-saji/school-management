@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Exam from "../models/Exam.js";
 import Teacher from "../models/Teacher.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -41,10 +42,15 @@ export class ExamService {
   /**
    * Fetch all exam timetables with summary stats (or seed initial records if empty)
    */
-  static async getExamTimetables() {
-    let count = await Exam.countDocuments();
+  static async getExamTimetables({ includeDeleted = false, deletedOnly = false } = {}) {
+    let query = Exam.find({}).sort({ examDate: 1, date: 1, startTime: 1 });
+    if (deletedOnly) {
+      query = Exam.find({ isDeleted: true }).sort({ examDate: 1, date: 1, startTime: 1 });
+    } else if (includeDeleted) {
+      query = query.setOptions({ includeDeleted: true });
+    }
 
-    const exams = await Exam.find({}).sort({ examDate: 1, date: 1, startTime: 1 }).lean();
+    const exams = await query.lean();
     const totalSchedules = exams.length;
     const upcomingCount = exams.filter((e) => e.status === "Approved & Published").length;
 
@@ -204,14 +210,33 @@ export class ExamService {
   }
 
   /**
-   * Delete exam schedule by ID
+   * Soft delete exam schedule by ID (moves to trash)
    */
-  static async deleteExam(id) {
-    const deleted = await Exam.findByIdAndDelete(id);
-    if (!deleted) {
+  static async deleteExam(id, deletedBy = null) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw ApiError.badRequest("Invalid exam ID format.");
+    }
+    const exam = await Exam.findById(id);
+    if (!exam) {
       throw ApiError.notFound("Exam schedule record not found.");
     }
-    return deleted;
+    await exam.softDelete(deletedBy);
+    return exam;
+  }
+
+  /**
+   * Restore soft-deleted exam schedule by ID
+   */
+  static async restoreExam(id) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw ApiError.badRequest("Invalid exam ID format.");
+    }
+    const exam = await Exam.findOne({ _id: id, isDeleted: true });
+    if (!exam) {
+      throw ApiError.notFound("Deleted exam schedule record not found in trash.");
+    }
+    await exam.restore();
+    return exam;
   }
 
   /**

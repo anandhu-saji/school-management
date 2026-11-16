@@ -1,3 +1,5 @@
+import "../../../Styles/AdminDash.css";
+
 export default function AttendanceRegisterModal({
   isOpen,
   onClose,

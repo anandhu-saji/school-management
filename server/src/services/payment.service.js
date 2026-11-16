@@ -414,17 +414,33 @@ export class PaymentService {
   }
 
   /**
-   * Delete fee payment record
+   * Soft delete fee payment record (moves to trash)
    */
-  static async deleteFeePayment(id) {
+  static async deleteFeePayment(id, deletedBy = null) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw ApiError.badRequest("Invalid payment ID format.");
     }
-    const deleted = await FeePayment.findByIdAndDelete(id);
-    if (!deleted) {
+    const payment = await FeePayment.findById(id);
+    if (!payment) {
       throw ApiError.notFound("Payment record not found.");
     }
-    return deleted;
+    await payment.softDelete(deletedBy);
+    return payment;
+  }
+
+  /**
+   * Restore soft-deleted fee payment record
+   */
+  static async restoreFeePayment(id) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw ApiError.badRequest("Invalid payment ID format.");
+    }
+    const payment = await FeePayment.findOne({ _id: id, isDeleted: true });
+    if (!payment) {
+      throw ApiError.notFound("Deleted payment record not found in trash.");
+    }
+    await payment.restore();
+    return payment;
   }
 }
 

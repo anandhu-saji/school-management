@@ -1,3 +1,5 @@
+import "../../../Styles/AdminDash.css";
+
 export default function PaymentReceiptModal({
   isOpen,
   onClose,

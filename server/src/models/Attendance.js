@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { softDeletePlugin } from "../plugins/softDelete.plugin.js";
 
 const singleRecordSchema = new mongoose.Schema(
   {
@@ -69,6 +70,8 @@ const attendanceSchema = new mongoose.Schema(
 
 // Only this compound index should exist:
 attendanceSchema.index({ date: 1, classDivision: 1 }, { unique: true });
+
+attendanceSchema.plugin(softDeletePlugin);
 
 const Attendance =
   mongoose.models.Attendance || mongoose.model("Attendance", attendanceSchema);
