@@ -33,6 +33,11 @@ const seatingEntrySchema = new mongoose.Schema(
 
 const examSchema = new mongoose.Schema(
   {
+    examName: {
+      type: String,
+      trim: true,
+      default: "SSLC Board Examination March 2027",
+    },
     term: {
       type: String,
       required: true,

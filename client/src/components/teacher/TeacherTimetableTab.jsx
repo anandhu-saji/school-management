@@ -284,7 +284,7 @@ export default function TeacherTimetableTab({
                 <div className="exam-item-top">
                   <div>
                     <div style={{ fontSize: "11.5px", color: "#64748b", fontWeight: "700" }}>
-                      {exam.term} • {exam.standard}
+                      {exam.examName || exam.term} • {exam.standard}
                     </div>
                     <h3 className="exam-subject-title" style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
                       <span>{exam.subject}</span>

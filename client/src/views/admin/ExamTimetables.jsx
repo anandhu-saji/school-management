@@ -46,6 +46,7 @@ export default function ExamTimetables() {
 
   // Form Initial Data
   const initialForm = {
+    examName: "SSLC Board Examination March 2027",
     term: "SSLC Board Examination March 2027",
     standard: "Standard 10 (SSLC)",
     date: "",
@@ -109,16 +110,18 @@ export default function ExamTimetables() {
   const filteredExams = useMemo(() => {
     return exams.filter((e) => {
       const q = searchQuery.toLowerCase();
+      const examNameStr = (e.examName || e.term || "").toLowerCase();
       const matchSearch =
         e.subject.toLowerCase().includes(q) ||
         e.qpCode.toLowerCase().includes(q) ||
         e.standard.toLowerCase().includes(q) ||
+        examNameStr.includes(q) ||
         (e.hall && e.hall.toLowerCase().includes(q)) ||
         (e.invigilator && e.invigilator.toLowerCase().includes(q));
 
       const matchTerm =
         selectedTerm === "All" ||
-        e.term.toLowerCase().includes(selectedTerm.toLowerCase());
+        examNameStr.includes(selectedTerm.toLowerCase());
 
       const matchStd =
         selectedStandard === "All" ||
@@ -148,6 +151,8 @@ export default function ExamTimetables() {
 
     setFormData({
       ...initialForm,
+      examName: "SSLC Board Examination March 2027",
+      term: "SSLC Board Examination March 2027",
       date: defaultUpcomingDate,
       subject: "",
       qpCode: "",
@@ -159,8 +164,10 @@ export default function ExamTimetables() {
   // Open Edit Exam Modal
   const openEditExamModal = (exam) => {
     setEditingExam(exam);
+    const resolvedName = exam.examName || exam.term || "SSLC Board Examination March 2027";
     setFormData({
-      term: exam.term || "SSLC Board Examination March 2027",
+      examName: resolvedName,
+      term: resolvedName,
       standard: exam.standard || "Standard 10 (SSLC)",
       date: exam.date || "",
       startTime: exam.startTime || "09:30 AM",
@@ -207,10 +214,17 @@ export default function ExamTimetables() {
       return;
     }
 
+    const resolvedName = (formData.examName || formData.term || "SSLC Board Examination March 2027").trim();
+    const payload = {
+      ...formData,
+      examName: resolvedName,
+      term: resolvedName,
+    };
+
     try {
       setFormSubmitting(true);
       if (editingExam) {
-        const res = await api.put(`/admin/exams/${editingExam._id}`, formData);
+        const res = await api.put(`/admin/exams/${editingExam._id}`, payload);
         if (res.data.success) {
           setFeedback({
             type: "success",
@@ -222,7 +236,7 @@ export default function ExamTimetables() {
           }, 700);
         }
       } else {
-        const res = await api.post("/admin/exams", formData);
+        const res = await api.post("/admin/exams", payload);
         if (res.data.success) {
           setFeedback({
             type: "success",
@@ -294,6 +308,7 @@ export default function ExamTimetables() {
   const handleExportCSV = () => {
     if (!exams.length) return;
     const headers = [
+      "Examination Name",
       "Exam Date",
       "Time Slot",
       "Standard",
@@ -305,6 +320,7 @@ export default function ExamTimetables() {
       "Status",
     ];
     const rows = exams.map((e) => [
+      `"${e.examName || e.term || "General Exam"}"`,
       `"${e.date}"`,
       `"${e.startTime} - ${e.endTime}"`,
       `"${e.standard}"`,
@@ -521,6 +537,24 @@ export default function ExamTimetables() {
 
                         {/* Subject & QP Code */}
                         <td>
+                          <div
+                            style={{
+                              fontSize: "11px",
+                              fontWeight: "700",
+                              color: "#4f46e5",
+                              marginBottom: "4px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              background: "#eef2ff",
+                              border: "1px solid #e0e7ff",
+                              padding: "2px 8px",
+                              borderRadius: "6px",
+                            }}
+                          >
+                            <span>📝</span>
+                            <span>{exam.examName || exam.term}</span>
+                          </div>
                           <div className="exam-subject-title">
                             {exam.subject}
                           </div>

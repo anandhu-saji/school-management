@@ -102,6 +102,11 @@ export class ExamService {
     const parsedExamDate = parseExamDate(data.date);
     const standardDateStr = formatDateToStandard(parsedExamDate) || data.date;
 
+    const resolvedExamName = (data.examName || data.term || "SSLC Board Examination March 2027").trim();
+    const resolvedTerm = (data.term || data.examName || "SSLC Board Examination March 2027").trim();
+    data.examName = resolvedExamName;
+    data.term = resolvedTerm;
+
     const existing = await Exam.findOne({ qpCode: data.qpCode });
     if (existing) {
       throw ApiError.conflict(`Exam paper with QP Code ${data.qpCode} is already scheduled.`);
@@ -176,6 +181,12 @@ export class ExamService {
       const parsedExamDate = parseExamDate(data.date);
       data.examDate = parsedExamDate || new Date();
       data.date = formatDateToStandard(parsedExamDate) || data.date;
+    }
+
+    if (data.examName || data.term) {
+      const resolvedExamName = (data.examName || data.term).trim();
+      data.examName = resolvedExamName;
+      data.term = resolvedExamName;
     }
 
     if (data.invigilator) {

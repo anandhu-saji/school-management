@@ -49,6 +49,16 @@ export default function ExamScheduleModal({
     }
   };
 
+  const currentExamName = formData?.examName || formData?.term || "";
+
+  const handleExamNameChange = (val) => {
+    setFormData({
+      ...formData,
+      examName: val,
+      term: val,
+    });
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -92,34 +102,73 @@ export default function ExamScheduleModal({
 
         <form onSubmit={onSave}>
           <div className="modal-form-body">
-            {/* Row 1: Exam Term & Standard */}
+            {/* Row 1: Exam Name / Term & Standard */}
           <div className="form-row-grid">
             <div className="form-group">
-              <label className="form-label">Examination Term / Board</label>
-              <select
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                <label className="form-label" style={{ margin: 0 }}>
+                  Examination Name / Title *
+                </label>
+                <span style={{ fontSize: "11px", color: "#4f46e5", fontWeight: "700" }}>
+                  Custom Name Enabled
+                </span>
+              </div>
+              <input
+                type="text"
                 className="form-input"
-                value={formData.term}
-                onChange={(e) =>
-                  setFormData({ ...formData, term: e.target.value })
-                }
+                placeholder="e.g. Mid-Term Examination 2026 / Unit Test 1"
+                value={currentExamName}
+                onChange={(e) => handleExamNameChange(e.target.value)}
                 required
-              >
-                <option value="SSLC Board Examination March 2027">
-                  SSLC Board Examination March 2027
-                </option>
-                <option value="Plus Two Higher Secondary Board Examination 2027">
-                  Plus Two Higher Secondary Board Examination 2027
-                </option>
-                <option value="First Terminal Model Evaluation December 2026">
-                  First Terminal Model Evaluation December 2026
-                </option>
-                <option value="High School Annual Evaluation (Class 8 & 9) 2027">
-                  High School Annual Evaluation (Class 8 &amp; 9) 2027
-                </option>
-                <option value="SSLC Board Examination March 2026">
-                  SSLC Board Examination March 2026
-                </option>
-              </select>
+                style={{ fontWeight: "600" }}
+              />
+              <div style={{ marginTop: "6px" }}>
+                <select
+                  className="form-input"
+                  style={{
+                    fontSize: "12px",
+                    padding: "6px 10px",
+                    background: "#f8fafc",
+                    borderColor: "#cbd5e1",
+                    color: "#475569",
+                  }}
+                  value=""
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      handleExamNameChange(e.target.value);
+                    }
+                  }}
+                >
+                  <option value="">⚡ Or pick a preset to autofill/edit...</option>
+                  <option value="SSLC Board Examination March 2027">
+                    SSLC Board Examination March 2027
+                  </option>
+                  <option value="Plus Two Higher Secondary Board Examination 2027">
+                    Plus Two Higher Secondary Board Examination 2027
+                  </option>
+                  <option value="First Terminal Model Evaluation December 2026">
+                    First Terminal Model Evaluation December 2026
+                  </option>
+                  <option value="High School Annual Evaluation (Class 8 & 9) 2027">
+                    High School Annual Evaluation (Class 8 &amp; 9) 2027
+                  </option>
+                  <option value="SSLC Board Examination March 2026">
+                    SSLC Board Examination March 2026
+                  </option>
+                  <option value="Mid-Term Examination 2026-27">
+                    Mid-Term Examination 2026-27
+                  </option>
+                  <option value="Second Terminal Evaluation">
+                    Second Terminal Evaluation
+                  </option>
+                  <option value="Unit Test / Monthly Class Assessment">
+                    Unit Test / Monthly Class Assessment
+                  </option>
+                  <option value="Annual Practical &amp; Viva Examination 2027">
+                    Annual Practical &amp; Viva Examination 2027
+                  </option>
+                </select>
+              </div>
             </div>
 
             <div className="form-group">

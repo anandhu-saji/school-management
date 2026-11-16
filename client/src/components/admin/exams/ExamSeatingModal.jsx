@@ -20,6 +20,7 @@ export default function ExamSeatingModal({
               Hall Seating &amp; Invigilation Plan
             </h3>
             <p style={{ fontSize: "12.5px", color: "#64748b", margin: "2px 0 0" }}>
+              <strong>{activeSeatingExam.examName || activeSeatingExam.term}</strong> •{" "}
               {activeSeatingExam.subject} ({activeSeatingExam.qpCode}) •{" "}
               {activeSeatingExam.date} ({activeSeatingExam.startTime} –{" "}
               {activeSeatingExam.endTime})
