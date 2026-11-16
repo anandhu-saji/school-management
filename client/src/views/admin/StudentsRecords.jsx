@@ -10,8 +10,10 @@ import StudentFormModal from "../../components/admin/students/StudentFormModal";
 import StudentDossierModal from "../../components/admin/students/StudentDossierModal";
 import { checkStudentAgeEligibility } from "../../utils/ageValidator";
 import { validateHumanName } from "../../utils/nameValidator";
+import { useConfirm } from "../../context/ConfirmContext";
 
 export default function StudentsRecords() {
+  const confirm = useConfirm();
   const fileInputRef = useRef(null);
   const bcFileInputRef = useRef(null);
 
@@ -414,12 +416,16 @@ export default function StudentsRecords() {
 
   const handleDeleteStudent = async () => {
     if (!editingStudent) return;
-    if (
-      !window.confirm(
-        `Are you sure you want to move ${editingStudent.name} to the Recycle Bin (soft delete)? You can restore this student anytime from the Recycle Bin.`
-      )
-    )
-      return;
+    const isConfirmed = await confirm({
+      title: "Move Student to Recycle Bin?",
+      message: `Are you sure you want to move ${editingStudent.name} to the Recycle Bin (soft delete)?`,
+      subMessage: "You can restore this student record anytime from the Recycle Bin.",
+      confirmText: "Move to Recycle Bin",
+      cancelText: "Keep Student",
+      type: "danger",
+    });
+
+    if (!isConfirmed) return;
 
     try {
       setFormSubmitting(true);

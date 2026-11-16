@@ -9,8 +9,12 @@ import PaymentStatsCards from "../../components/admin/payments/PaymentStatsCards
 import PaymentFormModal from "../../components/admin/payments/PaymentFormModal";
 import PaymentReceiptModal from "../../components/admin/payments/PaymentReceiptModal";
 import { validateHumanName } from "../../utils/nameValidator";
+import { useConfirm, useAlert } from "../../context/ConfirmContext";
 
 export default function PaymentConsole() {
+  const confirm = useConfirm();
+  const customAlert = useAlert();
+
   // Data states
   const [payments, setPayments] = useState([]);
   const [studentsList, setStudentsList] = useState([]);
@@ -276,12 +280,16 @@ export default function PaymentConsole() {
 
   // Delete payment (Soft Delete)
   const handleDeletePayment = async (id, receiptNo) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to move payment record ${receiptNo} to the Recycle Bin (soft delete)? You can restore it anytime.`
-      )
-    )
-      return;
+    const isConfirmed = await confirm({
+      title: "Move Payment to Recycle Bin?",
+      message: `Are you sure you want to move payment record ${receiptNo} to the Recycle Bin (soft delete)?`,
+      subMessage: "You can restore this payment voucher anytime from the Recycle Bin.",
+      confirmText: "Move to Recycle Bin",
+      cancelText: "Keep Record",
+      type: "danger",
+    });
+
+    if (!isConfirmed) return;
 
     try {
       const res = await api.delete(`/admin/payments/${id}`);
@@ -303,9 +311,12 @@ export default function PaymentConsole() {
   };
 
   // Export ledger to CSV
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
     if (payments.length === 0) {
-      alert("No payment records available to export.");
+      await customAlert("No payment records available to export.", {
+        title: "Export Notice",
+        type: "warning",
+      });
       return;
     }
 

@@ -9,8 +9,11 @@ import TeacherDossierModal from "../../components/admin/teachers/TeacherDossierM
 import TeacherFormModal from "../../components/admin/teachers/TeacherFormModal";
 import { checkTeacherAgeEligibility, checkTeacherAppointmentDate } from "../../utils/ageValidator";
 import { validateHumanName } from "../../utils/nameValidator";
+import { useConfirm } from "../../context/ConfirmContext";
 
 export default function TeachersRecords() {
+  const confirm = useConfirm();
+
   // State
   const [teachers, setTeachers] = useState([]);
   const [stats, setStats] = useState({
@@ -373,12 +376,16 @@ export default function TeachersRecords() {
 
   const handleDeleteTeacher = async () => {
     if (!editingTeacher) return;
-    if (
-      !window.confirm(
-        `Are you sure you want to move ${editingTeacher.name} (PEN: ${editingTeacher.pen}) to the Recycle Bin (soft delete)? You can restore this faculty record anytime from the Recycle Bin.`
-      )
-    )
-      return;
+    const isConfirmed = await confirm({
+      title: "Move Faculty to Recycle Bin?",
+      message: `Are you sure you want to move ${editingTeacher.name} (PEN: ${editingTeacher.pen}) to the Recycle Bin (soft delete)?`,
+      subMessage: "This faculty record will be soft-deleted. You can restore it anytime from the Recycle Bin.",
+      confirmText: "Move to Recycle Bin",
+      cancelText: "Keep Record",
+      type: "danger",
+    });
+
+    if (!isConfirmed) return;
 
     try {
       setFormSubmitting(true);

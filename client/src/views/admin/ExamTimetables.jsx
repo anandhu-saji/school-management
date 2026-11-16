@@ -11,8 +11,12 @@ import {
   validateExamDate,
   formatDateToStandard,
 } from "../../utils/examDateValidator";
+import { useConfirm, useAlert } from "../../context/ConfirmContext";
 
 export default function ExamTimetables() {
+  const confirm = useConfirm();
+  const customAlert = useAlert();
+
   // State
   const [exams, setExams] = useState([]);
   const [stats, setStats] = useState({
@@ -242,13 +246,16 @@ export default function ExamTimetables() {
 
   // Delete Exam Schedule (Soft Delete)
   const handleDeleteExam = async (exam) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to move the schedule for ${exam.subject} (${exam.qpCode}) to the Recycle Bin (soft delete)? You can restore it anytime.`
-      )
-    ) {
-      return;
-    }
+    const isConfirmed = await confirm({
+      title: "Move Exam to Recycle Bin?",
+      message: `Are you sure you want to move the schedule for ${exam.subject} (${exam.qpCode}) to the Recycle Bin (soft delete)?`,
+      subMessage: "You can restore this exam schedule anytime from the Recycle Bin.",
+      confirmText: "Move to Recycle Bin",
+      cancelText: "Keep Schedule",
+      type: "danger",
+    });
+
+    if (!isConfirmed) return;
 
     try {
       const res = await api.delete(`/admin/exams/${exam._id}`);
@@ -256,7 +263,10 @@ export default function ExamTimetables() {
         fetchExams();
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete exam schedule.");
+      await customAlert(err.response?.data?.message || "Failed to delete exam schedule.", {
+        title: "Deletion Failed",
+        type: "danger",
+      });
     }
   };
 

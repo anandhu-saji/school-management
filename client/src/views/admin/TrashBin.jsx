@@ -3,8 +3,10 @@ import api from "../../api/axiosclient";
 import "../../Styles/AdminDash.css";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminHeader from "../../components/admin/AdminHeader";
+import { useConfirm } from "../../context/ConfirmContext";
 
 export default function TrashBin() {
+  const confirm = useConfirm();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({
     summary: {
@@ -87,13 +89,16 @@ export default function TrashBin() {
 
   // Permanently delete single item
   const handlePermanentDelete = async (type, id, label) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to PERMANENTLY delete ${label}? This action cannot be undone.`
-      )
-    ) {
-      return;
-    }
+    const isConfirmed = await confirm({
+      title: "Permanently Delete Record?",
+      message: `Are you sure you want to PERMANENTLY delete "${label}"?`,
+      subMessage: "WARNING: This action cannot be undone. The record will be permanently purged from the database.",
+      confirmText: "Permanently Delete",
+      cancelText: "Cancel",
+      type: "danger",
+    });
+
+    if (!isConfirmed) return;
 
     try {
       setActionInProgress(true);
@@ -118,13 +123,16 @@ export default function TrashBin() {
   // Restore all items
   const handleRestoreAll = async () => {
     if (data.summary.totalDeleted === 0) return;
-    if (
-      !window.confirm(
-        `Are you sure you want to restore all ${data.summary.totalDeleted} records from the Recycle Bin?`
-      )
-    ) {
-      return;
-    }
+    const isConfirmed = await confirm({
+      title: "Restore All Records?",
+      message: `Are you sure you want to restore all ${data.summary.totalDeleted} records from the Recycle Bin?`,
+      subMessage: "All soft-deleted students, faculty, exams, and payment records will be restored to their active lists.",
+      confirmText: "Yes, Restore All",
+      cancelText: "Cancel",
+      type: "info",
+    });
+
+    if (!isConfirmed) return;
 
     try {
       setActionInProgress(true);
@@ -149,13 +157,16 @@ export default function TrashBin() {
   // Empty trash permanently
   const handleEmptyTrash = async () => {
     if (data.summary.totalDeleted === 0) return;
-    if (
-      !window.confirm(
-        `WARNING: Are you sure you want to permanently EMPTY the Recycle Bin? All ${data.summary.totalDeleted} soft-deleted items will be wiped from MongoDB permanently.`
-      )
-    ) {
-      return;
-    }
+    const isConfirmed = await confirm({
+      title: "Permanently Empty Recycle Bin?",
+      message: `WARNING: Are you sure you want to permanently EMPTY the Recycle Bin? All ${data.summary.totalDeleted} soft-deleted items will be wiped from MongoDB permanently.`,
+      subMessage: "CRITICAL: This action cannot be reversed. All records will be erased completely.",
+      confirmText: "Yes, Empty Recycle Bin",
+      cancelText: "Keep in Bin",
+      type: "danger",
+    });
+
+    if (!isConfirmed) return;
 
     try {
       setActionInProgress(true);

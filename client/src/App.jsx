@@ -14,6 +14,7 @@ import TrashBin from "./views/admin/TrashBin.jsx";
 import TeacherDashboard from "./views/teacher/TeacherDashboard.jsx";
 import Dashboard from "./views/student/Dashboard.jsx";
 import { isSessionValid, getRoleDashboardPath, clearAuthSession } from "./utils/auth";
+import { ConfirmProvider } from "./context/ConfirmContext";
 
 // Public route: If already logged in, route to role dashboard
 function PublicRoute({ children }) {
@@ -63,7 +64,8 @@ function ProtectedRoute({ children, allowedRoles }) {
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <ConfirmProvider>
+        <Routes>
         <Route
           path="/"
           element={
@@ -219,8 +221,9 @@ function App() {
 
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
-    </BrowserRouter>
-  );
+    </ConfirmProvider>
+  </BrowserRouter>
+);
 }
 
 export default App;
