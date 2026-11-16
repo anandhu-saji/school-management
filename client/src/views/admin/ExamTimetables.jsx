@@ -284,6 +284,32 @@ export default function ExamTimetables() {
     }
   };
 
+  // Mark Exam as Completed
+  const handleMarkExamCompleted = async (exam) => {
+    const isConfirmed = await confirm({
+      title: "Mark Examination as Completed?",
+      message: `Are you sure you want to mark "${exam.examName || exam.term} - ${exam.subject}" as Completed?`,
+      subMessage: "Once completed, this exam will immediately appear in the Teacher Portal for entering student grades.",
+      confirmText: "Mark Completed",
+      cancelText: "Cancel",
+      type: "info",
+    });
+
+    if (!isConfirmed) return;
+
+    try {
+      const res = await api.put(`/admin/exams/${exam._id}`, { status: "Completed" });
+      if (res.data.success) {
+        fetchExams();
+      }
+    } catch (err) {
+      await customAlert(err.response?.data?.message || "Failed to update exam status.", {
+        title: "Update Failed",
+        type: "danger",
+      });
+    }
+  };
+
   // Open Seating Plan Modal
   const openSeatingModal = async (exam) => {
     setActiveSeatingExam(exam);
@@ -588,7 +614,9 @@ export default function ExamTimetables() {
                         <td>
                           <span
                             className={
-                              isPublished
+                              exam.status === "Completed"
+                                ? "exam-status-completed"
+                                : isPublished
                                 ? "exam-status-published"
                                 : "exam-status-draft"
                             }
@@ -602,8 +630,25 @@ export default function ExamTimetables() {
                         <td style={{ textAlign: "right" }}>
                           <div
                             className="exam-actions-cell"
-                            style={{ justifyContent: "flex-end" }}
+                            style={{ justifyContent: "flex-end", gap: "6px" }}
                           >
+                            {exam.status !== "Completed" && (
+                              <button
+                                type="button"
+                                className="btn-seating-action"
+                                style={{
+                                  background: "#e0e7ff",
+                                  color: "#3730a3",
+                                  border: "1px solid #c7d2fe",
+                                  padding: "6px 10px",
+                                  fontWeight: "700",
+                                }}
+                                onClick={() => handleMarkExamCompleted(exam)}
+                                title="Mark Exam as Completed so teachers can enter grades"
+                              >
+                                ✓ Complete
+                              </button>
+                            )}
                             <button
                               type="button"
                               className="btn-seating-action"

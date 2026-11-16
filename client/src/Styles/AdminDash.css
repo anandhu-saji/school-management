@@ -1948,6 +1948,18 @@ textarea.form-input,
   border-radius: 14px;
 }
 
+.exam-status-completed {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #e0e7ff;
+  color: #3730a3;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 14px;
+}
+
 .exam-status-draft {
   display: inline-flex;
   align-items: center;

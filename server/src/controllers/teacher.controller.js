@@ -99,6 +99,16 @@ export const saveInternalMarks = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Controller: Get list of completed examinations only for grade marking
+ * Route: GET /api/teacher/completed-exams
+ */
+export const getCompletedExams = asyncHandler(async (req, res) => {
+  const { division, standard } = req.query;
+  const exams = await TeacherService.getCompletedExams({ division, standard });
+  return ApiResponse.ok(res, { exams });
+});
+
+/**
  * Controller: Get authenticated teacher profile & cadre credentials
  * Route: GET /api/teacher/profile
  */

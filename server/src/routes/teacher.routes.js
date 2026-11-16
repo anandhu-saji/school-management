@@ -3,6 +3,7 @@ import {
   getStudentsByDivision,
   saveAttendance,
   getTeacherSchedule,
+  getCompletedExams,
   getInternalMarks,
   saveInternalMarks,
   getTeacherProfile,
@@ -21,6 +22,7 @@ router.use(authenticate, requireTeacher);
 router.get("/students", getStudentsByDivision);
 router.post("/attendance", validate(saveAttendanceSchema), saveAttendance);
 router.get("/timetable", getTeacherSchedule);
+router.get("/completed-exams", getCompletedExams);
 router.get("/internal-marks", getInternalMarks);
 router.post("/internal-marks", saveInternalMarks);
 router.get("/profile", getTeacherProfile);

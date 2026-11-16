@@ -971,6 +971,32 @@ export class TeacherService {
   }
 
   /**
+   * Get list of COMPLETED examinations only for grade marking
+   */
+  static async getCompletedExams({ division, standard } = {}) {
+    const query = {
+      status: "Completed",
+      isDeleted: { $ne: true },
+    };
+
+    const exams = await Exam.find(query).sort({ examDate: -1, date: -1, createdAt: -1 }).lean();
+
+    return exams.map((e) => ({
+      _id: e._id,
+      examName: e.examName || e.term,
+      term: e.term || e.examName,
+      subject: e.subject,
+      standard: e.standard,
+      date: e.date,
+      examDate: e.examDate,
+      maxMarks: e.maxMarks || 80,
+      passMarks: e.passMarks || 24,
+      qpCode: e.qpCode,
+      status: e.status,
+    }));
+  }
+
+  /**
    * Get Continuous Evaluation & Internal Assessment Marks for a class and subject
    */
   static async getInternalMarks({
