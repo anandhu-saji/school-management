@@ -88,9 +88,18 @@ app.get("/api/health", (req, res) => {
 // Production Client Static Serving (Single-Port Production Deployment)
 const clientDistPath = path.resolve("../client/dist");
 if (fs.existsSync(clientDistPath) && (process.env.NODE_ENV === "production" || process.env.SERVE_CLIENT === "true")) {
-  app.use(express.static(clientDistPath));
+  app.use(
+    express.static(clientDistPath, {
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith("index.html")) {
+          res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+        }
+      },
+    })
+  );
   app.use((req, res, next) => {
     if (req.method === "GET" && !req.path.startsWith("/api") && !req.path.startsWith("/uploads")) {
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
       return res.sendFile(path.join(clientDistPath, "index.html"), (err) => {
         if (err) next();
       });
