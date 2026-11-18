@@ -412,93 +412,111 @@ export default function ProfilePage() {
         </section>
       )}
 
-      {/* Main Grid: Left Avatar Card + Right Details Form */}
+      {/* Main Grid: Left Column + Right Details Form */}
       <div className="profile-layout-grid">
-        {/* Left Column: Avatar & Summary */}
-        <div className="profile-card profile-avatar-wrapper">
-          <input
-            type="file"
-            ref={fileInputRef}
-            style={{ display: "none" }}
-            accept="image/png, image/jpeg, image/jpg, image/webp"
-            onChange={handleAvatarFileChange}
-          />
+        {/* Left Column: Avatar & Summary & Status Card */}
+        <div className="profile-left-col">
+          <div className="profile-card profile-avatar-wrapper">
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              accept="image/png, image/jpeg, image/jpg, image/webp"
+              onChange={handleAvatarFileChange}
+            />
 
-          <div
-            className="profile-avatar-frame"
-            onClick={() => fileInputRef.current?.click()}
-            title="Click to change profile picture"
-          >
-            {avatarDisplayUrl ? (
-              <img src={avatarDisplayUrl} alt="Avatar" />
-            ) : (
-              <span>{initials}</span>
-            )}
-            <div className="profile-avatar-upload-overlay">
-              <span style={{ fontSize: "20px" }}>📷</span>
-              <span>{uploadingAvatar ? "Uploading..." : "Change"}</span>
+            <div
+              className="profile-avatar-frame"
+              onClick={() => fileInputRef.current?.click()}
+              title="Click to change profile picture"
+            >
+              {avatarDisplayUrl ? (
+                <img src={avatarDisplayUrl} alt="Avatar" />
+              ) : (
+                <span>{initials}</span>
+              )}
+              <div className="profile-avatar-upload-overlay">
+                <span style={{ fontSize: "20px" }}>📷</span>
+                <span>{uploadingAvatar ? "Uploading..." : "Change"}</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="btn-upload-photo"
+              disabled={uploadingAvatar}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <span>📷</span>
+              <span>{uploadingAvatar ? "Uploading..." : "Change Photo"}</span>
+            </button>
+            <span style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>
+              Direct update • JPG, PNG, WEBP max 5MB
+            </span>
+
+            <h3 className="profile-user-name">{profileData?.user?.name || "User"}</h3>
+            <span className="profile-user-role">
+              {role === "admin" && "Headmaster / Admin"}
+              {role === "teacher" && (roleData.designation || "HSST Faculty")}
+              {role === "student" && `${roleData.classDivision || "Class 10-A"} Scholar`}
+            </span>
+
+            <div className="profile-meta-list">
+              <div className="profile-meta-row">
+                <span className="profile-meta-label">Account Email</span>
+                <span className="profile-meta-val">{profileData?.user?.email}</span>
+              </div>
+              <div className="profile-meta-row">
+                <span className="profile-meta-label">Official Identifier</span>
+                <span className="profile-meta-val" style={{ color: "#2563eb", fontFamily: "monospace" }}>
+                  {profileData?.identifier || "—"}
+                </span>
+              </div>
+              {profileData?.division && (
+                <div className="profile-meta-row">
+                  <span className="profile-meta-label">Academic Division</span>
+                  <span className="profile-meta-val">{profileData.division}</span>
+                </div>
+              )}
             </div>
           </div>
 
-          <button
-            type="button"
-            className="btn-upload-photo"
-            disabled={uploadingAvatar}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <span>📷</span>
-            <span>{uploadingAvatar ? "Uploading..." : "Change Photo"}</span>
-          </button>
-          <span style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>
-            Direct update • JPG, PNG, WEBP max 5MB
-          </span>
-
-          <h3 className="profile-user-name">{profileData?.user?.name || "User"}</h3>
-          <span className="profile-user-role">
-            {role === "admin" && "Headmaster / Admin"}
-            {role === "teacher" && (roleData.designation || "HSST Faculty")}
-            {role === "student" && `${roleData.classDivision || "Class 10-A"} Scholar`}
-          </span>
-
-          <div
-            style={{
-              width: "100%",
-              borderTop: "1px solid #f1f5f9",
-              paddingTop: "16px",
-              marginTop: "8px",
-              textAlign: "left",
-              fontSize: "12.5px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "8px",
-            }}
-          >
-            <div>
-              <span style={{ color: "#64748b", fontWeight: "600" }}>Account Email:</span>
-              <div style={{ fontWeight: "700", color: "#0f172a", wordBreak: "break-all" }}>
-                {profileData?.user?.email}
-              </div>
+          {/* Compliance & Verification Card */}
+          <div className="profile-card profile-status-card">
+            <div className="profile-status-title">
+              <span>🛡️</span>
+              <span>Institutional Status</span>
             </div>
-            <div>
-              <span style={{ color: "#64748b", fontWeight: "600" }}>Official Identifier:</span>
-              <div style={{ fontWeight: "700", color: "#2563eb", fontFamily: "monospace" }}>
-                {profileData?.identifier || "—"}
-              </div>
+            <div className="profile-status-item">
+              <span className="status-key">Registry State</span>
+              <span className="status-pill active">Verified ✓</span>
             </div>
-            {profileData?.division && (
-              <div>
-                <span style={{ color: "#64748b", fontWeight: "600" }}>Academic Division:</span>
-                <div style={{ fontWeight: "700", color: "#0f172a" }}>
-                  {profileData.division}
-                </div>
-              </div>
-            )}
+            <div className="profile-status-item">
+              <span className="status-key">Sampoorna ID</span>
+              <span className="status-pill linked">Linked</span>
+            </div>
+            <div className="profile-status-item">
+              <span className="status-key">Academic Year</span>
+              <span style={{ fontWeight: "700", color: "#0f172a" }}>2026 – 2027</span>
+            </div>
           </div>
         </div>
 
         {/* Right Column: Profile Form Details */}
         <div className="profile-card">
           <form onSubmit={handleSubmit}>
+            {role !== "admin" && (
+              <div className="profile-governance-notice">
+                <div className="gov-icon-badge">🏛️</div>
+                <div className="gov-text-block">
+                  <h4>Official Records Governance</h4>
+                  <p>
+                    For statutory compliance under Kerala Education Rules, changes to demographic and contact details will be reviewed and approved by the Administration before updating permanent records.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="profile-form-section-title">
               <span>👤</span>
               <span>Personal &amp; Contact Details</span>
@@ -508,9 +526,6 @@ export default function ProfilePage() {
               <div className="profile-form-group">
                 <label className="profile-form-label">
                   Full Legal Name <span className="required">*</span>
-                  {role !== "admin" && (
-                    <span className="badge-approval">Requires Admin Approval</span>
-                  )}
                 </label>
                 <input
                   type="text"
@@ -523,7 +538,9 @@ export default function ProfilePage() {
               </div>
 
               <div className="profile-form-group">
-                <label className="profile-form-label">Institutional Email ID</label>
+                <label className="profile-form-label">
+                  Institutional Email ID <span className="field-official-tag">Official</span>
+                </label>
                 <input
                   type="email"
                   name="email"
@@ -537,9 +554,6 @@ export default function ProfilePage() {
               <div className="profile-form-group">
                 <label className="profile-form-label">
                   Official Phone Number <span className="required">*</span>
-                  {role !== "admin" && (
-                    <span className="badge-approval">Requires Admin Approval</span>
-                  )}
                 </label>
                 <input
                   type="tel"
@@ -553,12 +567,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="profile-form-group">
-                <label className="profile-form-label">
-                  Gender
-                  {role !== "admin" && (
-                    <span className="badge-approval">Requires Admin Approval</span>
-                  )}
-                </label>
+                <label className="profile-form-label">Gender</label>
                 <select
                   name="gender"
                   className="profile-form-select"
@@ -572,12 +581,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="profile-form-group">
-                <label className="profile-form-label">
-                  Date of Birth
-                  {role !== "admin" && (
-                    <span className="badge-approval">Requires Admin Approval</span>
-                  )}
-                </label>
+                <label className="profile-form-label">Date of Birth</label>
                 <input
                   type="text"
                   name="dob"
@@ -590,10 +594,7 @@ export default function ProfilePage() {
 
               {role === "student" && (
                 <div className="profile-form-group">
-                  <label className="profile-form-label">
-                    Blood Group
-                    <span className="badge-approval">Requires Admin Approval</span>
-                  </label>
+                  <label className="profile-form-label">Blood Group</label>
                   <select
                     name="bloodGroup"
                     className="profile-form-select"
@@ -615,10 +616,7 @@ export default function ProfilePage() {
 
               {role === "teacher" && (
                 <div className="profile-form-group">
-                  <label className="profile-form-label">
-                    Academic Qualifications
-                    <span className="badge-approval">Requires Admin Approval</span>
-                  </label>
+                  <label className="profile-form-label">Academic Qualifications</label>
                   <input
                     type="text"
                     name="qualification"
@@ -641,10 +639,7 @@ export default function ProfilePage() {
 
                 <div className="profile-form-grid">
                   <div className="profile-form-group">
-                    <label className="profile-form-label">
-                      Guardian Full Name
-                      <span className="badge-approval">Requires Admin Approval</span>
-                    </label>
+                    <label className="profile-form-label">Guardian Full Name</label>
                     <input
                       type="text"
                       name="guardian"
@@ -655,10 +650,7 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="profile-form-group">
-                    <label className="profile-form-label">
-                      Parent / Guardian Contact
-                      <span className="badge-approval">Requires Admin Approval</span>
-                    </label>
+                    <label className="profile-form-label">Parent / Guardian Contact</label>
                     <input
                       type="tel"
                       name="parentContact"
@@ -669,10 +661,7 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="profile-form-group span-2">
-                    <label className="profile-form-label">
-                      House Name / Door Number
-                      <span className="badge-approval">Requires Admin Approval</span>
-                    </label>
+                    <label className="profile-form-label">House Name / Door Number</label>
                     <input
                       type="text"
                       name="houseName"
@@ -683,10 +672,7 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="profile-form-group">
-                    <label className="profile-form-label">
-                      City / Village / Post Office
-                      <span className="badge-approval">Requires Admin Approval</span>
-                    </label>
+                    <label className="profile-form-label">City / Village / Post Office</label>
                     <input
                       type="text"
                       name="city"
@@ -697,10 +683,7 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="profile-form-group">
-                    <label className="profile-form-label">
-                      Postal PIN Code
-                      <span className="badge-approval">Requires Admin Approval</span>
-                    </label>
+                    <label className="profile-form-label">Postal PIN Code</label>
                     <input
                       type="text"
                       name="pincode"
@@ -776,7 +759,7 @@ export default function ProfilePage() {
 
   if (role === "teacher") {
     return (
-      <div className="admin-layout teacher-layout">
+      <div className="teacher-layout">
         <TeacherSidebar
           activeTab="profile"
           setActiveTab={(tab) => {
@@ -791,7 +774,7 @@ export default function ProfilePage() {
             navigate("/login");
           }}
         />
-        <main className="admin-main">
+        <div className="teacher-main-wrapper">
           <TeacherHeader
             sidebarOpen={sidebarOpen}
             setSidebarOpen={setSidebarOpen}
@@ -802,14 +785,14 @@ export default function ProfilePage() {
             onDateChange={() => {}}
           />
           {renderContent()}
-        </main>
+        </div>
       </div>
     );
   }
 
   // Student Layout
   return (
-    <div className="student-layout admin-layout">
+    <div className="portal student-portal">
       <StudentSidebar
         activeTab="profile"
         setActiveTab={(tab) => {
@@ -825,7 +808,7 @@ export default function ProfilePage() {
           navigate("/login");
         }}
       />
-      <main className="admin-main student-main">
+      <div className="main portal-main student-main-wrapper">
         <StudentHeader
           activeTab="profile"
           displayClass={roleData.classDivision || "Class 10-A"}
@@ -834,7 +817,7 @@ export default function ProfilePage() {
           getInitials={(n) => (n || "S").slice(0, 2).toUpperCase()}
         />
         {renderContent()}
-      </main>
+      </div>
     </div>
   );
 }
