@@ -1,0 +1,42 @@
+name: Auto Deploy to AWS EC2
+
+on:
+  push:
+    branches:
+      - Main
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab for testing
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to AWS EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            set -e
+
+            echo "🚀 Navigating to project directory..."
+            cd /home/ubuntu/school-management
+
+            echo "📥 Pulling latest code from Main branch..."
+            git pull origin Main
+
+            echo "📦 Building client SPA..."
+            cd client
+            npm install
+            npm run build
+
+            echo "⚙️ Updating server dependencies..."
+            cd ../server
+            npm install --omit=dev
+
+            echo "🔄 Restarting PM2 process..."
+            pm2 restart school-backend --update-env || pm2 restart 0
+
+            echo "✅ Deployment completed successfully! Site is updated."
