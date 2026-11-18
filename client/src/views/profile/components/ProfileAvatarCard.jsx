@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+
 export default function ProfileAvatarCard({
   fileInputRef,
   handleAvatarFileChange,
@@ -8,6 +10,12 @@ export default function ProfileAvatarCard({
   role,
   roleData,
 }) {
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [avatarDisplayUrl]);
+
   return (
     <div className="profile-left-col">
       <div className="profile-card profile-avatar-wrapper">
@@ -24,8 +32,12 @@ export default function ProfileAvatarCard({
           onClick={() => fileInputRef.current?.click()}
           title="Click to change profile picture"
         >
-          {avatarDisplayUrl ? (
-            <img src={avatarDisplayUrl} alt="Avatar" />
+          {avatarDisplayUrl && !imgError ? (
+            <img
+              src={avatarDisplayUrl}
+              alt=""
+              onError={() => setImgError(true)}
+            />
           ) : (
             <span>{initials}</span>
           )}

@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { getDocumentUrl } from "../../utils/documentUrl";
 
 export default function TeacherSidebar({
@@ -8,8 +9,13 @@ export default function TeacherSidebar({
   setSidebarOpen,
   onLogout,
 }) {
+  const [avatarError, setAvatarError] = useState(false);
   const teacherAvatar = teacherProfile?.avatarUrl ? getDocumentUrl(teacherProfile.avatarUrl) : null;
   const initial = (teacherProfile?.name || "T").slice(0, 1).toUpperCase();
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [teacherAvatar]);
   return (
     <>
       {sidebarOpen && (
@@ -130,8 +136,12 @@ export default function TeacherSidebar({
             title="Click to view & edit SPARK Profile"
           >
             <div className="profile-avatar-circle" style={{ background: "#2563eb" }}>
-              {teacherAvatar ? (
-                <img src={teacherAvatar} alt="Teacher Avatar" />
+              {teacherAvatar && !avatarError ? (
+                <img
+                  src={teacherAvatar}
+                  alt=""
+                  onError={() => setAvatarError(true)}
+                />
               ) : (
                 <span>{initial}</span>
               )}

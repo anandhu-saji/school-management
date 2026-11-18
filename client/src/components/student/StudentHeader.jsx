@@ -31,7 +31,12 @@ export default function StudentHeader({
     };
   }, []);
 
+  const [avatarError, setAvatarError] = useState(false);
   const userAvatar = user?.avatarUrl ? getDocumentUrl(user.avatarUrl) : null;
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [userAvatar]);
 
   return (
     <header className="topbar admin-header">
@@ -95,10 +100,11 @@ export default function StudentHeader({
               justifyContent: "center",
             }}
           >
-            {userAvatar ? (
+            {userAvatar && !avatarError ? (
               <img
                 src={userAvatar}
-                alt="Avatar"
+                alt=""
+                onError={() => setAvatarError(true)}
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
             ) : (

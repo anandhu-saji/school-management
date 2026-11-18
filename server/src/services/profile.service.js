@@ -330,11 +330,12 @@ export class ProfileService {
         await student.save();
       }
 
-      // Also update User name/phone if present
-      if (requestedChanges.name || requestedChanges.phone) {
+      // Also update User name/phone/avatarUrl if present
+      if (requestedChanges.name || requestedChanges.phone || requestedChanges.avatarUrl) {
         await User.findByIdAndUpdate(userId, {
           ...(requestedChanges.name && { name: requestedChanges.name }),
           ...(requestedChanges.phone && { phone: requestedChanges.phone }),
+          ...(requestedChanges.avatarUrl && { avatarUrl: requestedChanges.avatarUrl }),
         });
       }
     } else if (userRole === "teacher") {
@@ -349,10 +350,11 @@ export class ProfileService {
         await teacher.save();
       }
 
-      if (requestedChanges.name || requestedChanges.phone) {
+      if (requestedChanges.name || requestedChanges.phone || requestedChanges.avatarUrl) {
         await User.findByIdAndUpdate(userId, {
           ...(requestedChanges.name && { name: requestedChanges.name }),
           ...(requestedChanges.phone && { phone: requestedChanges.phone }),
+          ...(requestedChanges.avatarUrl && { avatarUrl: requestedChanges.avatarUrl }),
         });
       }
     }

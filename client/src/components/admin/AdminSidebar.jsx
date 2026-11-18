@@ -73,8 +73,13 @@ export default function AdminSidebar({ activeNav }) {
 
   const userName = user?.name || user?.username || "Headmaster";
   const userEmail = user?.email || "anandhusaji043@gmail.com";
+  const [avatarError, setAvatarError] = useState(false);
   const userAvatar = user?.avatarUrl ? getDocumentUrl(user?.avatarUrl) : null;
   const initials = (userName || "HM").slice(0, 3).toUpperCase();
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [userAvatar]);
 
   return (
     <>
@@ -161,8 +166,12 @@ export default function AdminSidebar({ activeNav }) {
             title="Click to view & edit Headmaster profile"
           >
             <div className="profile-avatar-circle">
-              {userAvatar ? (
-                <img src={userAvatar} alt="Headmaster Avatar" />
+              {userAvatar && !avatarError ? (
+                <img
+                  src={userAvatar}
+                  alt=""
+                  onError={() => setAvatarError(true)}
+                />
               ) : (
                 <span>{initials}</span>
               )}

@@ -56,14 +56,17 @@ app.use(cookieParser());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-// Static uploaded avatars are public
+// Static uploaded avatars are public (mounted at both /uploads and /api/uploads for Nginx reverse-proxy compatibility)
 app.use("/uploads/avatars", express.static(path.resolve("uploads/avatars")));
+app.use("/api/uploads/avatars", express.static(path.resolve("uploads/avatars")));
 
 // Protected statutory student KYC documents require authentication
 app.use("/uploads/documents", authenticate, express.static(path.resolve("uploads/documents")));
+app.use("/api/uploads/documents", authenticate, express.static(path.resolve("uploads/documents")));
 
 // General uploads fallback (if any other files exist)
 app.use("/uploads", express.static(path.resolve("uploads")));
+app.use("/api/uploads", express.static(path.resolve("uploads")));
 
 // API Routes
 app.use("/api/admin", adminRoutes);

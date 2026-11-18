@@ -28,8 +28,13 @@ export default function AdminHeader() {
     };
   }, []);
 
+  const [avatarError, setAvatarError] = useState(false);
   const userAvatar = user?.avatarUrl ? getDocumentUrl(user.avatarUrl) : null;
   const initial = (user?.name || "A").slice(0, 1).toUpperCase();
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [userAvatar]);
 
   return (
     <header className="admin-top-header">
@@ -62,10 +67,11 @@ export default function AdminHeader() {
           title="Click to view & edit Profile"
           aria-label="Admin Profile"
         >
-          {userAvatar ? (
+          {userAvatar && !avatarError ? (
             <img
               src={userAvatar}
-              alt="Avatar"
+              alt=""
+              onError={() => setAvatarError(true)}
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
           ) : (

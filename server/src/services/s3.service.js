@@ -97,9 +97,10 @@ export const uploadImageToS3 = async (file, folder = "avatars") => {
 export const deleteImageFromS3 = async (fileUrl) => {
   if (!fileUrl) return;
   try {
-    if (fileUrl.startsWith("/uploads/")) {
+    if (fileUrl.startsWith("/uploads/") || fileUrl.startsWith("/api/uploads/")) {
+      const cleanRelative = fileUrl.replace(/^\/api/, "").replace(/^\//, "");
       const uploadsDir = path.resolve("uploads");
-      const localPath = path.resolve(fileUrl.replace(/^\//, ""));
+      const localPath = path.resolve(cleanRelative);
       if (localPath.startsWith(uploadsDir) && fs.existsSync(localPath)) {
         fs.unlinkSync(localPath);
       }

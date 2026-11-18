@@ -35,9 +35,14 @@ export default function StudentSidebar({
     };
   }, []);
 
+  const [avatarError, setAvatarError] = useState(false);
   const avatarSrc = localAvatar || studentProfile?.avatarUrl;
   const avatarUrl = avatarSrc ? getDocumentUrl(avatarSrc) : null;
   const initials = (displayName || "S").slice(0, 2).toUpperCase();
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [avatarUrl]);
 
   return (
     <>
@@ -142,8 +147,12 @@ export default function StudentSidebar({
             title="Click to view & edit My Profile"
           >
             <div className="profile-avatar-circle" style={{ background: "#2563eb" }}>
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="Avatar" />
+              {avatarUrl && !avatarError ? (
+                <img
+                  src={avatarUrl}
+                  alt=""
+                  onError={() => setAvatarError(true)}
+                />
               ) : (
                 <span>{initials}</span>
               )}
