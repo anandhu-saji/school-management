@@ -84,7 +84,7 @@ export default function StudentDashboard() {
   }, [activeTab, navigate]);
 
   // User session
-  const [user] = useState(() => {
+  const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem("user");
       return stored ? JSON.parse(stored) : null;
@@ -92,6 +92,21 @@ export default function StudentDashboard() {
       return null;
     }
   });
+
+  useEffect(() => {
+    const handleUserUpdate = () => {
+      try {
+        const stored = localStorage.getItem("user");
+        if (stored) setUser(JSON.parse(stored));
+      } catch {}
+    };
+    window.addEventListener("userUpdated", handleUserUpdate);
+    window.addEventListener("storage", handleUserUpdate);
+    return () => {
+      window.removeEventListener("userUpdated", handleUserUpdate);
+      window.removeEventListener("storage", handleUserUpdate);
+    };
+  }, []);
 
   // Data states from backend
   const [dashboardData, setDashboardData] = useState(null);

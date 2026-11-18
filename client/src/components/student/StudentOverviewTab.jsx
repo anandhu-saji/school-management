@@ -1,3 +1,6 @@
+import { useState, useEffect } from "react";
+import { getDocumentUrl } from "../../utils/documentUrl";
+
 const defaultWeeklyTimetable = [
   {
     time: "8:00–8:45",
@@ -83,6 +86,14 @@ export default function StudentOverviewTab({
   setActiveTab,
   getInitials,
 }) {
+  const [avatarError, setAvatarError] = useState(false);
+  const userAvatar = user?.avatarUrl || studentProfile?.avatarUrl;
+  const avatarUrl = userAvatar ? getDocumentUrl(userAvatar) : null;
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [avatarUrl]);
+
   return (
     <>
       {/* Welcome Card */}
@@ -92,8 +103,18 @@ export default function StudentOverviewTab({
           className="avatar main-avatar avatar-clickable"
           onClick={onOpenDossier}
           title="Click to view My ID &amp; Documents Dossier"
+          style={{ overflow: "hidden", position: "relative" }}
         >
-          {getInitials(displayName)}
+          {avatarUrl && !avatarError ? (
+            <img
+              src={avatarUrl}
+              alt=""
+              onError={() => setAvatarError(true)}
+              style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
+            />
+          ) : (
+            getInitials(displayName)
+          )}
           <span className="avatar-id-badge" title="View Identity Dossier">ID</span>
         </div>
 

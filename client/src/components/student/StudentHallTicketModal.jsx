@@ -1,3 +1,5 @@
+import { getDocumentUrl } from "../../utils/documentUrl";
+
 export default function StudentHallTicketModal({
   isOpen,
   onClose,
@@ -69,9 +71,16 @@ export default function StudentHallTicketModal({
               </div>
             </div>
 
-            <div className="candidate-photo-box">
-              <div style={{ fontSize: "28px" }}></div>
-              <div>Affix Attested Photo</div>
+            <div className="candidate-photo-box" style={{ overflow: "hidden", padding: 0 }}>
+              {studentProfile?.avatarUrl ? (
+                <img
+                  src={getDocumentUrl(studentProfile.avatarUrl)}
+                  alt=""
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : (
+                <div style={{ padding: "8px", fontSize: "11px", color: "#64748b" }}>Affix Attested Photo</div>
+              )}
             </div>
           </div>
 

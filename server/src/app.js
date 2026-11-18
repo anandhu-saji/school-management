@@ -17,6 +17,16 @@ import profileRoutes from "./routes/profile.routes.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 import { authenticate } from "./middleware/auth.middleware.js";
 import { ApiError } from "./utils/ApiError.js";
+import {
+  ensureUploadDirs,
+  AVATARS_DIR,
+  DOCUMENTS_DIR,
+  UPLOADS_DIR,
+  ROOT_UPLOADS_DIR,
+} from "./utils/paths.js";
+
+// Ensure physical upload directories exist on server start
+ensureUploadDirs();
 
 const app = express();
 
@@ -57,16 +67,23 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // Static uploaded avatars are public (mounted at both /uploads and /api/uploads for Nginx reverse-proxy compatibility)
-app.use("/uploads/avatars", express.static(path.resolve("uploads/avatars")));
-app.use("/api/uploads/avatars", express.static(path.resolve("uploads/avatars")));
+app.use("/uploads/avatars", express.static(AVATARS_DIR));
+app.use("/api/uploads/avatars", express.static(AVATARS_DIR));
+
+// Also check project root avatars fallback if existing
+const rootAvatars = path.resolve(ROOT_UPLOADS_DIR, "avatars");
+if (fs.existsSync(rootAvatars)) {
+  app.use("/uploads/avatars", express.static(rootAvatars));
+  app.use("/api/uploads/avatars", express.static(rootAvatars));
+}
 
 // Protected statutory student KYC documents require authentication
-app.use("/uploads/documents", authenticate, express.static(path.resolve("uploads/documents")));
-app.use("/api/uploads/documents", authenticate, express.static(path.resolve("uploads/documents")));
+app.use("/uploads/documents", authenticate, express.static(DOCUMENTS_DIR));
+app.use("/api/uploads/documents", authenticate, express.static(DOCUMENTS_DIR));
 
-// General uploads fallback (if any other files exist)
-app.use("/uploads", express.static(path.resolve("uploads")));
-app.use("/api/uploads", express.static(path.resolve("uploads")));
+// General uploads fallback
+app.use("/uploads", express.static(UPLOADS_DIR));
+app.use("/api/uploads", express.static(UPLOADS_DIR));
 
 // API Routes
 app.use("/api/admin", adminRoutes);

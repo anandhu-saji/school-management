@@ -4,6 +4,7 @@ export default function ProfileAvatarCard({
   fileInputRef,
   handleAvatarFileChange,
   avatarDisplayUrl,
+  avatarPreview,
   initials,
   uploadingAvatar,
   profileData,
@@ -11,10 +12,11 @@ export default function ProfileAvatarCard({
   roleData,
 }) {
   const [imgError, setImgError] = useState(false);
+  const effectiveSrc = avatarPreview || avatarDisplayUrl;
 
   useEffect(() => {
     setImgError(false);
-  }, [avatarDisplayUrl]);
+  }, [effectiveSrc]);
 
   return (
     <div className="profile-left-col">
@@ -32,9 +34,9 @@ export default function ProfileAvatarCard({
           onClick={() => fileInputRef.current?.click()}
           title="Click to change profile picture"
         >
-          {avatarDisplayUrl && !imgError ? (
+          {effectiveSrc && !imgError ? (
             <img
-              src={avatarDisplayUrl}
+              src={effectiveSrc}
               alt=""
               onError={() => setImgError(true)}
             />

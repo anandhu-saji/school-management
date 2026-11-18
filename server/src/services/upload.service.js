@@ -43,6 +43,10 @@ export class UploadService {
       }
     }
 
+    if (user?.avatarUrl && user.avatarUrl !== avatarUrl) {
+      await deleteImageFromS3(user.avatarUrl);
+    }
+
     await User.findByIdAndUpdate(userId, { avatarUrl });
 
     return { avatarUrl };

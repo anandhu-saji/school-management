@@ -24,6 +24,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState(null);
   const [feedback, setFeedback] = useState({ type: "", message: "" });
 
   const [user, setUser] = useState(() => {
@@ -131,6 +132,10 @@ export default function ProfilePage() {
       return;
     }
 
+    // Instant local preview so user sees new picture on the page immediately
+    const localBlob = URL.createObjectURL(file);
+    setAvatarPreview(localBlob);
+
     try {
       setUploadingAvatar(true);
       setFeedback({ type: "", message: "" });
@@ -168,6 +173,7 @@ export default function ProfilePage() {
       }
     } catch (err) {
       console.error("Failed to upload avatar:", err);
+      setAvatarPreview(null);
       setFeedback({
         type: "error",
         message:
@@ -309,6 +315,7 @@ export default function ProfilePage() {
           fileInputRef={fileInputRef}
           handleAvatarFileChange={handleAvatarFileChange}
           avatarDisplayUrl={avatarDisplayUrl}
+          avatarPreview={avatarPreview}
           initials={initials}
           uploadingAvatar={uploadingAvatar}
           profileData={profileData}

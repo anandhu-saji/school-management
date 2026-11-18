@@ -60,9 +60,18 @@ export default function StudentDossierModal({
               fontSize: "22px",
               fontWeight: "800",
               flexShrink: 0,
+              overflow: "hidden",
             }}
           >
-            {getInitials(displayName)}
+            {(user?.avatarUrl || studentProfile?.avatarUrl) ? (
+              <img
+                src={getDocumentUrl(user?.avatarUrl || studentProfile?.avatarUrl)}
+                alt=""
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            ) : (
+              getInitials(displayName)
+            )}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <h2 style={{ margin: 0, fontSize: "18px", color: "#0f172a" }}>

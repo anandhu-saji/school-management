@@ -2,6 +2,12 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client
 import crypto from "crypto";
 import path from "path";
 import fs from "fs";
+import {
+  AVATARS_DIR,
+  DOCUMENTS_DIR,
+  UPLOADS_DIR,
+  ROOT_UPLOADS_DIR,
+} from "../utils/paths.js";
 
 /**
  * Instantiates and caches the S3 client using current environment credentials
@@ -64,8 +70,8 @@ export const uploadFile = async (file, folder = "documents") => {
     }
   }
 
-  // Graceful local disk fallback
-  const uploadDir = path.resolve("uploads", folder);
+  // Graceful local disk fallback using canonical storage paths
+  const uploadDir = folder === "avatars" ? AVATARS_DIR : DOCUMENTS_DIR;
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
@@ -99,10 +105,19 @@ export const deleteImageFromS3 = async (fileUrl) => {
   try {
     if (fileUrl.startsWith("/uploads/") || fileUrl.startsWith("/api/uploads/")) {
       const cleanRelative = fileUrl.replace(/^\/api/, "").replace(/^\//, "");
-      const uploadsDir = path.resolve("uploads");
-      const localPath = path.resolve(cleanRelative);
-      if (localPath.startsWith(uploadsDir) && fs.existsSync(localPath)) {
-        fs.unlinkSync(localPath);
+      const fileName = path.basename(cleanRelative);
+      const isAvatar = cleanRelative.includes("avatars");
+      const targetDir = isAvatar ? AVATARS_DIR : DOCUMENTS_DIR;
+      const targetFile = path.join(targetDir, fileName);
+
+      if (fs.existsSync(targetFile)) {
+        fs.unlinkSync(targetFile);
+      } else {
+        // Also check fallback root uploads
+        const fallbackTarget = path.resolve(ROOT_UPLOADS_DIR, isAvatar ? "avatars" : "documents", fileName);
+        if (fs.existsSync(fallbackTarget)) {
+          fs.unlinkSync(fallbackTarget);
+        }
       }
       return;
     }
