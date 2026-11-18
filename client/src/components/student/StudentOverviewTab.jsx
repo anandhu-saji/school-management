@@ -1,3 +1,71 @@
+const defaultWeeklyTimetable = [
+  {
+    time: "8:00–8:45",
+    monday: "Mathematics",
+    tuesday: "Science",
+    wednesday: "English",
+    thursday: "Social Studies",
+    friday: "Mathematics",
+  },
+  {
+    time: "8:45–9:30",
+    monday: "Mathematics",
+    tuesday: "Science",
+    wednesday: "English",
+    thursday: "Social Studies",
+    friday: "Mathematics",
+  },
+  {
+    time: "9:30–10:15",
+    monday: "Science",
+    tuesday: "English",
+    wednesday: "Mathematics",
+    thursday: "Science",
+    friday: "English",
+  },
+  {
+    time: "10:15–10:30",
+    isBreak: true,
+  },
+  {
+    time: "10:30–11:15",
+    monday: "Social Studies",
+    tuesday: "Art",
+    wednesday: "Computer",
+    thursday: "Mathematics",
+    friday: "Science",
+  },
+  {
+    time: "11:15–12:00",
+    monday: "Computer",
+    tuesday: "Social Studies",
+    wednesday: "Art",
+    thursday: "Computer",
+    friday: "Social Studies",
+  },
+  {
+    time: "12:00–12:45",
+    monday: "Physical Education",
+    tuesday: "Computer",
+    wednesday: "Physical Education",
+    thursday: "Art",
+    friday: "Physical Education",
+  },
+];
+
+const getSubjectClass = (subject) => {
+  if (!subject) return "general";
+  const s = subject.toLowerCase();
+  if (s.includes("math")) return "math";
+  if (s.includes("science")) return "science";
+  if (s.includes("english")) return "english";
+  if (s.includes("social")) return "social";
+  if (s.includes("computer")) return "computer";
+  if (s.includes("art")) return "art";
+  if (s.includes("physical") || s.includes("pe") || s.includes("education")) return "pe";
+  return "general";
+};
+
 export default function StudentOverviewTab({
   displayName,
   displayClass,
@@ -178,36 +246,66 @@ export default function StudentOverviewTab({
           <div className="panel-heading">
             <div className="panel-title">
               <span className="heading-marker blue-marker" />
-              <h2>Today's Class Schedule &amp; Routine</h2>
+              <h2>Weekly Class Timetable</h2>
             </div>
-            <span className="schedule-period">Monday • Period 1 to 7</span>
-          </div>
-
-          <div className="lesson-grid">
-            {lessons.map((lesson) => (
-              <div
-                className={`lesson-card lesson-${lesson.type}`}
-                key={lesson.subject}
-              >
-                <span className="lesson-time">{lesson.time}</span>
-                <h3>{lesson.subject}</h3>
-                <p>{lesson.teacher}</p>
-                <span className="lesson-room">{lesson.room}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="schedule-footer">
-            <span>
-              Class Mentor Sign-off for Terminal Exam Hall Pass:
-              <strong className="verified-text"> Verified &amp; Endorsed</strong>
+            <span className="schedule-period">
+              {displayClass ? `${displayClass} • ` : ""}Monday to Friday
             </span>
-            <button
-              className="text-button"
-              onClick={() => setActiveTab("timetable")}
-            >
-              View full exam timetable →
-            </button>
+          </div>
+
+          <div className="weekly-timetable-container">
+            <table className="weekly-timetable-table">
+              <thead>
+                <tr>
+                  <th className="time-col-header">Time</th>
+                  <th>Monday</th>
+                  <th>Tuesday</th>
+                  <th>Wednesday</th>
+                  <th>Thursday</th>
+                  <th>Friday</th>
+                </tr>
+              </thead>
+              <tbody>
+                {defaultWeeklyTimetable.map((row, idx) => (
+                  <tr key={idx}>
+                    <td className="time-cell">{row.time}</td>
+                    {row.isBreak ? (
+                      <td colSpan={5} className="break-cell">
+                        — BREAK —
+                      </td>
+                    ) : (
+                      <>
+                        <td>
+                          <span className={`timetable-subject-pill ${getSubjectClass(row.monday)}`}>
+                            {row.monday}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`timetable-subject-pill ${getSubjectClass(row.tuesday)}`}>
+                            {row.tuesday}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`timetable-subject-pill ${getSubjectClass(row.wednesday)}`}>
+                            {row.wednesday}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`timetable-subject-pill ${getSubjectClass(row.thursday)}`}>
+                            {row.thursday}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`timetable-subject-pill ${getSubjectClass(row.friday)}`}>
+                            {row.friday}
+                          </span>
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </article>
 
