@@ -59,7 +59,6 @@ export class OtpService {
       email: cleanEmail,
       purpose,
       expiresInSeconds: 300,
-      devOtp: otp,
     };
   }
 
