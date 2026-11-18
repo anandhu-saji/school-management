@@ -1,4 +1,36 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { getDocumentUrl } from "../../utils/documentUrl";
+
 export default function AdminHeader() {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "{}");
+    } catch {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      try {
+        setUser(JSON.parse(localStorage.getItem("user") || "{}"));
+      } catch {
+        // ignore
+      }
+    };
+    window.addEventListener("userUpdated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+    return () => {
+      window.removeEventListener("userUpdated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
+  }, []);
+
+  const userAvatar = user?.avatarUrl ? getDocumentUrl(user.avatarUrl) : null;
+  const initial = (user?.name || "A").slice(0, 1).toUpperCase();
+
   return (
     <header className="admin-top-header">
       <span>
@@ -8,21 +40,37 @@ export default function AdminHeader() {
       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
         <span className="badge-sync">AY 2025–2026</span>
         <button
+          onClick={() => navigate("/admin/profile")}
           style={{
-            width: "32px",
-            height: "32px",
+            width: "34px",
+            height: "34px",
             borderRadius: "50%",
             background: "#135bec",
             color: "#ffffff",
-            border: "none",
+            border: "2px solid #ffffff",
+            outline: "2px solid #93c5fd",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             cursor: "pointer",
+            fontWeight: "700",
+            fontSize: "14px",
+            overflow: "hidden",
+            padding: 0,
+            transition: "transform 0.15s",
           }}
+          title="Click to view & edit Profile"
           aria-label="Admin Profile"
         >
-          A
+          {userAvatar ? (
+            <img
+              src={userAvatar}
+              alt="Avatar"
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          ) : (
+            initial
+          )}
         </button>
       </div>
     </header>

@@ -77,6 +77,12 @@ export default function StudentDashboard() {
   // Navigation tab state: "overview" | "attendance" | "timetable" | "fees"
   const [activeTab, setActiveTab] = useState("overview");
 
+  useEffect(() => {
+    if (activeTab === "profile") {
+      navigate("/student/profile");
+    }
+  }, [activeTab, navigate]);
+
   // User session
   const [user] = useState(() => {
     try {

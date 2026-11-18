@@ -119,6 +119,33 @@ const teacherSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    // Temporary Student Admission Administrator Delegation (Admission Time Period Only)
+    isAdmissionAdmin: {
+      type: Boolean,
+      default: false,
+    },
+    admissionAdminStartDate: {
+      type: Date,
+      default: null,
+    },
+    admissionAdminEndDate: {
+      type: Date,
+      default: null,
+    },
+    admissionAdminNote: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    admissionAdminAssignedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    admissionAdminAssignedAt: {
+      type: Date,
+      default: null,
+    },
     // Essential Statutory Identity Proofs
     aadharNumber: {
       type: String,

@@ -1,4 +1,7 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { ACADEMIC_WINGS, normalizeClassDivision } from "../../utils/classData";
+import { getDocumentUrl } from "../../utils/documentUrl";
 
 export default function TeacherHeader({
   sidebarOpen,
@@ -9,6 +12,31 @@ export default function TeacherHeader({
   selectedDate,
   onDateChange,
 }) {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "{}");
+    } catch {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      try {
+        setUser(JSON.parse(localStorage.getItem("user") || "{}"));
+      } catch {}
+    };
+    window.addEventListener("userUpdated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+    return () => {
+      window.removeEventListener("userUpdated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
+  }, []);
+
+  const userAvatar = user?.avatarUrl ? getDocumentUrl(user.avatarUrl) : null;
+  const initial = (user?.name || "T").slice(0, 1).toUpperCase();
   const cleanDivision = (selectedDivision || "Class 10-A")
     .replace(/\s*(Mentor|Class Teacher|In-charge|Teacher)\s*$/i, "")
     .replace(/\s*\(.*?\)\s*$/, "")
@@ -22,6 +50,8 @@ export default function TeacherHeader({
         return "Continuous Evaluation (CE) & Terminal Marks Portal";
       case "timetable":
         return "Weekly Teaching Schedule & Exam Duties";
+      case "admissions":
+        return "Student Admission & Academic Registry";
       case "profile":
         return "SPARK Government Cadre & Service Profile";
       case "attendance":
@@ -118,6 +148,41 @@ export default function TeacherHeader({
           title="Print official report"
         >
           <span>Print View</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => navigate("/teacher/profile")}
+          style={{
+            width: "34px",
+            height: "34px",
+            borderRadius: "50%",
+            background: "#2563eb",
+            color: "#ffffff",
+            border: "2px solid #ffffff",
+            outline: "2px solid #93c5fd",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            fontWeight: "700",
+            fontSize: "14px",
+            overflow: "hidden",
+            padding: 0,
+            transition: "transform 0.15s",
+          }}
+          title="Click to view & edit Profile"
+          aria-label="Teacher Profile"
+        >
+          {userAvatar ? (
+            <img
+              src={userAvatar}
+              alt="Avatar"
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          ) : (
+            initial
+          )}
         </button>
       </div>
     </header>

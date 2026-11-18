@@ -7,6 +7,8 @@ import User from "../models/user.js";
 import Attendance from "../models/Attendance.js";
 import Exam from "../models/Exam.js";
 import InternalMark from "../models/InternalMark.js";
+import Notification from "../models/Notification.js";
+import { isTeacherActiveAdmissionAdmin } from "../middleware/role.middleware.js";
 import { ApiError } from "../utils/ApiError.js";
 import { OtpService } from "./otp.service.js";
 import { validateHumanName } from "../utils/nameValidator.js";
@@ -116,6 +118,11 @@ export class TeacherService {
       teachers = [];
     }
 
+    teachers = teachers.map((t) => ({
+      ...t,
+      isAdmissionAdminActive: isTeacherActiveAdmissionAdmin(t),
+    }));
+
     const allTeachers = await Teacher.find(deletedOnly ? { isDeleted: true } : {}).lean();
     const totalSanctioned = allTeachers.length;
     const regularTeachers = allTeachers.filter(
@@ -125,6 +132,7 @@ export class TeacherService {
     ).length;
 
     const onDutyStaff = allTeachers.filter((t) => t.status === "On Duty").length;
+    const admissionAdminsCount = allTeachers.filter((t) => isTeacherActiveAdmissionAdmin(t)).length;
     const vacantPosts = Math.max(0, 26 - totalSanctioned);
     const guestFaculty = Math.max(0, totalSanctioned - regularTeachers);
     const periodsPerWeek = allTeachers.reduce(
@@ -140,6 +148,7 @@ export class TeacherService {
         permanentPosts: regularTeachers,
         regularTeachers,
         onDutyStaff,
+        admissionAdminsCount,
         vacantPosts,
         guestFaculty,
         periodsPerWeek,
@@ -758,14 +767,81 @@ export class TeacherService {
 
     if (teacher) {
       const norm = normalizeClassDivision(teacher.assignedClass);
+      const isAdmissionAdminActive = isTeacherActiveAdmissionAdmin(teacher);
       teacher = {
         ...teacher,
+        isAdmissionAdminActive,
         assignedClass: norm ? norm.name : (teacher.assignedClass || "Class 10-A"),
         mentorClass: norm ? norm.id : (teacher.mentorClass || "10-A"),
       };
     }
 
     return teacher;
+  }
+
+  /**
+   * Update teacher temporary student admission admin delegation
+   */
+  static async updateTeacherAdmissionDelegation(
+    id,
+    { isAdmissionAdmin, startDate, endDate, note },
+    adminUserId
+  ) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw ApiError.badRequest("Invalid teacher ID format.");
+    }
+
+    const teacher = await Teacher.findById(id);
+    if (!teacher) {
+      throw ApiError.notFound("Teacher record not found.");
+    }
+
+    const activeBool = Boolean(isAdmissionAdmin);
+    teacher.isAdmissionAdmin = activeBool;
+    teacher.admissionAdminStartDate = startDate ? new Date(startDate) : null;
+    teacher.admissionAdminEndDate = endDate ? new Date(endDate) : null;
+    teacher.admissionAdminNote = note ? String(note).trim() : "";
+    teacher.admissionAdminAssignedBy = adminUserId || null;
+    teacher.admissionAdminAssignedAt = new Date();
+
+    await teacher.save();
+
+    // Notify teacher if linked user exists
+    let targetUserId = teacher.userId;
+    if (!targetUserId && teacher.email) {
+      const u = await User.findOne({ email: teacher.email.toLowerCase().trim() });
+      if (u) targetUserId = u._id;
+    }
+
+    if (targetUserId) {
+      const formattedEndDate = teacher.admissionAdminEndDate
+        ? new Date(teacher.admissionAdminEndDate).toLocaleDateString("en-IN", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })
+        : "further notice";
+
+      if (activeBool) {
+        await Notification.create({
+          userId: targetUserId,
+          title: "Temporary Admission Administrator Authorized",
+          message: `You have been designated as a Temporary Student Admission Administrator by the Headmaster until ${formattedEndDate}. You can now process student admissions in the Portal.`,
+          type: "info",
+        });
+      } else {
+        await Notification.create({
+          userId: targetUserId,
+          title: "Admission Administrator Authorization Revoked",
+          message: "Your temporary Student Admission Administrator authorization has been revoked by the Headmaster.",
+          type: "warning",
+        });
+      }
+    }
+
+    const result = teacher.toObject();
+    result.isAdmissionAdminActive = isTeacherActiveAdmissionAdmin(result);
+    return result;
   }
 
   /**

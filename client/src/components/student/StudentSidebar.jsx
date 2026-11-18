@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getDocumentUrl } from "../../utils/documentUrl";
 
 export default function StudentSidebar({
   activeTab,
@@ -10,6 +11,33 @@ export default function StudentSidebar({
   handleLogout,
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [localAvatar, setLocalAvatar] = useState(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || "{}");
+      return u?.avatarUrl || studentProfile?.avatarUrl || null;
+    } catch {
+      return studentProfile?.avatarUrl || null;
+    }
+  });
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      try {
+        const u = JSON.parse(localStorage.getItem("user") || "{}");
+        if (u?.avatarUrl) setLocalAvatar(u.avatarUrl);
+      } catch {}
+    };
+    window.addEventListener("userUpdated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+    return () => {
+      window.removeEventListener("userUpdated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
+  }, []);
+
+  const avatarSrc = localAvatar || studentProfile?.avatarUrl;
+  const avatarUrl = avatarSrc ? getDocumentUrl(avatarSrc) : null;
+  const initials = (displayName || "S").slice(0, 2).toUpperCase();
 
   return (
     <>
@@ -91,22 +119,34 @@ export default function StudentSidebar({
             >
               <span>•</span> Fee Ledger &amp; Receipts
             </button>
-            
+            <button
+              className={`console-nav-item ${activeTab === "profile" ? "active" : ""}`}
+              onClick={() => {
+                setActiveTab("profile");
+                setMobileOpen(false);
+              }}
+            >
+              <span>👤</span> My Profile &amp; Settings
+            </button>
           </nav>
         </div>
 
-        {/* Bottom Profile Card - Interactive Click to View ID & Dossier */}
+        {/* Bottom Profile Card - Click to view & edit Profile */}
         <div className="sidebar-bottom-profile">
           <button
             className="sidebar-bottom-profile-btn"
             onClick={() => {
-              onOpenDossier();
+              setActiveTab("profile");
               setMobileOpen(false);
             }}
-            title="Click to view My ID &amp; Documents Dossier"
+            title="Click to view & edit My Profile"
           >
-            <div className="profile-avatar-circle" style={{ background: "#7c3aed" }}>
-              <span>ID</span>
+            <div className="profile-avatar-circle" style={{ background: "#2563eb" }}>
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Avatar" />
+              ) : (
+                <span>{initials}</span>
+              )}
             </div>
             <div className="profile-details-column">
               <div className="profile-name-row">

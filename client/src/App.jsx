@@ -13,6 +13,8 @@ import PaymentConsole from "./views/admin/PaymentConsole.jsx";
 import TrashBin from "./views/admin/TrashBin.jsx";
 import TeacherDashboard from "./views/teacher/TeacherDashboard.jsx";
 import Dashboard from "./views/student/Dashboard.jsx";
+import ProfilePage from "./views/profile/ProfilePage.jsx";
+import AdminProfileRequests from "./views/admin/AdminProfileRequests.jsx";
 import { isSessionValid, getRoleDashboardPath, clearAuthSession } from "./utils/auth";
 import { ConfirmProvider } from "./context/ConfirmContext";
 
@@ -111,12 +113,48 @@ function App() {
           }
         />
 
+        {/* Universal Profile Route */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "teacher", "student", "user"]}>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Student Profile Route */}
+        <Route
+          path="/student/profile"
+          element={
+            <ProtectedRoute allowedRoles={["student", "user"]}>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Admin Dashboard Routes */}
         <Route
           path="/admin/dashboard"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/profile"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/profile-requests"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminProfileRequests />
             </ProtectedRoute>
           }
         />
@@ -211,10 +249,18 @@ function App() {
           }
         />
         <Route
-          path="/teacher/profile"
+          path="/teacher/admissions"
           element={
             <ProtectedRoute allowedRoles={["teacher"]}>
               <TeacherDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/profile"
+          element={
+            <ProtectedRoute allowedRoles={["teacher"]}>
+              <ProfilePage />
             </ProtectedRoute>
           }
         />

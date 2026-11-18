@@ -7,6 +7,7 @@ import TeacherStatsCards from "../../components/admin/teachers/TeacherStatsCards
 import TeacherAllotmentModal from "../../components/admin/teachers/TeacherAllotmentModal";
 import TeacherDossierModal from "../../components/admin/teachers/TeacherDossierModal";
 import TeacherFormModal from "../../components/admin/teachers/TeacherFormModal";
+import TeacherAdmissionDelegationModal from "../../components/admin/teachers/TeacherAdmissionDelegationModal";
 import { checkTeacherAgeEligibility, checkTeacherAppointmentDate } from "../../utils/ageValidator";
 import { validateHumanName } from "../../utils/nameValidator";
 import { useConfirm } from "../../context/ConfirmContext";
@@ -43,6 +44,9 @@ export default function TeachersRecords() {
 
   // View Document Dossier Modal State
   const [dossierTeacher, setDossierTeacher] = useState(null);
+
+  // Temporary Admission Admin Delegation Modal State
+  const [delegationTeacher, setDelegationTeacher] = useState(null);
 
   const initialForm = {
     name: "",
@@ -686,10 +690,27 @@ export default function TeachersRecords() {
                             ? "✓ Partial Dossier Attached"
                             : "KYC & SPARK Seeded"}
                         </span>
+
+                        {t.isAdmissionAdmin && (
+                          <span
+                            style={{
+                              fontSize: "11px",
+                              fontWeight: "700",
+                              padding: "2px 8px",
+                              borderRadius: "10px",
+                              background: t.isAdmissionAdminActive ? "#ecfdf5" : "#fef2f2",
+                              color: t.isAdmissionAdminActive ? "#065f46" : "#991b1b",
+                              border: `1px solid ${t.isAdmissionAdminActive ? "#a7f3d0" : "#fecaca"}`,
+                            }}
+                            title={t.admissionAdminNote || (t.isAdmissionAdminActive ? "Active Temporary Admission Admin" : "Expired Temporary Admission Admin")}
+                          >
+                            {t.isAdmissionAdminActive ? "🎓 Admission Admin" : "⌛ Admission Admin (Expired)"}
+                          </span>
+                        )}
                       </div>
                     </div>
 
-                    {/* Footer Actions: View Allotment, Dossier & Edit Profile */}
+                    {/* Footer Actions: View Allotment, Dossier, Edit Profile & Admission Admin */}
                     <div className="teacher-card-footer">
                       <button
                         type="button"
@@ -707,6 +728,18 @@ export default function TeachersRecords() {
                         title="Inspect Submitted ID Proofs &amp; Qualification Certificates"
                       >
                         Dossier
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-allotment-link"
+                        style={{
+                          color: t.isAdmissionAdminActive ? "#2563eb" : "#475569",
+                          fontWeight: t.isAdmissionAdminActive ? "800" : "600",
+                        }}
+                        onClick={() => setDelegationTeacher(t)}
+                        title="Manage Temporary Student Admission Admin Privileges"
+                      >
+                        🎓 Admission Admin
                       </button>
                       <button
                         type="button"
@@ -812,6 +845,16 @@ export default function TeachersRecords() {
       <TeacherDossierModal
         teacher={dossierTeacher}
         onClose={() => setDossierTeacher(null)}
+      />
+
+      {/* =========================================================================
+          MODAL 4: TEMPORARY ADMISSION ADMIN DELEGATION
+          ========================================================================= */}
+      <TeacherAdmissionDelegationModal
+        teacher={delegationTeacher}
+        isOpen={Boolean(delegationTeacher)}
+        onClose={() => setDelegationTeacher(null)}
+        onSaved={() => fetchTeachers()}
       />
     </div>
   );

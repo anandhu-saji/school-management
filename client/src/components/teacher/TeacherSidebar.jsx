@@ -1,11 +1,15 @@
+import { getDocumentUrl } from "../../utils/documentUrl";
+
 export default function TeacherSidebar({
   activeTab,
   setActiveTab,
-  teacherProfile,
+  teacherProfile = {},
   sidebarOpen,
   setSidebarOpen,
   onLogout,
 }) {
+  const teacherAvatar = teacherProfile?.avatarUrl ? getDocumentUrl(teacherProfile.avatarUrl) : null;
+  const initial = (teacherProfile?.name || "T").slice(0, 1).toUpperCase();
   return (
     <>
       {sidebarOpen && (
@@ -71,28 +75,81 @@ export default function TeacherSidebar({
             >
               <span>•</span> My SPARK Profile
             </button>
+
+            {teacherProfile?.isAdmissionAdminActive && (
+              <button
+                className={`console-nav-item ${activeTab === "admissions" ? "active" : ""}`}
+                onClick={() => {
+                  setActiveTab("admissions");
+                  setSidebarOpen(false);
+                }}
+                style={{
+                  background: activeTab === "admissions" ? "#1e3a8a" : "#eff6ff",
+                  color: activeTab === "admissions" ? "#ffffff" : "#1d4ed8",
+                  border: "1.5px solid #3b82f6",
+                  fontWeight: "700",
+                  marginTop: "6px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+                title={`Temporary Admission Administrator (Valid until ${
+                  teacherProfile.admissionAdminEndDate
+                    ? new Date(teacherProfile.admissionAdminEndDate).toLocaleDateString()
+                    : "further notice"
+                })`}
+              >
+                <span>🎓</span> Student Admissions
+                <span
+                  style={{
+                    marginLeft: "auto",
+                    fontSize: "10px",
+                    fontWeight: "800",
+                    background: activeTab === "admissions" ? "#10b981" : "#2563eb",
+                    color: "#ffffff",
+                    padding: "2px 6px",
+                    borderRadius: "8px",
+                  }}
+                >
+                  ADMIN
+                </span>
+              </button>
+            )}
   
           </nav>
         </div>
 
         {/* Bottom Profile Card */}
         <div className="sidebar-bottom-profile">
-          <div className="profile-avatar-circle" style={{ background: "#2563eb" }}>
-            <span>T</span>
-          </div>
-          <div className="profile-details-column">
-            <div className="profile-name-row">
-              <span style={{ fontWeight: "700", fontSize: "13px" }}>
-                {teacherProfile.name || "Teacher"}
-              </span>
-              <span className="verified-badge-icon" title="SPARK Verified">✓</span>
+          <div
+            className="profile-avatar-clickable"
+            onClick={() => {
+              setActiveTab("profile");
+              setSidebarOpen(false);
+            }}
+            title="Click to view & edit SPARK Profile"
+          >
+            <div className="profile-avatar-circle" style={{ background: "#2563eb" }}>
+              {teacherAvatar ? (
+                <img src={teacherAvatar} alt="Teacher Avatar" />
+              ) : (
+                <span>{initial}</span>
+              )}
             </div>
-            <p className="profile-role-subtext">
-              {teacherProfile.department || "Faculty"}
-            </p>
-            <p className="profile-id-code">
-              {teacherProfile.assignedClass || "Class 10-A Mentor"} • PEN: {teacherProfile.pen || "—"}
-            </p>
+            <div className="profile-details-column">
+              <div className="profile-name-row">
+                <span style={{ fontWeight: "700", fontSize: "13px" }}>
+                  {teacherProfile.name || "Teacher"}
+                </span>
+                <span className="verified-badge-icon" title="SPARK Verified">✓</span>
+              </div>
+              <p className="profile-role-subtext">
+                {teacherProfile.department || "Faculty"}
+              </p>
+              <p className="profile-id-code">
+                {teacherProfile.assignedClass || "Class 10-A Mentor"} • PEN: {teacherProfile.pen || teacherProfile.penNumber || "—"}
+              </p>
+            </div>
           </div>
           <button
             className="logout-icon-btn"

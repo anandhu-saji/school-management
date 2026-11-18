@@ -14,19 +14,33 @@ export class UploadService {
     }
 
     const avatarUrl = await uploadImageToS3(file, "avatars");
+    const user = await User.findById(userId);
+    const userEmail = user?.email?.toLowerCase()?.trim();
 
     if (userRole === "teacher") {
-      const teacher = await Teacher.findOne({ userId });
+      let teacher = await Teacher.findOne({
+        $or: [{ userId }, ...(userEmail ? [{ email: userEmail }] : [])],
+      });
       if (teacher?.avatarUrl) {
         await deleteImageFromS3(teacher.avatarUrl);
       }
-      await Teacher.findOneAndUpdate({ userId }, { avatarUrl }, { new: true });
-    } else if (userRole === "student") {
-      const student = await Student.findOne({ userId });
+      if (teacher) {
+        teacher.avatarUrl = avatarUrl;
+        if (!teacher.userId && userId) teacher.userId = userId;
+        await teacher.save();
+      }
+    } else if (userRole === "student" || userRole === "user") {
+      let student = await Student.findOne({
+        $or: [{ userId }, ...(userEmail ? [{ email: userEmail }] : [])],
+      });
       if (student?.avatarUrl) {
         await deleteImageFromS3(student.avatarUrl);
       }
-      await Student.findOneAndUpdate({ userId }, { avatarUrl }, { new: true });
+      if (student) {
+        student.avatarUrl = avatarUrl;
+        if (!student.userId && userId) student.userId = userId;
+        await student.save();
+      }
     }
 
     await User.findByIdAndUpdate(userId, { avatarUrl });

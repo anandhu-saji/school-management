@@ -43,6 +43,25 @@ export const updateTeacher = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Controller: Update temporary student admission admin delegation for a teacher
+ * Route: PUT /api/admin/teachers/:id/admission-admin
+ */
+export const updateTeacherAdmissionDelegation = asyncHandler(async (req, res) => {
+  const adminUserId = req.user?._id;
+  const teacher = await TeacherService.updateTeacherAdmissionDelegation(
+    req.params.id,
+    req.body,
+    adminUserId
+  );
+  return ApiResponse.ok(res, {
+    message: teacher.isAdmissionAdmin
+      ? `Teacher ${teacher.name} has been designated as Temporary Admission Administrator.`
+      : `Temporary Admission Administrator delegation for ${teacher.name} has been revoked.`,
+    teacher,
+  });
+});
+
+/**
  * Controller: Soft-delete a teacher record (moves to trash)
  * Route: DELETE /api/admin/teachers/:id
  */

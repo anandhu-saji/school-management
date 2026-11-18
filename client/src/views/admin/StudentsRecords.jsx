@@ -12,7 +12,11 @@ import { checkStudentAgeEligibility } from "../../utils/ageValidator";
 import { validateHumanName } from "../../utils/nameValidator";
 import { useConfirm } from "../../context/ConfirmContext";
 
-export default function StudentsRecords() {
+export default function StudentsRecords({
+  embedded = false,
+  isTeacherView = false,
+  teacherProfile = null,
+}) {
   const confirm = useConfirm();
   const fileInputRef = useRef(null);
   const bcFileInputRef = useRef(null);
@@ -33,7 +37,7 @@ export default function StudentsRecords() {
   const [selectedDivision, setSelectedDivision] = useState("All");
   const [academicWings, setAcademicWings] = useState(ACADEMIC_WINGS);
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 2;
+  const pageSize = 10;
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -514,19 +518,110 @@ export default function StudentsRecords() {
     document.body.removeChild(link);
   };
 
-  return (
-    <div className="admin-layout">
-      {/* ---------------- SIDEBAR ---------------- */}
-      <AdminSidebar activeNav="students" />
+  if (isTeacherView && teacherProfile && !teacherProfile.isAdmissionAdminActive) {
+    return (
+      <div
+        style={{
+          background: "#ffffff",
+          border: "1px solid #fecaca",
+          borderRadius: "14px",
+          padding: "36px 24px",
+          textAlign: "center",
+          maxWidth: "600px",
+          margin: "40px auto",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+        }}
+      >
+        <span style={{ fontSize: "42px", display: "block", marginBottom: "12px" }}>🔒</span>
+        <h3 style={{ fontSize: "18px", fontWeight: "800", color: "#991b1b", margin: "0 0 8px 0" }}>
+          Admission Administrator Access Inactive
+        </h3>
+        <p style={{ fontSize: "13.5px", color: "#475569", lineHeight: "1.5", margin: 0 }}>
+          Your temporary student admission administrator privileges are currently inactive or have expired.
+          Temporary admission rights are only granted by the Headmaster during designated admission time periods.
+        </p>
+      </div>
+    );
+  }
 
-      {/* ---------------- MAIN CONTENT WRAPPER ---------------- */}
-      <div className="admin-main-wrapper">
-        <AdminHeader />
+  const registryMainContent = (
+    <>
+      {isTeacherView && teacherProfile && (
+        <section
+          style={{
+            background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)",
+            color: "#ffffff",
+            padding: "16px 22px",
+            borderRadius: "14px",
+            marginBottom: "20px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "12px",
+            boxShadow: "0 4px 12px rgba(37,99,235,0.15)",
+          }}
+        >
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+              <span
+                style={{
+                  background: "#10b981",
+                  color: "#ffffff",
+                  fontSize: "10.5px",
+                  fontWeight: "800",
+                  padding: "3px 8px",
+                  borderRadius: "6px",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                TEMPORARY ADMISSION ADMIN ACTIVE
+              </span>
+              <span style={{ fontSize: "12px", opacity: 0.9 }}>
+                Kerala General Education Dept. • Sampoorna Admission Officer
+              </span>
+            </div>
+            <h3 style={{ fontSize: "16px", fontWeight: "800", margin: 0 }}>
+              Authorized to Process Student Admissions
+            </h3>
+            <p style={{ fontSize: "12.5px", opacity: 0.9, margin: "4px 0 0 0" }}>
+              Delegated by Headmaster for the admission period until{" "}
+              <strong>
+                {teacherProfile.admissionAdminEndDate
+                  ? new Date(teacherProfile.admissionAdminEndDate).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })
+                  : "further notice"}
+              </strong>
+              {teacherProfile.admissionAdminNote ? ` (${teacherProfile.admissionAdminNote})` : ""}.
+            </p>
+          </div>
 
-        {/* Main Content Area */}
-        <main className="admin-content-area">
-          {/* Top 4 Summary Cards Grid */}
-          <StudentStatsCards stats={stats} />
+          <button
+            type="button"
+            className="btn-admission-primary"
+            onClick={openNewAdmissionModal}
+            style={{
+              background: "#ffffff",
+              color: "#1d4ed8",
+              fontWeight: "800",
+              fontSize: "13px",
+              padding: "9px 18px",
+              borderRadius: "8px",
+              border: "none",
+              cursor: "pointer",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+            }}
+          >
+            + New Admission
+          </button>
+        </section>
+      )}
+
+      {/* Top 4 Summary Cards Grid */}
+      <StudentStatsCards stats={stats} />
 
           {/* Action Header Banner */}
           <section className="student-header-banner">
@@ -843,9 +938,11 @@ export default function StudentsRecords() {
               Sampoorna Academic Management Platform v2.0 • Operational
             </div>
           </footer>
-        </main>
-      </div>
+    </>
+  );
 
+  const modals = (
+    <>
       {/* ---------------- NEW / EDIT STUDENT MODAL (MULTI-TAB) ---------------- */}
       <StudentFormModal
         isOpen={isModalOpen}
@@ -873,6 +970,34 @@ export default function StudentsRecords() {
         onClose={() => setDossierStudent(null)}
         onEdit={(student) => openEditModal(student)}
       />
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <div className="embedded-students-registry" style={{ width: "100%" }}>
+        {registryMainContent}
+        {modals}
+      </div>
+    );
+  }
+
+  return (
+    <div className="admin-layout">
+      {/* ---------------- SIDEBAR ---------------- */}
+      <AdminSidebar activeNav="students" />
+
+      {/* ---------------- MAIN CONTENT WRAPPER ---------------- */}
+      <div className="admin-main-wrapper">
+        <AdminHeader />
+
+        {/* Main Content Area */}
+        <main className="admin-content-area">
+          {registryMainContent}
+        </main>
+      </div>
+
+      {modals}
     </div>
   );
 }

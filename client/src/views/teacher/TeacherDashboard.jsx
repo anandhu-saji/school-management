@@ -14,12 +14,14 @@ import TeacherInternalMarksTab from "../../components/teacher/TeacherInternalMar
 import TeacherTimetableTab from "../../components/teacher/TeacherTimetableTab";
 import TeacherProfileTab from "../../components/teacher/TeacherProfileTab";
 import StudentDossierModal from "../../components/admin/students/StudentDossierModal";
+import StudentsRecords from "../admin/StudentsRecords";
 export default function TeacherDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const getInitialTab = () => {
+    if (location.pathname.includes("admissions")) return "admissions";
     if (location.pathname.includes("students") || location.pathname.includes("academics")) return "academics";
     if (location.pathname.includes("marks")) return "marks";
     if (location.pathname.includes("timetable")) return "timetable";
@@ -30,7 +32,9 @@ export default function TeacherDashboard() {
   const [activeTab, setActiveTab] = useState(getInitialTab);
 
   useEffect(() => {
-    if (location.pathname.includes("students") || location.pathname.includes("academics")) {
+    if (location.pathname.includes("admissions")) {
+      setActiveTab("admissions");
+    } else if (location.pathname.includes("students") || location.pathname.includes("academics")) {
       setActiveTab("academics");
     } else if (location.pathname.includes("marks")) {
       setActiveTab("marks");
@@ -259,6 +263,14 @@ export default function TeacherDashboard() {
 
           {activeTab === "profile" && (
             <TeacherProfileTab teacherProfile={teacherProfile}  />
+          )}
+
+          {activeTab === "admissions" && (
+            <StudentsRecords
+              embedded={true}
+              isTeacherView={true}
+              teacherProfile={teacherProfile}
+            />
           )}
         </main>
       </div>
