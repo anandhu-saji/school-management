@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../../api/axiosclient";
 import { loadRazorpayScript, getRazorpayKeyId } from "../../utils/razorpay";
+import SimulatedRazorpayGateway from "./SimulatedRazorpayGateway";
 
 export default function StudentRazorpayModal({
   isOpen,
@@ -217,104 +218,14 @@ export default function StudentRazorpayModal({
           )}
 
           {simulatedCheckoutOpen ? (
-            <div
-              style={{
-                background: "#f8fafc",
-                border: "1px solid #cbd5e1",
-                borderRadius: "8px",
-                padding: "16px",
-                textAlign: "center",
-              }}
-            >
-              <div
-                style={{
-                  display: "inline-block",
-                  background: "#0284c7",
-                  color: "#ffffff",
-                  fontSize: "10px",
-                  fontWeight: "700",
-                  padding: "3px 10px",
-                  borderRadius: "4px",
-                  textTransform: "uppercase",
-                  marginBottom: "8px",
-                }}
-              >
-                Razorpay Checkout Simulator
-              </div>
-              <h4 style={{ margin: "4px 0 10px", color: "#0f172a" }}>
-                Confirm Online Clearance of ₹{pendingOrderData?.numAmount}
-              </h4>
-              <p style={{ fontSize: "12px", color: "#64748b", margin: "0 0 16px" }}>
-                Order ID: <code>{pendingOrderData?.order?.id}</code> &bull; Currency: INR
-              </p>
-
-              <div style={{ marginBottom: "14px", textAlign: "left" }}>
-                <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>
-                  Select Payment Method:
-                </label>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
-                  {[
-                    { id: "UPI", label: "📱 UPI / QR", sub: "GPay / PhonePe / Paytm" },
-                    { id: "Card", label: "💳 Debit / Credit", sub: "Visa / RuPay / MC" },
-                    { id: "NetBanking", label: "🏦 NetBanking", sub: "SBI / Canara / Fed" },
-                  ].map((m) => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => setPaymentMethod(m.id)}
-                      style={{
-                        padding: "8px 6px",
-                        borderRadius: "6px",
-                        border: paymentMethod === m.id ? "2px solid #0284c7" : "1px solid #cbd5e1",
-                        background: paymentMethod === m.id ? "#e0f2fe" : "#ffffff",
-                        color: paymentMethod === m.id ? "#0369a1" : "#334155",
-                        cursor: "pointer",
-                        textAlign: "center",
-                      }}
-                    >
-                      <div style={{ fontSize: "12px", fontWeight: "700" }}>{m.label}</div>
-                      <div style={{ fontSize: "10px", color: "#64748b" }}>{m.sub}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div
-                style={{
-                  background: "#ffffff",
-                  border: "1px dashed #94a3b8",
-                  padding: "12px",
-                  borderRadius: "6px",
-                  fontSize: "12px",
-                  textAlign: "left",
-                  marginBottom: "16px",
-                }}
-              >
-                <div><strong>Beneficiary:</strong> GHSS Rajakkad (Code: 06042)</div>
-                <div><strong>Scholar:</strong> {studentProfile?.name} ({studentProfile?.admissionNumber})</div>
-                <div><strong>Category:</strong> {feeCategory} ({term})</div>
-                <div><strong>Channel:</strong> Razorpay Sandbox ({paymentMethod})</div>
-              </div>
-
-              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
-                <button
-                  type="button"
-                  className="dossier-copy-btn"
-                  onClick={() => setSimulatedCheckoutOpen(false)}
-                  disabled={loading}
-                >
-                  Back
-                </button>
-                <button
-                  type="button"
-                  className="btn-print-dossier"
-                  onClick={handleSimulatedPaymentComplete}
-                  disabled={loading}
-                >
-                  {loading ? "Verifying..." : `Complete ₹${pendingOrderData?.numAmount} Payment`}
-                </button>
-              </div>
-            </div>
+            <SimulatedRazorpayGateway
+              pendingOrderData={pendingOrderData}
+              paymentMethod={paymentMethod}
+              setPaymentMethod={setPaymentMethod}
+              loading={loading}
+              onBack={() => setSimulatedCheckoutOpen(false)}
+              onComplete={handleSimulatedPaymentComplete}
+            />
           ) : (
             <form onSubmit={handleInitiatePayment}>
               {/* Student Summary Card */}

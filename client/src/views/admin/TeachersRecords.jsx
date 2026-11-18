@@ -8,13 +8,12 @@ import TeacherAllotmentModal from "../../components/admin/teachers/TeacherAllotm
 import TeacherDossierModal from "../../components/admin/teachers/TeacherDossierModal";
 import TeacherFormModal from "../../components/admin/teachers/TeacherFormModal";
 import TeacherAdmissionDelegationModal from "../../components/admin/teachers/TeacherAdmissionDelegationModal";
-import { checkTeacherAgeEligibility, checkTeacherAppointmentDate } from "../../utils/ageValidator";
-import { validateHumanName } from "../../utils/nameValidator";
-import { useConfirm } from "../../context/ConfirmContext";
+import TeacherFilterHeader from "../../components/admin/teachers/TeacherFilterHeader";
+import TeacherCardsGrid from "../../components/admin/teachers/TeacherCardsGrid";
+import { useTeacherForm } from "../../components/admin/teachers/useTeacherForm";
+import { exportTeacherRosterCsv } from "../../utils/teacherCsvExport";
 
 export default function TeachersRecords() {
-  const confirm = useConfirm();
-
   // State
   const [teachers, setTeachers] = useState([]);
   const [stats, setStats] = useState({
@@ -30,65 +29,10 @@ export default function TeachersRecords() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 6;
 
-  // Add / Edit Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingTeacher, setEditingTeacher] = useState(null);
-  const [isEmailVerified, setIsEmailVerified] = useState(false);
-  const [activeModalTab, setActiveModalTab] = useState("general");
-  const [formSubmitting, setFormSubmitting] = useState(false);
-  const [uploadingDoc, setUploadingDoc] = useState({});
-  const [feedback, setFeedback] = useState({ type: "", message: "" });
-
-  // View Allotment Modal State
+  // Additional Modal States
   const [allotmentTeacher, setAllotmentTeacher] = useState(null);
-
-  // View Document Dossier Modal State
   const [dossierTeacher, setDossierTeacher] = useState(null);
-
-  // Temporary Admission Admin Delegation Modal State
   const [delegationTeacher, setDelegationTeacher] = useState(null);
-
-  const initialForm = {
-    name: "",
-    pen: "",
-    department: "HSST Malayalam",
-    designation: "HSST",
-    assignedClass: "Class 10-A",
-    phone: "+91 94471 23450",
-    email: "",
-    periods: "24 hrs / Week",
-    status: "Active",
-    qualification: "M.A, B.Ed, SET",
-    dob: "15/05/1988",
-    appointmentDate: "01/06/2018",
-    // Essential Statutory ID Proofs
-    aadharNumber: "",
-    aadharDocUrl: null,
-    aadharDocFileName: null,
-    panNumber: "",
-    panDocUrl: null,
-    panDocFileName: null,
-    penAllotmentDocUrl: null,
-    penAllotmentDocFileName: null,
-    // Essential Qualification Certificates
-    highestDegree: "Post Graduate (Master's)",
-    pgDegreeName: "M.Sc Mathematics",
-    pgCertificateUrl: null,
-    pgCertificateFileName: null,
-    ugDegreeName: "B.Sc Mathematics",
-    ugCertificateUrl: null,
-    ugCertificateFileName: null,
-    bedCollege: "Govt. College of Teacher Education",
-    bedCertificateUrl: null,
-    bedCertificateFileName: null,
-    eligibilityExam: "SET / KTET Qualified",
-    eligibilityCertificateUrl: null,
-    eligibilityCertificateFileName: null,
-    experienceCertificateUrl: null,
-    experienceCertificateFileName: null,
-    documentsVerified: true,
-  };
-  const [formData, setFormData] = useState(initialForm);
 
   // Debounced search effect
   useEffect(() => {
@@ -99,7 +43,7 @@ export default function TeachersRecords() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Fetch Teachers & Stats via Backend Search and Filters
+  // Fetch Teachers & Stats
   const fetchTeachers = useCallback(async () => {
     try {
       setLoading(true);
@@ -129,350 +73,35 @@ export default function TeachersRecords() {
     fetchTeachers();
   }, [fetchTeachers]);
 
-  // Filter & Search Logic (powered by backend results)
-  const filteredTeachers = useMemo(() => {
-    return teachers;
-  }, [teachers]);
+  // Form hook
+  const {
+    isModalOpen,
+    editingTeacher,
+    isEmailVerified,
+    setIsEmailVerified,
+    activeModalTab,
+    setActiveModalTab,
+    formData,
+    uploadingDoc,
+    formSubmitting,
+    feedback,
+    openAddTeacherModal,
+    openEditModal,
+    closeModal,
+    handleFormChange,
+    handleDocumentUpload,
+    handleRemoveDocument,
+    handleFormSubmit,
+    handleDeleteTeacher,
+  } = useTeacherForm({ fetchTeachers });
 
   // Pagination Logic
-  const totalFacultyCount = filteredTeachers.length;
+  const totalFacultyCount = teachers.length;
   const totalPages = Math.ceil(totalFacultyCount / pageSize) || 1;
   const paginatedTeachers = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
-    return filteredTeachers.slice(start, start + pageSize);
-  }, [filteredTeachers, currentPage]);
-
-  // Modal Handlers
-  const openAddTeacherModal = () => {
-    setEditingTeacher(null);
-    setIsEmailVerified(false);
-    setActiveModalTab("general");
-    setFormData({
-      ...initialForm,
-      pen: `849${Math.floor(200 + Math.random() * 800)}`,
-    });
-    setFeedback({ type: "", message: "" });
-    setIsModalOpen(true);
-  };
-
-  const openEditModal = (teacher) => {
-    setEditingTeacher(teacher);
-    setIsEmailVerified(true);
-    setActiveModalTab("general");
-    setFormData({
-      name: teacher.name || "",
-      pen: teacher.pen || "",
-      department: teacher.department || "",
-      designation: teacher.designation || "HST",
-      assignedClass: teacher.assignedClass || "",
-      phone: teacher.phone || "",
-      email: teacher.email || "",
-      periods: teacher.periods || "",
-      status: teacher.status || "Active",
-      qualification: teacher.qualification || "",
-      dob: teacher.dob || "15/05/1988",
-      appointmentDate: teacher.appointmentDate || "",
-      aadharNumber: teacher.aadharNumber || "",
-      aadharDocUrl: teacher.aadharDocUrl || null,
-      aadharDocFileName: teacher.aadharDocFileName || null,
-      panNumber: teacher.panNumber || "",
-      panDocUrl: teacher.panDocUrl || null,
-      panDocFileName: teacher.panDocFileName || null,
-      penAllotmentDocUrl: teacher.penAllotmentDocUrl || null,
-      penAllotmentDocFileName: teacher.penAllotmentDocFileName || null,
-      highestDegree: teacher.highestDegree || "Post Graduate (Master's)",
-      pgDegreeName: teacher.pgDegreeName || "",
-      pgCertificateUrl: teacher.pgCertificateUrl || null,
-      pgCertificateFileName: teacher.pgCertificateFileName || null,
-      ugDegreeName: teacher.ugDegreeName || "",
-      ugCertificateUrl: teacher.ugCertificateUrl || null,
-      ugCertificateFileName: teacher.ugCertificateFileName || null,
-      bedCollege: teacher.bedCollege || "",
-      bedCertificateUrl: teacher.bedCertificateUrl || null,
-      bedCertificateFileName: teacher.bedCertificateFileName || null,
-      eligibilityExam: teacher.eligibilityExam || "",
-      eligibilityCertificateUrl: teacher.eligibilityCertificateUrl || null,
-      eligibilityCertificateFileName: teacher.eligibilityCertificateFileName || null,
-      experienceCertificateUrl: teacher.experienceCertificateUrl || null,
-      experienceCertificateFileName: teacher.experienceCertificateFileName || null,
-      documentsVerified: teacher.documentsVerified !== false,
-    });
-    setFeedback({ type: "", message: "" });
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setEditingTeacher(null);
-    setIsEmailVerified(false);
-  };
-
-  const handleFormChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    if (name === "email" && value !== formData.email) {
-      setIsEmailVerified(false);
-    }
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
-
-  // Upload handler for individual documents
-  const handleDocumentUpload = async (e, urlKey, nameKey) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 10 * 1024 * 1024) {
-      setFeedback({
-        type: "error",
-        message: "File exceeds 10MB limit. Please upload a smaller document.",
-      });
-      return;
-    }
-
-    const uploadFormData = new FormData();
-    uploadFormData.append("document", file);
-
-    try {
-      setUploadingDoc((prev) => ({ ...prev, [urlKey]: true }));
-      const res = await api.post("/upload/document", uploadFormData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      if (res.data.success) {
-        setFormData((prev) => ({
-          ...prev,
-          [urlKey]: res.data.fileUrl,
-          [nameKey]: res.data.fileName || file.name,
-        }));
-        setFeedback({
-          type: "success",
-          message: `${file.name} uploaded & attached successfully!`,
-        });
-      }
-    } catch (err) {
-      setFeedback({
-        type: "error",
-        message: err.response?.data?.message || "File upload failed.",
-      });
-    } finally {
-      setUploadingDoc((prev) => ({ ...prev, [urlKey]: false }));
-    }
-  };
-
-  const handleRemoveDocument = (urlKey, nameKey) => {
-    setFormData((prev) => ({
-      ...prev,
-      [urlKey]: null,
-      [nameKey]: null,
-    }));
-  };
-
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    const nameCheck = validateHumanName(formData.name, "Faculty full name");
-    if (nameCheck !== true) {
-      setActiveModalTab("general");
-      setFeedback({ type: "error", message: nameCheck });
-      return;
-    }
-
-    if (!formData.pen || !formData.pen.trim()) {
-      setActiveModalTab("general");
-      setFeedback({
-        type: "error",
-        message: "Government PEN number is required.",
-      });
-      return;
-    }
-
-    // Age validation for teaching faculty
-    if (!formData.dob || !formData.dob.trim()) {
-      setActiveModalTab("general");
-      setFeedback({
-        type: "error",
-        message: "Teacher Date of Birth (DOB) is required.",
-      });
-      return;
-    }
-
-    const ageCheck = checkTeacherAgeEligibility(formData.dob);
-    if (!ageCheck.valid) {
-      setActiveModalTab("general");
-      setFeedback({
-        type: "error",
-        message: ageCheck.message,
-      });
-      return;
-    }
-
-    if (formData.appointmentDate && formData.appointmentDate.trim()) {
-      const apptCheck = checkTeacherAppointmentDate(formData.appointmentDate, formData.dob);
-      if (!apptCheck.valid) {
-        setActiveModalTab("general");
-        setFeedback({
-          type: "error",
-          message: apptCheck.message,
-        });
-        return;
-      }
-    }
-
-    if (!editingTeacher) {
-      if (!formData.email || !formData.email.trim()) {
-        setActiveModalTab("general");
-        setFeedback({
-          type: "error",
-          message: "Official institutional email is required for faculty registration.",
-        });
-        return;
-      }
-      if (!isEmailVerified) {
-        setActiveModalTab("general");
-        setFeedback({
-          type: "error",
-          message: "Email verification required: Please verify the teacher's email with the 6-digit OTP code before completing registration.",
-        });
-        return;
-      }
-    }
-
-    try {
-      setFormSubmitting(true);
-      if (editingTeacher) {
-        const res = await api.put(
-          `/admin/teachers/${editingTeacher._id}`,
-          formData
-        );
-        if (res.data.success) {
-          setFeedback({
-            type: "success",
-            message: `Updated faculty ${formData.name}!`,
-          });
-          setTimeout(() => {
-            closeModal();
-            fetchTeachers();
-          }, 800);
-        }
-      } else {
-        const res = await api.post("/admin/teachers", formData);
-        if (res.data.success) {
-          setFeedback({
-            type: "success",
-            message: `Registered faculty ${formData.name} successfully!`,
-          });
-          setTimeout(() => {
-            closeModal();
-            fetchTeachers();
-          }, 800);
-        }
-      }
-    } catch (err) {
-      setFeedback({
-        type: "error",
-        message: err.response?.data?.message || "Failed to save record.",
-      });
-    } finally {
-      setFormSubmitting(false);
-    }
-  };
-
-  const handleDeleteTeacher = async () => {
-    if (!editingTeacher) return;
-    const isConfirmed = await confirm({
-      title: "Move Faculty to Recycle Bin?",
-      message: `Are you sure you want to move ${editingTeacher.name} (PEN: ${editingTeacher.pen}) to the Recycle Bin (soft delete)?`,
-      subMessage: "This faculty record will be soft-deleted. You can restore it anytime from the Recycle Bin.",
-      confirmText: "Move to Recycle Bin",
-      cancelText: "Keep Record",
-      type: "danger",
-    });
-
-    if (!isConfirmed) return;
-
-    try {
-      setFormSubmitting(true);
-      const res = await api.delete(`/admin/teachers/${editingTeacher._id}`);
-      if (res.data.success) {
-        closeModal();
-        fetchTeachers();
-        setFeedback({
-          type: "success",
-          message:
-            res.data.message ||
-            `Teacher ${editingTeacher.name} moved to trash (soft-deleted). You can restore it from the Recycle Bin.`,
-        });
-      }
-    } catch (err) {
-      setFeedback({
-        type: "error",
-        message: err.response?.data?.message || "Failed to delete teacher.",
-      });
-    } finally {
-      setFormSubmitting(false);
-    }
-  };
-
-  // CSV Export for Kerala Sampoorna Government Faculty Cadre
-  const handleExportCSV = () => {
-    if (!teachers.length) return;
-    const headers = [
-      "PEN Number",
-      "Teacher Full Name",
-      "Department / Cadre",
-      "Assigned Class / Mentorship",
-      "Contact Phone",
-      "Periods / Week",
-      "Duty Status",
-      "Qualification",
-      "Appointment Date",
-      "Aadhaar Number",
-      "Aadhaar Attached",
-      "PAN Number",
-      "PAN Attached",
-      "B.Ed College",
-      "B.Ed Attached",
-      "Eligibility Exam",
-      "SET / KTET Attached",
-      "Documents Verified",
-    ];
-    const rows = teachers.map((t) => [
-      t.pen,
-      `"${t.name}"`,
-      `"${t.department}"`,
-      `"${t.assignedClass}"`,
-      t.phone,
-      `"${t.periods}"`,
-      t.status,
-      `"${t.qualification}"`,
-      t.appointmentDate,
-      `"${t.aadharNumber || "Pending"}"`,
-      t.aadharDocUrl ? "Yes" : "No",
-      `"${t.panNumber || "Pending"}"`,
-      t.panDocUrl ? "Yes" : "No",
-      `"${t.bedCollege || "N/A"}"`,
-      t.bedCertificateUrl ? "Yes" : "No",
-      `"${t.eligibilityExam || "N/A"}"`,
-      t.eligibilityCertificateUrl ? "Yes" : "No",
-      t.documentsVerified ? "Verified (Rule 12 KER)" : "Pending",
-    ]);
-
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute(
-      "download",
-      `Sampoorna_Faculty_Cadre_Dossier_${Date.now()}.csv`
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+    return teachers.slice(start, start + pageSize);
+  }, [teachers, currentPage]);
 
   return (
     <div className="admin-layout">
@@ -489,272 +118,24 @@ export default function TeachersRecords() {
           <TeacherStatsCards stats={stats} />
 
           {/* Action Header Banner */}
-          <section className="student-header-banner">
-            <div className="registry-title-left">
-              <div className="registry-icon-badge"></div>
-              <div className="registry-title-text">
-                <h1>Faculty Directory &amp; Department Roster</h1>
-                <p>
-                  Authorized permanent teaching cadre, PEN allocation,
-                  statutory ID proofs, and qualification credentials.
-                </p>
-              </div>
-            </div>
-
-            <div className="registry-controls-right">
-              {/* Search Box */}
-              <div className="search-input-wrapper">
-                <span className="search-input-icon"></span>
-                <input
-                  type="text"
-                  placeholder="Search teacher by name, PEN, Aadhaar..."
-                  className="registry-search-input"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    className="search-clear-btn"
-                    onClick={() => {
-                      setSearchQuery("");
-                      setCurrentPage(1);
-                    }}
-                    title="Clear search"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-
-              {/* Department & Wing Filter across all 64 Cadre */}
-              <select
-                className="registry-select-dropdown"
-                value={selectedDept}
-                onChange={(e) => {
-                  setSelectedDept(e.target.value);
-                  setCurrentPage(1);
-                }}
-              >
-                <option value="All">All Departments &amp; Wings (64 Cadre)</option>
-                <optgroup label="Academic Wings">
-                  <option value="Lower Primary">Lower Primary (LPSA Cadre)</option>
-                  <option value="Upper Primary">Upper Primary (UPSA Cadre)</option>
-                  <option value="High School">High School (HST Cadre)</option>
-                  <option value="Higher Secondary">Higher Secondary (HSST Cadre)</option>
-                </optgroup>
-                <optgroup label="Subject Specialization">
-                  <option value="Malayalam">Malayalam</option>
-                  <option value="Mathematics">Mathematics</option>
-                  <option value="Physical Science">Physical Science</option>
-                  <option value="Chemistry">Chemistry</option>
-                  <option value="English">English</option>
-                  <option value="Social Science">Social Science</option>
-                  <option value="Commerce">Commerce</option>
-                  <option value="Natural Science">Natural Science</option>
-                  <option value="Primary Education">Primary Education</option>
-                </optgroup>
-              </select>
-
-              {/* Add Teacher Button */}
-              <button
-                className="btn-new-admission"
-                onClick={openAddTeacherModal}
-              >
-                <span>+</span> Add Teacher
-              </button>
-            </div>
-          </section>
+          <TeacherFilterHeader
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            selectedDept={selectedDept}
+            setSelectedDept={setSelectedDept}
+            setCurrentPage={setCurrentPage}
+            openAddTeacherModal={openAddTeacherModal}
+          />
 
           {/* Teacher Directory 3x2 Grid */}
-          {loading ? (
-            <div
-              style={{
-                textAlign: "center",
-                padding: "60px",
-                background: "#ffffff",
-                borderRadius: "16px",
-                border: "1px solid #e2e8f0",
-                color: "#64748b",
-                fontWeight: "600",
-              }}
-            >
-              Loading Faculty Directory &amp; PEN Allocation...
-            </div>
-          ) : paginatedTeachers.length === 0 ? (
-            <div
-              style={{
-                textAlign: "center",
-                padding: "60px",
-                background: "#ffffff",
-                borderRadius: "16px",
-                border: "1px solid #e2e8f0",
-                color: "#64748b",
-              }}
-            >
-              No matching faculty records found.
-            </div>
-          ) : (
-            <div className="teachers-directory-grid">
-              {paginatedTeachers.map((t) => {
-                let statusClass = "status-pill-active";
-                if (t.status === "In Class") statusClass = "status-pill-in-class";
-                else if (t.status === "On Duty")
-                  statusClass = "status-pill-on-duty";
-                else if (t.status === "On Leave")
-                  statusClass = "status-pill-on-leave";
-
-                const hasAadhaar = !!t.aadharDocUrl;
-                const hasBed = !!t.bedCertificateUrl;
-
-                return (
-                  <div className="teacher-card" key={t._id}>
-                    {/* Top Row: Avatar, Name, Dept, Mentor Pill & Status */}
-                    <div className="teacher-card-header">
-                      <div className="teacher-profile-left">
-                        <div className="teacher-avatar-circle">
-                          {t.initials || "TR"}
-                        </div>
-                        <div className="teacher-meta-name-col">
-                          <h3 className="teacher-name-title">
-                            <span>{t.name}</span>
-                            <span
-                              className="teacher-verified-icon"
-                              title="Verified Permanent Cadre"
-                            >
-                              ✓
-                            </span>
-                          </h3>
-                          <div className="teacher-dept-subtext">
-                            {t.department}
-                          </div>
-                          <span className="mentor-charge-pill">
-                            {t.assignedClass}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Status Badge */}
-                      <span className={statusClass}>
-                        <span className="status-dot"></span>
-                        {t.status}
-                      </span>
-                    </div>
-
-                    {/* Metadata Rows: PEN, Official Contact, Periods Allotted */}
-                    <div className="teacher-card-body">
-                      <div className="teacher-meta-row">
-                        <span className="teacher-meta-label">PEN Number</span>
-                        <span className="teacher-meta-value">{t.pen}</span>
-                      </div>
-                      {t.dob && (
-                        <div className="teacher-meta-row">
-                          <span className="teacher-meta-label">Date of Birth</span>
-                          <span className="teacher-meta-value">
-                            {t.dob} {t.age ? `(${t.age} yrs)` : ""}
-                          </span>
-                        </div>
-                      )}
-                      <div className="teacher-meta-row">
-                        <span className="teacher-meta-label">Official Contact</span>
-                        <span className="teacher-meta-value">{t.phone}</span>
-                      </div>
-                      <div className="teacher-meta-row">
-                        <span className="teacher-meta-label">Official Mail ID</span>
-                        <span className="teacher-meta-value" style={{ fontSize: "12px", color: "#2563eb", wordBreak: "break-all" }}>
-                          {t.email ? t.email : "Not registered"}
-                        </span>
-                      </div>
-                      <div className="teacher-meta-row">
-                        <span className="teacher-meta-label">Periods Allotted</span>
-                        <span className="teacher-meta-value">{t.periods}</span>
-                      </div>
-                      <div className="teacher-meta-row">
-                        <span className="teacher-meta-label">Submitted Proofs</span>
-                        <span
-                          style={{
-                            fontSize: "11px",
-                            fontWeight: "700",
-                            color: "#059669",
-                            background: "#d1fae5",
-                            padding: "2px 8px",
-                            borderRadius: "10px",
-                          }}
-                        >
-                          {hasAadhaar && hasBed
-                            ? "✓ Aadhaar & B.Ed Attached"
-                            : hasAadhaar || hasBed
-                            ? "✓ Partial Dossier Attached"
-                            : "KYC & SPARK Seeded"}
-                        </span>
-
-                        {t.isAdmissionAdmin && (
-                          <span
-                            style={{
-                              fontSize: "11px",
-                              fontWeight: "700",
-                              padding: "2px 8px",
-                              borderRadius: "10px",
-                              background: t.isAdmissionAdminActive ? "#ecfdf5" : "#fef2f2",
-                              color: t.isAdmissionAdminActive ? "#065f46" : "#991b1b",
-                              border: `1px solid ${t.isAdmissionAdminActive ? "#a7f3d0" : "#fecaca"}`,
-                            }}
-                            title={t.admissionAdminNote || (t.isAdmissionAdminActive ? "Active Temporary Admission Admin" : "Expired Temporary Admission Admin")}
-                          >
-                            {t.isAdmissionAdminActive ? "🎓 Admission Admin" : "⌛ Admission Admin (Expired)"}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Footer Actions: View Allotment, Dossier, Edit Profile & Admission Admin */}
-                    <div className="teacher-card-footer">
-                      <button
-                        type="button"
-                        className="btn-allotment-link"
-                        onClick={() => setAllotmentTeacher(t)}
-                        title="View Teaching Timetable &amp; Duty Allotment"
-                      >
-                        Allotment
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-allotment-link"
-                        style={{ color: "#0d9488" }}
-                        onClick={() => setDossierTeacher(t)}
-                        title="Inspect Submitted ID Proofs &amp; Qualification Certificates"
-                      >
-                        Dossier
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-allotment-link"
-                        style={{
-                          color: t.isAdmissionAdminActive ? "#2563eb" : "#475569",
-                          fontWeight: t.isAdmissionAdminActive ? "800" : "600",
-                        }}
-                        onClick={() => setDelegationTeacher(t)}
-                        title="Manage Temporary Student Admission Admin Privileges"
-                      >
-                        🎓 Admission Admin
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-edit-profile-link"
-                        onClick={() => openEditModal(t)}
-                        title="Edit Faculty Record &amp; Documents"
-                      >
-                        Edit Profile
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          <TeacherCardsGrid
+            loading={loading}
+            paginatedTeachers={paginatedTeachers}
+            setAllotmentTeacher={setAllotmentTeacher}
+            setDossierTeacher={setDossierTeacher}
+            setDelegationTeacher={setDelegationTeacher}
+            openEditModal={openEditModal}
+          />
 
           {/* Footer Bar: Pagination & Full Roster Export */}
           <div className="registry-footer-bar">
@@ -800,7 +181,7 @@ export default function TeachersRecords() {
             <button
               type="button"
               className="export-roster-link"
-              onClick={handleExportCSV}
+              onClick={() => exportTeacherRosterCsv(teachers)}
               style={{ background: "transparent", border: "none", cursor: "pointer" }}
             >
               View All Faculty &amp; Export Sampoorna Roster (CSV) →

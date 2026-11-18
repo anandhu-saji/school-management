@@ -8,6 +8,10 @@ import TeacherSidebar from "../../components/teacher/TeacherSidebar";
 import TeacherHeader from "../../components/teacher/TeacherHeader";
 import StudentSidebar from "../../components/student/StudentSidebar";
 import StudentHeader from "../../components/student/StudentHeader";
+import ProfileHeroCard from "./components/ProfileHeroCard";
+import ProfileAvatarCard from "./components/ProfileAvatarCard";
+import ProfilePendingRequestBanner from "./components/ProfilePendingRequestBanner";
+import ProfileFormFields from "./components/ProfileFormFields";
 import "../../Styles/AdminDash.css";
 import "../../Styles/TeacherDash.css";
 import "../../Styles/StudentDash.css";
@@ -276,231 +280,34 @@ export default function ProfilePage() {
 
   const renderContent = () => (
     <div className="profile-page-container">
-      {/* Header Banner */}
-      <section className="profile-hero-card">
-        <div className="profile-badge-row">
-          <span className="profile-pill-badge">
-            KERALA GENERAL EDUCATION DEPT. • GHSS RAJAKKAD
-          </span>
-          <span className="profile-pill-sync">SAMPOORNA ID VERIFIED</span>
-          {role === "admin" && (
-            <span className="profile-pill-badge" style={{ background: "#f59e0b" }}>
-              CHIEF ADMIN
-            </span>
-          )}
-        </div>
-        <h1 className="profile-hero-title">
-          <span>{profileData?.user?.name || "User Profile"}</span>
-          <span style={{ fontSize: "18px", color: "#60a5fa" }}>✓</span>
-        </h1>
-        <p className="profile-hero-subtext">
-          {role === "admin" && "Headmaster & Chief Administrative Executive • School Code: 06042"}
-          {role === "teacher" &&
-            `Faculty Service Register • PEN: ${
-              roleData.penNumber || roleData.pen || "—"
-            } • ${roleData.assignedClass || "Class Mentor"}`}
-          {role === "student" &&
-            `Kerala Sampoorna Student Registry • Admission No: ${
-              roleData.admissionNumber || "—"
-            } • ${roleData.classDivision || "Class 10-A"}`}
-        </p>
-      </section>
-
-      {/* Action / Error / Success Feedback */}
-      {feedback.message && (
-        <div className={`profile-notification-card ${feedback.type}`}>
-          <div>
-            <div className="notif-content-title">
-              {feedback.type === "success" && "✓ Success"}
-              {feedback.type === "warning" && "⏳ Pending Admin Approval"}
-              {feedback.type === "error" && "✕ Alert"}
-            </div>
-            <div className="notif-content-msg">{feedback.message}</div>
-          </div>
-          <button
-            type="button"
-            className="notif-dismiss-btn"
-            onClick={() => setFeedback({ type: "", message: "" })}
-          >
-            ✕
-          </button>
-        </div>
-      )}
-
-      {/* Notifications from Admin (e.g. "Your request is rejected.") */}
-      {notifications.length > 0 && (
-        <div style={{ marginBottom: "20px" }}>
-          {notifications.map((notif) => (
-            <div
-              key={notif._id}
-              className={`profile-notification-card ${
-                notif.type === "error" ? "error" : "success"
-              }`}
-            >
-              <div>
-                <div className="notif-content-title">
-                  {notif.type === "error" ? "✕ Notification" : "✓ Notification"}
-                </div>
-                <div className="notif-content-msg">
-                  <strong>{notif.message}</strong>
-                </div>
-              </div>
-              <button
-                type="button"
-                className="notif-dismiss-btn"
-                title="Dismiss notification"
-                onClick={() => handleDismissNotification(notif._id)}
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+      <ProfileHeroCard
+        role={role}
+        roleData={roleData}
+        profileData={profileData}
+        feedback={feedback}
+        setFeedback={setFeedback}
+        notifications={notifications}
+        handleDismissNotification={handleDismissNotification}
+      />
 
       {/* Active Pending Request Banner with Differences */}
-      {pendingReq && pendingReq.requestedChanges && (
-        <section className="profile-pending-banner">
-          <div className="pending-banner-header">
-            <div className="pending-tag">
-              <span>⏳</span>
-              <span>Pending Admin Verification &amp; Approval</span>
-            </div>
-            <span style={{ fontSize: "12px", color: "#64748b" }}>
-              Submitted on:{" "}
-              {new Date(pendingReq.createdAt).toLocaleDateString("en-IN", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </span>
-          </div>
-          <p style={{ fontSize: "13px", color: "#475569", margin: "0 0 10px 0" }}>
-            You have submitted the following updates. Current records will remain active until the
-            Headmaster reviews and approves your request:
-          </p>
-          <table className="pending-diff-table">
-            <thead>
-              <tr>
-                <th>Field Name</th>
-                <th>Current Value</th>
-                <th>Requested New Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.keys(pendingReq.requestedChanges).map((key) => (
-                <tr key={key}>
-                  <td>
-                    <strong>{getFieldLabel(key)}</strong>
-                  </td>
-                  <td>
-                    <span className="diff-val-old">
-                      {pendingReq.currentData?.[key] || "—"}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="diff-val-new">
-                      {pendingReq.requestedChanges[key]}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
-      )}
+      <ProfilePendingRequestBanner
+        pendingReq={pendingReq}
+        getFieldLabel={getFieldLabel}
+      />
 
       {/* Main Grid: Left Column + Right Details Form */}
       <div className="profile-layout-grid">
-        {/* Left Column: Avatar & Summary & Status Card */}
-        <div className="profile-left-col">
-          <div className="profile-card profile-avatar-wrapper">
-            <input
-              type="file"
-              ref={fileInputRef}
-              style={{ display: "none" }}
-              accept="image/png, image/jpeg, image/jpg, image/webp"
-              onChange={handleAvatarFileChange}
-            />
-
-            <div
-              className="profile-avatar-frame"
-              onClick={() => fileInputRef.current?.click()}
-              title="Click to change profile picture"
-            >
-              {avatarDisplayUrl ? (
-                <img src={avatarDisplayUrl} alt="Avatar" />
-              ) : (
-                <span>{initials}</span>
-              )}
-              <div className="profile-avatar-upload-overlay">
-                <span style={{ fontSize: "20px" }}>📷</span>
-                <span>{uploadingAvatar ? "Uploading..." : "Change"}</span>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              className="btn-upload-photo"
-              disabled={uploadingAvatar}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <span>📷</span>
-              <span>{uploadingAvatar ? "Uploading..." : "Change Photo"}</span>
-            </button>
-            <span style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>
-              Direct update • JPG, PNG, WEBP max 5MB
-            </span>
-
-            <h3 className="profile-user-name">{profileData?.user?.name || "User"}</h3>
-            <span className="profile-user-role">
-              {role === "admin" && "Headmaster / Admin"}
-              {role === "teacher" && (roleData.designation || "HSST Faculty")}
-              {role === "student" && `${roleData.classDivision || "Class 10-A"} Scholar`}
-            </span>
-
-            <div className="profile-meta-list">
-              <div className="profile-meta-row">
-                <span className="profile-meta-label">Account Email</span>
-                <span className="profile-meta-val">{profileData?.user?.email}</span>
-              </div>
-              <div className="profile-meta-row">
-                <span className="profile-meta-label">Official Identifier</span>
-                <span className="profile-meta-val" style={{ color: "#2563eb", fontFamily: "monospace" }}>
-                  {profileData?.identifier || "—"}
-                </span>
-              </div>
-              {profileData?.division && (
-                <div className="profile-meta-row">
-                  <span className="profile-meta-label">Academic Division</span>
-                  <span className="profile-meta-val">{profileData.division}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Compliance & Verification Card */}
-          <div className="profile-card profile-status-card">
-            <div className="profile-status-title">
-              <span>🛡️</span>
-              <span>Institutional Status</span>
-            </div>
-            <div className="profile-status-item">
-              <span className="status-key">Registry State</span>
-              <span className="status-pill active">Verified ✓</span>
-            </div>
-            <div className="profile-status-item">
-              <span className="status-key">Sampoorna ID</span>
-              <span className="status-pill linked">Linked</span>
-            </div>
-            <div className="profile-status-item">
-              <span className="status-key">Academic Year</span>
-              <span style={{ fontWeight: "700", color: "#0f172a" }}>2026 – 2027</span>
-            </div>
-          </div>
-        </div>
+        <ProfileAvatarCard
+          fileInputRef={fileInputRef}
+          handleAvatarFileChange={handleAvatarFileChange}
+          avatarDisplayUrl={avatarDisplayUrl}
+          initials={initials}
+          uploadingAvatar={uploadingAvatar}
+          profileData={profileData}
+          role={role}
+          roleData={roleData}
+        />
 
         {/* Right Column: Profile Form Details */}
         <div className="profile-card">
@@ -517,184 +324,11 @@ export default function ProfilePage() {
               </div>
             )}
 
-            <div className="profile-form-section-title">
-              <span>👤</span>
-              <span>Personal &amp; Contact Details</span>
-            </div>
-
-            <div className="profile-form-grid">
-              <div className="profile-form-group">
-                <label className="profile-form-label">
-                  Full Legal Name <span className="required">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  className="profile-form-input"
-                  value={formData.name || ""}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-
-              <div className="profile-form-group">
-                <label className="profile-form-label">
-                  Institutional Email ID <span className="field-official-tag">Official</span>
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  className="profile-form-input readonly"
-                  value={formData.email || ""}
-                  readOnly
-                  title="Official institutional email ID cannot be edited online"
-                />
-              </div>
-
-              <div className="profile-form-group">
-                <label className="profile-form-label">
-                  Official Phone Number <span className="required">*</span>
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  className="profile-form-input"
-                  value={formData.phone || ""}
-                  onChange={handleInputChange}
-                  placeholder="+91 98765 43210"
-                  required
-                />
-              </div>
-
-              <div className="profile-form-group">
-                <label className="profile-form-label">Gender</label>
-                <select
-                  name="gender"
-                  className="profile-form-select"
-                  value={formData.gender || "Male"}
-                  onChange={handleInputChange}
-                >
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
-              <div className="profile-form-group">
-                <label className="profile-form-label">Date of Birth</label>
-                <input
-                  type="text"
-                  name="dob"
-                  className="profile-form-input"
-                  value={formData.dob || ""}
-                  onChange={handleInputChange}
-                  placeholder="YYYY-MM-DD or DD/MM/YYYY"
-                />
-              </div>
-
-              {role === "student" && (
-                <div className="profile-form-group">
-                  <label className="profile-form-label">Blood Group</label>
-                  <select
-                    name="bloodGroup"
-                    className="profile-form-select"
-                    value={formData.bloodGroup || "O+"}
-                    onChange={handleInputChange}
-                  >
-                    <option value="A+">A+</option>
-                    <option value="A-">A-</option>
-                    <option value="B+">B+</option>
-                    <option value="B-">B-</option>
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
-                    <option value="AB+">AB+</option>
-                    <option value="AB-">AB-</option>
-                    <option value="Unknown">Unknown</option>
-                  </select>
-                </div>
-              )}
-
-              {role === "teacher" && (
-                <div className="profile-form-group">
-                  <label className="profile-form-label">Academic Qualifications</label>
-                  <input
-                    type="text"
-                    name="qualification"
-                    className="profile-form-input"
-                    value={formData.qualification || ""}
-                    onChange={handleInputChange}
-                    placeholder="M.Sc, B.Ed, SET"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Student-Specific Guardian and Address */}
-            {role === "student" && (
-              <>
-                <div className="profile-form-section-title">
-                  <span>👨‍👩‍👧</span>
-                  <span>Guardian &amp; Residential Address</span>
-                </div>
-
-                <div className="profile-form-grid">
-                  <div className="profile-form-group">
-                    <label className="profile-form-label">Guardian Full Name</label>
-                    <input
-                      type="text"
-                      name="guardian"
-                      className="profile-form-input"
-                      value={formData.guardian || ""}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-
-                  <div className="profile-form-group">
-                    <label className="profile-form-label">Parent / Guardian Contact</label>
-                    <input
-                      type="tel"
-                      name="parentContact"
-                      className="profile-form-input"
-                      value={formData.parentContact || ""}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-
-                  <div className="profile-form-group span-2">
-                    <label className="profile-form-label">House Name / Door Number</label>
-                    <input
-                      type="text"
-                      name="houseName"
-                      className="profile-form-input"
-                      value={formData.houseName || ""}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-
-                  <div className="profile-form-group">
-                    <label className="profile-form-label">City / Village / Post Office</label>
-                    <input
-                      type="text"
-                      name="city"
-                      className="profile-form-input"
-                      value={formData.city || ""}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-
-                  <div className="profile-form-group">
-                    <label className="profile-form-label">Postal PIN Code</label>
-                    <input
-                      type="text"
-                      name="pincode"
-                      className="profile-form-input"
-                      value={formData.pincode || ""}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
+            <ProfileFormFields
+              formData={formData}
+              handleInputChange={handleInputChange}
+              role={role}
+            />
 
             {/* Action Bar */}
             <div className="profile-actions-bar">

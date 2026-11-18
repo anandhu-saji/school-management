@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import api from "../../../api/axiosclient";
-import { getDocumentUrl } from "../../../utils/documentUrl";
-import { checkTeacherAgeEligibility, checkTeacherAppointmentDate } from "../../../utils/ageValidator";
 import { ACADEMIC_WINGS, ALL_CLASSES, fetchDynamicWings } from "../../../utils/classData";
-import EmailOtpVerification from "../../common/EmailOtpVerification";
+import TeacherCadreTab from "./tabs/TeacherCadreTab";
+import TeacherIdProofsTab from "./tabs/TeacherIdProofsTab";
+import TeacherQualificationsTab from "./tabs/TeacherQualificationsTab";
 import "../../../Styles/AdminDash.css";
-
 
 // Helper to normalize teacher assigned class to standard Kerala 2.0 academic division
 const resolveAssignedClass = (raw) => {
@@ -53,101 +52,16 @@ export default function TeacherFormModal({
 
   const currentAssignedClass = resolveAssignedClass(formData.assignedClass);
 
-  const renderDocumentUploadCard = (label, urlKey, nameKey, helpText, icon = "DOC") => {
-    const fileUrl = formData[urlKey];
-    const fileName = formData[nameKey];
-    const isUploading = uploadingDoc[urlKey];
-    const isPdf =
-      fileUrl &&
-      (fileUrl.toLowerCase().endsWith(".pdf") ||
-        (fileName && fileName.toLowerCase().endsWith(".pdf")));
-
-    return (
-      <div className="form-field-group" style={{ marginBottom: "16px" }}>
-        <label>{label}</label>
-        <span className="helper-text" style={{ marginBottom: "6px" }}>
-          {helpText}
-        </span>
-
-        {fileUrl ? (
-          <div className="uploaded-file-card">
-            <div className="uploaded-file-info">
-              {isPdf ? (
-                <div className="uploaded-pdf-badge">
-                  <span>PDF</span>
-                </div>
-              ) : (
-                <img
-                  src={getDocumentUrl(fileUrl)}
-                  alt={fileName}
-                  className="uploaded-file-thumbnail"
-                  onError={(e) => {
-                    e.target.style.display = "none";
-                  }}
-                />
-              )}
-              <div className="uploaded-file-names">
-                <span className="uploaded-file-name" title={fileName}>
-                  {fileName}
-                </span>
-                <span className="uploaded-file-status">
-                  ✓ Uploaded &amp; Attached
-                </span>
-              </div>
-            </div>
-
-            <div className="uploaded-file-actions">
-              <a
-                href={getDocumentUrl(fileUrl)}
-                target="_blank"
-                rel="noreferrer"
-                className="btn-file-preview"
-                title="View document in new tab"
-              >
-                View ↗
-              </a>
-              <button
-                type="button"
-                className="btn-file-remove"
-                onClick={() => handleRemoveDocument(urlKey, nameKey)}
-                title="Remove attached document"
-              >
-                Remove
-              </button>
-            </div>
-          </div>
-        ) : (
-          <label
-            className={`upload-dropzone ${isUploading ? "disabled" : ""}`}
-            style={{ padding: "14px 18px", marginTop: "4px" }}
-          >
-            <input
-              type="file"
-              accept=".pdf,image/png,image/jpeg,image/jpg,image/webp"
-              style={{ display: "none" }}
-              onChange={(e) => handleDocumentUpload(e, urlKey, nameKey)}
-              disabled={isUploading}
-            />
-            <div className="upload-icon-circle" style={{ width: "36px", height: "36px", fontSize: "16px" }}>
-              {isUploading ? "..." : icon}
-            </div>
-            <p className="upload-prompt-text" style={{ fontSize: "13px" }}>
-              {isUploading ? "Uploading file..." : `Click to browse & upload ${label}`}
-            </p>
-            <p className="upload-sub-text" style={{ fontSize: "11px" }}>
-              Accepts PDF or Images (JPG, PNG) up to 10MB
-            </p>
-          </label>
-        )}
-      </div>
-    );
-  };
-
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
         className="modal-content-card modal-lg"
-        style={{ maxWidth: "780px", maxHeight: "90vh", display: "flex", flexDirection: "column" }}
+        style={{
+          maxWidth: "780px",
+          maxHeight: "90vh",
+          display: "flex",
+          flexDirection: "column",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header-row">
@@ -235,479 +149,47 @@ export default function TeacherFormModal({
               </div>
             )}
 
-            {/* ---------------- TAB 1: CADRE DETAILS ---------------- */}
+            {/* TAB 1: CADRE DETAILS */}
             {activeModalTab === "general" && (
-              <div>
-                <div className="form-field-group">
-                  <label>Faculty Full Name *</label>
-                  <input
-                    type="text"
-                    name="name"
-                    required
-                    placeholder="e.g. Mrs. Priya Nair"
-                    value={formData.name}
-                    onChange={handleFormChange}
-                  />
-                </div>
-
-                <div className="form-row-grid-2">
-                  <div className="form-field-group">
-                    <label>Government PEN Number *</label>
-                    <input
-                      type="text"
-                      name="pen"
-                      required
-                      placeholder="e.g. 849201"
-                      value={formData.pen}
-                      onChange={handleFormChange}
-                    />
-                    <span className="helper-text">
-                      Permanent Employee Number (SPARK).
-                    </span>
-                  </div>
-                  <div className="form-field-group">
-                    <label>Department &amp; Cadre</label>
-                    <input
-                      type="text"
-                      name="department"
-                      placeholder="e.g. HSST Malayalam"
-                      value={formData.department}
-                      onChange={handleFormChange}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-row-grid-2">
-                  <div className="form-field-group">
-                    <label>Assigned Division / Mentorship</label>
-                    <select
-                      name="assignedClass"
-                      value={currentAssignedClass}
-                      onChange={handleFormChange}
-                    >
-                      <option value="">-- Select Assigned Division / Class --</option>
-                      <option value="General / Subject Faculty">
-                        General / Subject Faculty (No Class Mentorship)
-                      </option>
-                      {currentAssignedClass &&
-                        !ALL_CLASSES.some((c) => c.name === currentAssignedClass) &&
-                        currentAssignedClass !== "General / Subject Faculty" && (
-                          <option value={currentAssignedClass}>
-                            {currentAssignedClass} (Current)
-                          </option>
-                        )}
-                      {academicWings.map((wing) => (
-                        <optgroup key={wing.code} label={wing.wing}>
-                          {wing.classes.map((c) => (
-                            <option key={c.id} value={c.name}>
-                              {c.name} ({c.stream})
-                            </option>
-                          ))}
-                        </optgroup>
-                      ))}
-                    </select>
-                    <span className="helper-text">
-                      Official division mentorship or standard classroom charge.
-                    </span>
-                  </div>
-                  <div className="form-field-group">
-                    <label>Periods / Workload Allotted</label>
-                    <input
-                      type="text"
-                      name="periods"
-                      placeholder="e.g. 24 hrs / Week"
-                      value={formData.periods}
-                      onChange={handleFormChange}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-row-grid-2">
-                  <div className="form-field-group">
-                    <label>Official Contact Mobile</label>
-                    <input
-                      type="text"
-                      name="phone"
-                      placeholder="+91 94471 23450"
-                      value={formData.phone}
-                      onChange={handleFormChange}
-                    />
-                  </div>
-                  <div className="form-field-group">
-                    <label>Official Email ID (Mail ID)</label>
-                    <input
-                      type="email"
-                      name="email"
-                      placeholder="teacher@ghssrajakkad.kerala.gov.in"
-                      value={formData.email}
-                      onChange={handleFormChange}
-                    />
-                    <EmailOtpVerification
-                      email={formData.email}
-                      purpose="teacher_registration"
-                      isVerified={isEmailVerified}
-                      setIsVerified={setIsEmailVerified}
-                      disabled={Boolean(editingTeacher)}
-                    />
-                    {!editingTeacher && (
-                      <div
-                        style={{
-                          marginTop: "6px",
-                          padding: "6px 10px",
-                          borderRadius: "6px",
-                          background: "#eff6ff",
-                          border: "1px solid #bfdbfe",
-                          fontSize: "11.5px",
-                          color: "#1e40af",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                        }}
-                      >
-                        <span>🔑</span>
-                        <span>
-                          Primary login password: <strong>Teacher@123</strong>.
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="form-row-grid-2">
-                  <div className="form-field-group">
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
-                      <label style={{ margin: 0, whiteSpace: "nowrap" }}>Date of Birth *</label>
-                      {formData.dob && (
-                        (() => {
-                          const check = checkTeacherAgeEligibility(formData.dob);
-                          return (
-                            <span
-                              style={{
-                                fontSize: "11px",
-                                fontWeight: "600",
-                                whiteSpace: "nowrap",
-                                color: check.valid ? "#16a34a" : "#dc2626",
-                                background: check.valid ? "#f0fdf4" : "#fef2f2",
-                                padding: "2px 8px",
-                                borderRadius: "4px",
-                                border: `1px solid ${check.valid ? "#bbf7d0" : "#fecaca"}`,
-                              }}
-                              title={check.message}
-                            >
-                              {check.valid ? `✓ ${check.badge || `Age: ${check.age} yrs`}` : `${check.badge || check.message}`}
-                            </span>
-                          );
-                        })()
-                      )}
-                    </div>
-                    <input
-                      type="text"
-                      name="dob"
-                      required
-                      placeholder="DD/MM/YYYY (e.g. 15/05/1988)"
-                      value={formData.dob}
-                      onChange={handleFormChange}
-                    />
-                    <span className="helper-text">
-                      Statutory entry age under K.E.R: 25 – 60 years.
-                    </span>
-                  </div>
-                  <div className="form-field-group">
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
-                      <label style={{ margin: 0, whiteSpace: "nowrap" }}>Date of Appointment</label>
-                      {formData.appointmentDate && (
-                        (() => {
-                          const check = checkTeacherAppointmentDate(formData.appointmentDate, formData.dob);
-                          return (
-                            <span
-                              style={{
-                                fontSize: "11px",
-                                fontWeight: "700",
-                                padding: "2px 8px",
-                                borderRadius: "6px",
-                                background: check.valid ? "#dcfce7" : "#fee2e2",
-                                color: check.valid ? "#15803d" : "#b91c1c",
-                                border: `1px solid ${check.valid ? "#bbf7d0" : "#fecaca"}`,
-                              }}
-                              title={check.message}
-                            >
-                              {check.valid ? check.badge : `✕ ${check.badge || check.message}`}
-                            </span>
-                          );
-                        })()
-                      )}
-                    </div>
-                    <input
-                      type="text"
-                      name="appointmentDate"
-                      placeholder="DD/MM/YYYY (e.g. 01/06/2018)"
-                      value={formData.appointmentDate}
-                      onChange={handleFormChange}
-                      style={{
-                        borderColor:
-                          formData.appointmentDate && !checkTeacherAppointmentDate(formData.appointmentDate, formData.dob).valid
-                            ? "#ef4444"
-                            : undefined,
-                      }}
-                    />
-                    <span className="helper-text">
-                      Official appointment memo / joining date under K.E.R. (Cannot be future date).
-                    </span>
-                  </div>
-                </div>
-
-                <div className="form-row-grid-2">
-                  <div className="form-field-group">
-                    <label>Current Duty Status</label>
-                    <select
-                      name="status"
-                      value={formData.status}
-                      onChange={handleFormChange}
-                    >
-                      <option value="Active">Active</option>
-                      <option value="In Class">In Class</option>
-                      <option value="On Duty">On Duty</option>
-                      <option value="On Leave">On Leave</option>
-                    </select>
-                  </div>
-                  <div className="form-field-group">
-                    <label>Teaching Qualification Summary</label>
-                    <input
-                      type="text"
-                      name="qualification"
-                      placeholder="e.g. M.A, B.Ed, SET"
-                      value={formData.qualification}
-                      onChange={handleFormChange}
-                    />
-                  </div>
-                </div>
-              </div>
+              <TeacherCadreTab
+                formData={formData}
+                handleFormChange={handleFormChange}
+                editingTeacher={editingTeacher}
+                currentAssignedClass={currentAssignedClass}
+                academicWings={academicWings}
+                isEmailVerified={isEmailVerified}
+                setIsEmailVerified={setIsEmailVerified}
+              />
             )}
 
-            {/* ---------------- TAB 2: STATUTORY ID PROOFS & UPLOADS ---------------- */}
+            {/* TAB 2: STATUTORY ID PROOFS */}
             {activeModalTab === "idProofs" && (
-              <div>
-                <div className="form-section-header" style={{ marginBottom: "14px" }}>
-                  Statutory Government Identification (SPARK / K.E.R Compliant)
-                </div>
-
-                {/* Aadhaar Card */}
-                <div className="form-row-grid-2">
-                  <div className="form-field-group">
-                    <label>Aadhaar UID Number</label>
-                    <input
-                      type="text"
-                      name="aadharNumber"
-                      placeholder="XXXX-XXXX-XXXX"
-                      value={formData.aadharNumber}
-                      onChange={handleFormChange}
-                    />
-                  </div>
-                  <div>
-                    {renderDocumentUploadCard(
-                      "Aadhaar Card Copy",
-                      "aadharDocUrl",
-                      "aadharDocFileName",
-                      "Upload Aadhaar front & back copy (PDF or Image)",
-                      "ID"
-                    )}
-                  </div>
-                </div>
-
-                {/* PAN Card */}
-                <div className="form-row-grid-2">
-                  <div className="form-field-group">
-                    <label>Permanent Account Number (PAN)</label>
-                    <input
-                      type="text"
-                      name="panNumber"
-                      placeholder="e.g. ABCDE1234F"
-                      value={formData.panNumber}
-                      onChange={handleFormChange}
-                    />
-                    <span className="helper-text">
-                      Required for government treasury &amp; SPARK payroll.
-                    </span>
-                  </div>
-                  <div>
-                    {renderDocumentUploadCard(
-                      "PAN Card Copy",
-                      "panDocUrl",
-                      "panDocFileName",
-                      "Upload clear copy of PAN Card (PDF or Image)",
-                      "PAN"
-                    )}
-                  </div>
-                </div>
-
-                {/* SPARK / Govt Appointment Order */}
-                <div>
-                  {renderDocumentUploadCard(
-                    "Government PEN / SPARK Cadre Appointment Order",
-                    "penAllotmentDocUrl",
-                    "penAllotmentDocFileName",
-                    "Official appointment memo / PEN allotment order issued by Director of General Education (PDF / Image)",
-                    "DOC"
-                  )}
-                </div>
-              </div>
+              <TeacherIdProofsTab
+                formData={formData}
+                handleFormChange={handleFormChange}
+                uploadingDoc={uploadingDoc}
+                handleDocumentUpload={handleDocumentUpload}
+                handleRemoveDocument={handleRemoveDocument}
+              />
             )}
 
-            {/* ---------------- TAB 3: QUALIFICATIONS & CERTIFICATES ---------------- */}
+            {/* TAB 3: QUALIFICATIONS */}
             {activeModalTab === "qualifications" && (
-              <div>
-                <div className="form-section-header" style={{ marginBottom: "14px" }}>
-                  Mandatory Academic Degrees &amp; Teaching Eligibility
-                </div>
-
-                {/* B.Ed Degree (Essential Teaching Qualification) */}
-                <div className="form-row-grid-2">
-                  <div className="form-field-group">
-                    <label>B.Ed / Teaching Training College *</label>
-                    <input
-                      type="text"
-                      name="bedCollege"
-                      placeholder="e.g. Govt. College of Teacher Education, Kozhikode"
-                      value={formData.bedCollege}
-                      onChange={handleFormChange}
-                    />
-                    <span className="helper-text">
-                      Mandatory pedagogical training certificate under K.E.R.
-                    </span>
-                  </div>
-                  <div>
-                    {renderDocumentUploadCard(
-                      "B.Ed / Teaching Degree Certificate",
-                      "bedCertificateUrl",
-                      "bedCertificateFileName",
-                      "Upload B.Ed Degree certificate or mark list (PDF/Image)",
-                      "DEG"
-                    )}
-                  </div>
-                </div>
-
-                {/* Post Graduate Degree (M.Sc / M.A) */}
-                <div className="form-row-grid-2">
-                  <div className="form-field-group">
-                    <label>Master's / Post Graduate Degree</label>
-                    <input
-                      type="text"
-                      name="pgDegreeName"
-                      placeholder="e.g. M.Sc Mathematics, First Class"
-                      value={formData.pgDegreeName}
-                      onChange={handleFormChange}
-                    />
-                  </div>
-                  <div>
-                    {renderDocumentUploadCard(
-                      "Post Graduate (PG) Certificate",
-                      "pgCertificateUrl",
-                      "pgCertificateFileName",
-                      "Upload Master's Degree certificate (PDF/Image)",
-                      "DOC"
-                    )}
-                  </div>
-                </div>
-
-                {/* Bachelor's Degree (B.Sc / B.A) */}
-                <div className="form-row-grid-2">
-                  <div className="form-field-group">
-                    <label>Bachelor's / Graduation Degree</label>
-                    <input
-                      type="text"
-                      name="ugDegreeName"
-                      placeholder="e.g. B.Sc Mathematics"
-                      value={formData.ugDegreeName}
-                      onChange={handleFormChange}
-                    />
-                  </div>
-                  <div>
-                    {renderDocumentUploadCard(
-                      "Bachelor's (UG) Certificate",
-                      "ugCertificateUrl",
-                      "ugCertificateFileName",
-                      "Upload Bachelor's Degree certificate (PDF/Image)",
-                      "DOC"
-                    )}
-                  </div>
-                </div>
-
-                {/* SET / KTET / NET Eligibility */}
-                <div className="form-row-grid-2">
-                  <div className="form-field-group">
-                    <label>Teacher Eligibility Test Qualified</label>
-                    <input
-                      type="text"
-                      name="eligibilityExam"
-                      placeholder="e.g. Kerala SET / KTET Category III / NET"
-                      value={formData.eligibilityExam}
-                      onChange={handleFormChange}
-                    />
-                  </div>
-                  <div>
-                    {renderDocumentUploadCard(
-                      "Eligibility Pass Certificate (SET / KTET)",
-                      "eligibilityCertificateUrl",
-                      "eligibilityCertificateFileName",
-                      "Upload SET, KTET, or NET pass certificate (PDF/Image)",
-                      "CERT"
-                    )}
-                  </div>
-                </div>
-
-                {/* Experience Certificate */}
-                <div>
-                  {renderDocumentUploadCard(
-                    "Teaching Experience / Prior Service Book Copy (Optional)",
-                    "experienceCertificateUrl",
-                    "experienceCertificateFileName",
-                    "Prior government or aided school service records (PDF/Image)",
-                    "DOC"
-                  )}
-                </div>
-
-                {/* Verification Toggle */}
-                <div
-                  style={{
-                    marginTop: "16px",
-                    padding: "12px 16px",
-                    background: "#f0fdf4",
-                    border: "1px solid #bbf7d0",
-                    borderRadius: "8px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    id="documentsVerified"
-                    name="documentsVerified"
-                    checked={formData.documentsVerified}
-                    onChange={handleFormChange}
-                    style={{ width: "18px", height: "18px", cursor: "pointer" }}
-                  />
-                  <label
-                    htmlFor="documentsVerified"
-                    style={{
-                      fontSize: "12.5px",
-                      fontWeight: "700",
-                      color: "#166534",
-                      cursor: "pointer",
-                      margin: 0,
-                      textTransform: "none",
-                    }}
-                  >
-                    Statutory Document Verification Completed by Headmaster /
-                    Chief Admin (Rule 12 K.E.R)
-                  </label>
-                </div>
-              </div>
+              <TeacherQualificationsTab
+                formData={formData}
+                handleFormChange={handleFormChange}
+                uploadingDoc={uploadingDoc}
+                handleDocumentUpload={handleDocumentUpload}
+                handleRemoveDocument={handleRemoveDocument}
+              />
             )}
           </div>
 
           {/* Modal Footer Controls */}
-          <div className="modal-footer-row" style={{ flexShrink: 0, marginTop: "auto" }}>
+          <div
+            className="modal-footer-row"
+            style={{ flexShrink: 0, marginTop: "auto" }}
+          >
             {editingTeacher && (
               <button
                 type="button"

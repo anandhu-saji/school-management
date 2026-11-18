@@ -1,18 +1,20 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import api from "../../api/axiosclient";
 import "../../Styles/AdminDash.css";
-import { ACADEMIC_WINGS, normalizeClassDivision, getAcademicWingForClass, fetchDynamicWings } from "../../utils/classData";
+import { ACADEMIC_WINGS, fetchDynamicWings } from "../../utils/classData";
 
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminHeader from "../../components/admin/AdminHeader";
 import PaymentStatsCards from "../../components/admin/payments/PaymentStatsCards";
 import PaymentFormModal from "../../components/admin/payments/PaymentFormModal";
 import PaymentReceiptModal from "../../components/admin/payments/PaymentReceiptModal";
-import { validateHumanName } from "../../utils/nameValidator";
-import { useConfirm, useAlert } from "../../context/ConfirmContext";
+import PaymentFilterBar from "../../components/admin/payments/PaymentFilterBar";
+import PaymentTable from "../../components/admin/payments/PaymentTable";
+import { usePaymentConsoleForm } from "../../components/admin/payments/usePaymentConsoleForm";
+import { exportPaymentLedgerCsv } from "../../utils/paymentCsvExport";
+import { useAlert } from "../../context/ConfirmContext";
 
 export default function PaymentConsole() {
-  const confirm = useConfirm();
   const customAlert = useAlert();
 
   // Data states
@@ -47,37 +49,6 @@ export default function PaymentConsole() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const [academicWings, setAcademicWings] = useState(ACADEMIC_WINGS);
-
-  // Modals state
-  const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
-  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
-  const [editingPayment, setEditingPayment] = useState(null);
-  const [viewingReceipt, setViewingReceipt] = useState(null);
-  const [formSubmitting, setFormSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState({ type: "", message: "" });
-  const [studentSearchQuery, setStudentSearchQuery] = useState("");
-  const [studentLookupResults, setStudentLookupResults] = useState([]);
-
-  const initialForm = {
-    studentName: "",
-    admissionNumber: "",
-    rollNumber: "",
-    classDivision: "Class 10-A",
-    wing: "High School",
-    feeCategory: "Bus Fee",
-    academicYear: "2026-2027",
-    term: "Term 1",
-    totalAmount: 4500,
-    amountPaid: 4500,
-    paymentDate: new Date().toISOString().split("T")[0],
-    paymentMode: "Razorpay / Online",
-    transactionReference: "",
-    dueDate: "2026-11-20",
-    remarks: "",
-    collectedBy: "Accounts Desk / Sri. R. Krishnan",
-  };
-
-  const [paymentForm, setPaymentForm] = useState(initialForm);
 
   // Debounced search effect
   useEffect(() => {
@@ -115,7 +86,6 @@ export default function PaymentConsole() {
       }
     } catch (err) {
       console.error("Failed to load payments:", err);
-      setFeedback({ type: "error", message: "Failed to connect to payments registry." });
     } finally {
       setLoading(false);
     }
@@ -145,225 +115,28 @@ export default function PaymentConsole() {
     fetchPayments();
   }, [fetchPayments]);
 
-  // Real-time backend search for student lookup in modal
-  useEffect(() => {
-    if (!studentSearchQuery.trim()) {
-      setStudentLookupResults([]);
-      return;
-    }
-    const timer = setTimeout(async () => {
-      try {
-        const res = await api.get(`/admin/students?search=${encodeURIComponent(studentSearchQuery.trim())}&limit=6`);
-        if (res.data.success && res.data.students) {
-          setStudentLookupResults(res.data.students);
-        }
-      } catch (err) {
-        console.error("Backend student lookup failed:", err);
-      }
-    }, 250);
-    return () => clearTimeout(timer);
-  }, [studentSearchQuery]);
-
-  // Filtered students for autocomplete inside modal (prefer backend results)
-  const filteredStudentsForLookup = useMemo(() => {
-    if (!studentSearchQuery.trim()) return [];
-    if (studentLookupResults.length > 0) return studentLookupResults.slice(0, 6);
-    const query = studentSearchQuery.toLowerCase();
-    return studentsList
-      .filter(
-        (s) =>
-          (s.name && s.name.toLowerCase().includes(query)) ||
-          (s.admissionNumber && s.admissionNumber.toLowerCase().includes(query)) ||
-          (s.classDivision && s.classDivision.toLowerCase().includes(query))
-      )
-      .slice(0, 6);
-  }, [studentSearchQuery, studentLookupResults, studentsList]);
-
-  // Handle selecting a student in modal
-  const handleSelectStudent = (student) => {
-    const rawClass = student.classDivision || student.className || "Class 10-A";
-    const norm = normalizeClassDivision(rawClass);
-    const canonClass = norm ? norm.name : rawClass;
-    const derivedWing = getAcademicWingForClass(canonClass);
-
-    setPaymentForm((prev) => ({
-      ...prev,
-      studentId: student._id || null,
-      studentName: student.name,
-      admissionNumber: student.admissionNumber || "",
-      rollNumber: student.rollNumber || "",
-      classDivision: canonClass,
-      wing: derivedWing,
-    }));
-    setStudentSearchQuery("");
-  };
-
-  // Open Record Modal (Create or Edit)
-  const handleOpenRecordModal = (paymentToEdit = null) => {
-    if (paymentToEdit) {
-      setEditingPayment(paymentToEdit);
-      setPaymentForm({
-        studentId: paymentToEdit.studentId || null,
-        studentName: paymentToEdit.studentName || "",
-        admissionNumber: paymentToEdit.admissionNumber || "",
-        rollNumber: paymentToEdit.rollNumber || "",
-        classDivision: paymentToEdit.classDivision || "Class 10-A",
-        wing: paymentToEdit.wing || "High School",
-        feeCategory: paymentToEdit.feeCategory || "Bus Fee",
-        academicYear: paymentToEdit.academicYear || "2026-2027",
-        term: paymentToEdit.term || "Term 1",
-        totalAmount: paymentToEdit.totalAmount || 0,
-        amountPaid: paymentToEdit.amountPaid || 0,
-        paymentDate: paymentToEdit.paymentDate || new Date().toISOString().split("T")[0],
-        paymentMode: paymentToEdit.paymentMode || "UPI / Online (Google Pay / PhonePe)",
-        transactionReference: paymentToEdit.transactionReference || "",
-        dueDate: paymentToEdit.dueDate || "2026-11-20",
-        remarks: paymentToEdit.remarks || "",
-        collectedBy: paymentToEdit.collectedBy || "Accounts Desk / Sri. R. Krishnan",
-      });
-    } else {
-      setEditingPayment(null);
-      setPaymentForm(initialForm);
-    }
-    setStudentSearchQuery("");
-    setIsRecordModalOpen(true);
-  };
-
-  // Open Receipt Modal
-  const handleOpenReceiptModal = (payment) => {
-    setViewingReceipt(payment);
-    setIsReceiptModalOpen(true);
-  };
-
-  // Save payment (POST / PUT)
-  const handleSavePayment = async (e) => {
-    e.preventDefault();
-    if (!paymentForm.studentName || !paymentForm.admissionNumber || !paymentForm.classDivision) {
-      setFeedback({ type: "error", message: "Please fill in all mandatory student details." });
-      return;
-    }
-
-    const nameCheck = validateHumanName(paymentForm.studentName, "Student name");
-    if (nameCheck !== true) {
-      setFeedback({ type: "error", message: nameCheck });
-      return;
-    }
-
-    try {
-      setFormSubmitting(true);
-      setFeedback({ type: "", message: "" });
-
-      if (editingPayment) {
-        const res = await api.put(`/admin/payments/${editingPayment._id}`, paymentForm);
-        if (res.data.success) {
-          setFeedback({ type: "success", message: "Fee payment record updated successfully!" });
-          setIsRecordModalOpen(false);
-          fetchPayments();
-        }
-      } else {
-        const res = await api.post("/admin/payments", paymentForm);
-        if (res.data.success) {
-          setFeedback({ type: "success", message: "New fee payment recorded into ledger!" });
-          setIsRecordModalOpen(false);
-          fetchPayments();
-        }
-      }
-    } catch (err) {
-      setFeedback({
-        type: "error",
-        message: err.response?.data?.message || "Failed to save payment record.",
-      });
-    } finally {
-      setFormSubmitting(false);
-    }
-  };
-
-  // Delete payment (Soft Delete)
-  const handleDeletePayment = async (id, receiptNo) => {
-    const isConfirmed = await confirm({
-      title: "Move Payment to Recycle Bin?",
-      message: `Are you sure you want to move payment record ${receiptNo} to the Recycle Bin (soft delete)?`,
-      subMessage: "You can restore this payment voucher anytime from the Recycle Bin.",
-      confirmText: "Move to Recycle Bin",
-      cancelText: "Keep Record",
-      type: "danger",
-    });
-
-    if (!isConfirmed) return;
-
-    try {
-      const res = await api.delete(`/admin/payments/${id}`);
-      if (res.data.success) {
-        setFeedback({
-          type: "success",
-          message:
-            res.data.message ||
-            `Receipt ${receiptNo} moved to Recycle Bin (soft-deleted). You can restore it anytime.`,
-        });
-        fetchPayments();
-      }
-    } catch (err) {
-      setFeedback({
-        type: "error",
-        message: err.response?.data?.message || "Failed to delete payment record.",
-      });
-    }
-  };
-
-  // Export ledger to CSV
-  const handleExportCSV = async () => {
-    if (payments.length === 0) {
-      await customAlert("No payment records available to export.", {
-        title: "Export Notice",
-        type: "warning",
-      });
-      return;
-    }
-
-    const headers = [
-      "Receipt Number",
-      "Date",
-      "Student Name",
-      "Admission Number",
-      "Class Division",
-      "Wing",
-      "Fee Category",
-      "Term",
-      "Total Amount",
-      "Amount Paid",
-      "Due Amount",
-      "Payment Mode",
-      "Transaction Ref",
-      "Status",
-    ];
-
-    const rows = payments.map((p) => [
-      `"${p.receiptNumber}"`,
-      `"${p.paymentDate}"`,
-      `"${p.studentName}"`,
-      `"${p.admissionNumber}"`,
-      `"${p.classDivision}"`,
-      `"${p.wing}"`,
-      `"${p.feeCategory}"`,
-      `"${p.term}"`,
-      p.totalAmount,
-      p.amountPaid,
-      p.dueAmount,
-      `"${p.paymentMode}"`,
-      `"${p.transactionReference || ""}"`,
-      `"${p.status}"`,
-    ]);
-
-    const csvContent =
-      "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `GHSS_Fee_Ledger_${new Date().toISOString().split("T")[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  // Payment form hook
+  const {
+    isRecordModalOpen,
+    setIsRecordModalOpen,
+    isReceiptModalOpen,
+    setIsReceiptModalOpen,
+    editingPayment,
+    viewingReceipt,
+    formSubmitting,
+    feedback,
+    setFeedback,
+    studentSearchQuery,
+    setStudentSearchQuery,
+    filteredStudentsForLookup,
+    paymentForm,
+    setPaymentForm,
+    handleSelectStudent,
+    handleOpenRecordModal,
+    handleOpenReceiptModal,
+    handleSavePayment,
+    handleDeletePayment,
+  } = usePaymentConsoleForm({ fetchPayments, studentsList });
 
   // Helper formatting for currency
   const formatINR = (val) => {
@@ -399,7 +172,10 @@ export default function PaymentConsole() {
               <strong>Fee &amp; Payments Console</strong>
             </div>
             <div className="header-actions-group" style={{ display: "flex", gap: "10px" }}>
-              <button className="btn-secondary-action" onClick={handleExportCSV}>
+              <button
+                className="btn-secondary-action"
+                onClick={() => exportPaymentLedgerCsv(payments, customAlert)}
+              >
                 Export Ledger CSV
               </button>
               <button className="btn-primary-action" onClick={() => handleOpenRecordModal()}>
@@ -460,267 +236,34 @@ export default function PaymentConsole() {
           <PaymentStatsCards summary={summary} formatINR={formatINR} />
 
           {/* ---------------- CONTROLS & FILTERS BAR ---------------- */}
-          <div className="payment-controls-card">
-            {/* Search Input */}
-            <div className="search-field-box">
-              <span className="search-icon"></span>
-              <input
-                type="text"
-                placeholder="Search by Student Name, Admission No, Receipt #, or UPI ref..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  className="search-clear-btn"
-                  onClick={() => setSearchQuery("")}
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-
-            {/* Wing Selector */}
-            <div className="filter-dropdown-group">
-              <label>Wing:</label>
-              <select
-                value={selectedWing}
-                onChange={(e) => {
-                  setSelectedWing(e.target.value);
-                  setCurrentPage(1);
-                }}
-              >
-                <option value="All">All Wings</option>
-                <option value="LP School">Lower Primary (LP)</option>
-                <option value="UP School">Upper Primary (UP)</option>
-                <option value="High School">High School (HS)</option>
-                <option value="Higher Secondary">Higher Secondary (HSS)</option>
-              </select>
-            </div>
-
-            {/* Fee Category Selector */}
-            <div className="filter-dropdown-group">
-              <label>Fee Category:</label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => {
-                  setSelectedCategory(e.target.value);
-                  setCurrentPage(1);
-                }}
-              >
-                <option value="All">All Categories</option>
-                <option value="Bus Fee">Bus Fee (School Transport)</option>
-                <option value="Annual Fee">Annual Composite Tuition</option>
-                <option value="PTA Fund">PTA Welfare &amp; Development</option>
-                <option value="Lab &amp; Computer Fee">IT Lab &amp; Science Practicals</option>
-                <option value="Special / Exam Fee">Special / Examination Fee</option>
-                <option value="Sports &amp; Library">Sports &amp; Library Club</option>
-              </select>
-            </div>
-
-            {/* Class / Division Selector */}
-            <div className="filter-dropdown-group">
-              <label>Division:</label>
-              <select
-                value={selectedDivision}
-                onChange={(e) => {
-                  setSelectedDivision(e.target.value);
-                  setCurrentPage(1);
-                }}
-              >
-                <option value="All">All Divisions</option>
-                {academicWings.map((wing) => (
-                  <optgroup key={wing.code} label={wing.wing}>
-                    {wing.classes.map((c) => (
-                      <option key={c.id} value={c.name}>
-                        {c.name} ({c.stream})
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-            </div>
-
-            {/* Status Filter Buttons */}
-            <div className="payment-status-pills">
-              {["All", "Paid", "Partial", "Pending"].map((st) => (
-                <button
-                  key={st}
-                  className={`status-pill-btn ${selectedStatus === st ? "active" : ""} ${st.toLowerCase()}`}
-                  onClick={() => {
-                    setSelectedStatus(st);
-                    setCurrentPage(1);
-                  }}
-                >
-                  {st}
-                </button>
-              ))}
-            </div>
-          </div>
+          <PaymentFilterBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            selectedWing={selectedWing}
+            setSelectedWing={setSelectedWing}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            selectedDivision={selectedDivision}
+            setSelectedDivision={setSelectedDivision}
+            selectedStatus={selectedStatus}
+            setSelectedStatus={setSelectedStatus}
+            academicWings={academicWings}
+            setCurrentPage={setCurrentPage}
+          />
 
           {/* ---------------- PAYMENTS DATA TABLE ---------------- */}
-          <div className="payment-table-container">
-            <table className="payment-registry-table">
-              <thead>
-                <tr>
-                  <th>Receipt # / Date</th>
-                  <th>Student Info</th>
-                  <th>Class / Division</th>
-                  <th>Fee Category</th>
-                  <th>Billed Amount</th>
-                  <th>Amount Paid</th>
-                  <th>Balance Due</th>
-                  <th>Payment Mode</th>
-                  <th style={{ textAlign: "center" }}>Status</th>
-                  <th style={{ textAlign: "center" }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan="10" style={{ textAlign: "center", padding: "40px" }}>
-                      <div className="loading-spinner"></div>
-                      <p style={{ marginTop: "12px", color: "#64748b", fontWeight: "600" }}>
-                        Loading fee ledger from Sampoorna Database...
-                      </p>
-                    </td>
-                  </tr>
-                ) : payments.length === 0 ? (
-                  <tr>
-                    <td colSpan="10" style={{ textAlign: "center", padding: "48px" }}>
-                      <div style={{ fontSize: "32px", marginBottom: "8px" }}></div>
-                      <h4 style={{ color: "#0f172a", marginBottom: "4px" }}>No Payment Records Found</h4>
-                      <p style={{ color: "#64748b", fontSize: "13px" }}>
-                        No fee payments match your current search and filter criteria.
-                      </p>
-                    </td>
-                  </tr>
-                ) : (
-                  payments.map((p) => {
-                    const isDue = (p.dueAmount || 0) > 0;
-                    return (
-                      <tr key={p._id} className={p.status === "Pending" ? "row-pending" : ""}>
-                        {/* Receipt & Date */}
-                        <td>
-                          <div className="payment-receipt-badge">{p.receiptNumber}</div>
-                          <div className="payment-date-sub">{p.paymentDate}</div>
-                        </td>
-
-                        {/* Student Info */}
-                        <td>
-                          <div className="student-name-bold">{p.studentName}</div>
-                          <div className="student-adm-sub">Adm: {p.admissionNumber}</div>
-                        </td>
-
-                        {/* Class & Division */}
-                        <td>
-                          <div className="class-div-pill">{normalizeClassDivision(p.classDivision)?.name || p.classDivision}</div>
-                          <div className="wing-tag-sub">{getAcademicWingForClass(p.classDivision) || p.wing}</div>
-                        </td>
-
-                        {/* Fee Category */}
-                        <td>
-                          <span className={`fee-cat-badge ${p.feeCategory.toLowerCase().replace(/[^a-z]/g, "")}`}>
-                            {p.feeCategory}
-                          </span>
-                          <div className="fee-term-sub">{p.term}</div>
-                        </td>
-
-                        {/* Total Billed */}
-                        <td className="amount-col">{formatINR(p.totalAmount)}</td>
-
-                        {/* Amount Paid */}
-                        <td className="amount-col font-bold text-green">{formatINR(p.amountPaid)}</td>
-
-                        {/* Balance Due */}
-                        <td className="amount-col">
-                          {isDue ? (
-                            <span className="due-amount-highlight text-red">{formatINR(p.dueAmount)}</span>
-                          ) : (
-                            <span className="text-muted" style={{ fontSize: "12px" }}>
-                              Settled ✓
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Mode & Reference */}
-                        <td>
-                          <div className="pay-mode-text">{p.paymentMode}</div>
-                          {p.transactionReference && (
-                            <div className="pay-ref-text">{p.transactionReference}</div>
-                          )}
-                        </td>
-
-                        {/* Status */}
-                        <td style={{ textAlign: "center" }}>
-                          <span className={`payment-status-badge ${p.status.toLowerCase()}`}>
-                            {p.status === "Paid" && "● Paid"}
-                            {p.status === "Partial" && "◐ Partial"}
-                            {p.status === "Pending" && "○ Pending"}
-                          </span>
-                        </td>
-
-                        {/* Actions */}
-                        <td style={{ textAlign: "center" }}>
-                          <div className="payment-action-btns">
-                            <button
-                              type="button"
-                              className="btn-action-view"
-                              title="View Official Kerala Govt Fee Receipt"
-                              onClick={() => handleOpenReceiptModal(p)}
-                            >
-                              Receipt
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-action-edit"
-                              title="Edit / Record Balance Payment"
-                              onClick={() => handleOpenRecordModal(p)}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-action-delete"
-                              title="Delete Record"
-                              onClick={() => handleDeletePayment(p._id, p.receiptNumber)}
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="payment-pagination-bar">
-                <div className="pagination-info">
-                  Showing Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong> ({totalRecords} total
-                  entries)
-                </div>
-                <div className="pagination-buttons">
-                  <button
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  >
-                    ← Previous
-                  </button>
-                  <button
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  >
-                    Next →
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          <PaymentTable
+            loading={loading}
+            payments={payments}
+            formatINR={formatINR}
+            handleOpenReceiptModal={handleOpenReceiptModal}
+            handleOpenRecordModal={handleOpenRecordModal}
+            handleDeletePayment={handleDeletePayment}
+            totalPages={totalPages}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            totalRecords={totalRecords}
+          />
         </main>
       </div>
 
