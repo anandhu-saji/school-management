@@ -2,10 +2,12 @@ import { useState, useEffect, useCallback } from "react";
 import api from "../../api/axiosclient";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminHeader from "../../components/admin/AdminHeader";
+import { useConfirm } from "../../context/ConfirmContext";
 import "../../Styles/AdminDash.css";
 import "../../Styles/Profile.css";
 
 export default function AdminProfileRequests() {
+  const confirm = useConfirm();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("pending");
@@ -45,15 +47,18 @@ export default function AdminProfileRequests() {
     fetchRequests();
   }, [fetchRequests]);
 
-  // Handle Approve
+  // Handle Approve with in-page custom Confirm Dialog
   const handleApprove = async (id, name) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to approve the profile update request for ${name}?`
-      )
-    ) {
-      return;
-    }
+    const isConfirmed = await confirm({
+      title: "Approve Profile Update?",
+      message: `Are you sure you want to approve the profile update request for ${name}?`,
+      subMessage: "This will immediately update their permanent institutional profile records.",
+      confirmText: "Approve & Update",
+      cancelText: "Cancel",
+      type: "info",
+    });
+
+    if (!isConfirmed) return;
 
     try {
       setActionLoading(id);

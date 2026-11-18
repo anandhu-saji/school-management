@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../../../api/axiosclient";
+import { useConfirm } from "../../../context/ConfirmContext";
 import "../../../Styles/AdminDash.css";
 
 export default function TeacherAdmissionDelegationModal({
@@ -8,6 +9,7 @@ export default function TeacherAdmissionDelegationModal({
   onClose,
   onSaved,
 }) {
+  const confirm = useConfirm();
   const [isAdmissionAdmin, setIsAdmissionAdmin] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -99,11 +101,16 @@ export default function TeacherAdmissionDelegationModal({
   };
 
   const handleRevoke = async () => {
-    if (
-      !window.confirm(
-        `Are you sure you want to revoke temporary admission admin rights for ${teacher.name} immediately?`
-      )
-    ) {
+    const isConfirmed = await confirm({
+      title: "Revoke Admission Admin Rights?",
+      message: `Are you sure you want to revoke temporary admission admin rights for ${teacher.name} immediately?`,
+      subMessage: "This faculty member will immediately lose access to student registration privileges.",
+      confirmText: "Revoke Rights",
+      cancelText: "Keep Rights",
+      type: "danger",
+    });
+
+    if (!isConfirmed) {
       return;
     }
 
