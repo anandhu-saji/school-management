@@ -2,7 +2,7 @@ export const getDocumentUrl = (url) => {
   if (!url) return "";
   const backendBase = import.meta.env.VITE_API_URL
     ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, "")
-    : "http://localhost:5000";
+    : import.meta.env.PROD ? "" : "http://localhost:5000";
 
   let fullUrl = url.startsWith("http://") || url.startsWith("https://")
     ? url
